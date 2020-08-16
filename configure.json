@@ -1,0 +1,17 @@
+{
+  "request": {
+    "adds": {
+      "Name": "Anthony",
+      "key1": "valueOfKey1",
+      "key2": "valueOfKey2",
+      "mynewkey": "valueOfMyNewKey"
+    },
+    "deletes": [
+      "myrequest",
+      "key4"
+    ],
+    "modifies": {
+      "key3": "ModifyKey3"
+    }
+  }
+}
