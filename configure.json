@@ -1,4 +1,6 @@
 {
+  "destinationUrl": "https://requestloggerbin.herokuapp.com/bin/15981abb-1214-4f25-bd80-725299deada0",
+  "method": "POST",
   "request": {
     "adds": {
       "Name": "Anthony",
@@ -12,6 +14,11 @@
     ],
     "modifies": {
       "key3": "ModifyKey3"
+    }
+  },
+  "response": {
+    "adds": {
+      "key4": "valueOfKey4"
     }
   }
 }

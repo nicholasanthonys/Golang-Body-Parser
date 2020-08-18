@@ -77,13 +77,16 @@ func Transform(c echo.Context) error {
 		service.Add(configure, requestFromUser)
 		service.Delete(configure, requestFromUser)
 		service.Modify(configure, requestFromUser)
+		service.Send(configure, requestFromUser)
 		return c.JSON(http.StatusOK, requestFromUser)
 
 	case "application/x-www-form-urlencoded":
-		requestFromUser := service.FormUrlFormToMap(c)
+		requestFromUser := service.FormUrlToMap(c)
 		service.Add(configure, requestFromUser)
 		service.Delete(configure, requestFromUser)
 		service.Modify(configure, requestFromUser)
+
+		service.Send(configure, requestFromUser)
 		return c.JSON(http.StatusOK, requestFromUser)
 
 	default:

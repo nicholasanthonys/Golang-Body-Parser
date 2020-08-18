@@ -1,10 +1,12 @@
 package model
 
 type Configure struct {
-	Request Request `json:"request"`
+	DestinationUrl string         `json:"destinationurl"`
+	Method         string         `json:"method"`
+	Request        CommandRequest `json:"request"`
 }
 
-type Request struct {
+type CommandRequest struct {
 	Adds     StructAdd    `json:"adds"`
 	Deletes  []string     `json:"deletes"`
 	Modifies StructModify `json:"modifies"`

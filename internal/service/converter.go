@@ -12,7 +12,7 @@ type User struct {
 }
 
 //* x wwww form url encoded loop field
-func FormUrlFormToMap(c echo.Context) map[string]interface{} {
+func FormUrlToMap(c echo.Context) map[string]interface{} {
 	logrus.Warn("FORM URL TO MAP")
 	myMap := make(map[string]interface{})
 	c.Request().ParseForm()
