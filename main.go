@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"plugin"
 )
 
 var log = logrus.New()
@@ -24,7 +25,10 @@ func init() {
 	log.Level = logrus.DebugLevel
 }
 
+var toXml func(map[string]interface{}) []byte
+
 func main() {
+
 	// Echo instance
 	e := echo.New()
 
@@ -33,10 +37,10 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Routes
-	e.POST("/", Transform)
+	e.POST("/", switcher)
 
 	// Start server
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":8888"))
 }
 
 func readConfigure(configure model.Configure) []byte {
@@ -57,8 +61,27 @@ func readConfigure(configure model.Configure) []byte {
 
 }
 
+func Load(c echo.Context) error {
+	plug, err := plugin.Open("./plugin/transform.so")
+	if err != nil {
+		logrus.Warn("Unable to load plugin module")
+		logrus.Warn(err.Error())
+		c.JSON(http.StatusInternalServerError, err)
+		os.Exit(1)
+
+	}
+	_, err = plug.Lookup("ToJson")
+	if err != nil {
+		logrus.Warn("Unable to Lookup plugin module")
+		logrus.Warn(err.Error())
+		c.JSON(http.StatusInternalServerError, err)
+		os.Exit(1)
+	}
+	return c.JSON(http.StatusOK, "load succeess")
+}
+
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
-func Transform(c echo.Context) error {
+func switcher(c echo.Context) error {
 	//*Read file Configure
 	var configure model.Configure
 	configByte := readConfigure(configure)
@@ -70,29 +93,39 @@ func Transform(c echo.Context) error {
 	//*check the content type
 	contentType := c.Request().Header["Content-Type"][0]
 	logrus.Info(contentType)
+
 	switch contentType {
 	case "application/json":
 		myJson, _ := ioutil.ReadAll(c.Request().Body)
-		json.Unmarshal(myJson, &requestFromUser)
-		service.Add(configure, requestFromUser)
-		service.Delete(configure, requestFromUser)
-		service.Modify(configure, requestFromUser)
-		service.Send(configure, requestFromUser)
-		return c.JSON(http.StatusOK, requestFromUser)
+		requestFromUser, _ = service.FromJson(myJson)
 
 	case "application/x-www-form-urlencoded":
-		requestFromUser := service.FormUrlToMap(c)
-		service.Add(configure, requestFromUser)
-		service.Delete(configure, requestFromUser)
-		service.Modify(configure, requestFromUser)
-
-		service.Send(configure, requestFromUser)
-		return c.JSON(http.StatusOK, requestFromUser)
+		requestFromUser = service.FromFormUrl(c)
 
 	default:
 		logrus.Info("Content type not supported")
 		return c.JSON(http.StatusOK, "Type not supported")
-
 	}
 
+	//*do map modification
+	ModifyMap(configure, requestFromUser)
+
+	//*send
+	response, err := service.Send(configure, requestFromUser)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	switch configure.Response.Transform {
+	case "ToXml":
+		return c.XMLBlob(http.StatusOK, response)
+	}
+	return c.JSONBlob(http.StatusOK, response)
+}
+
+func ModifyMap(configure model.Configure, requestFromUser map[string]interface{}) {
+	service.Add(configure, requestFromUser)
+	service.Delete(configure, requestFromUser)
+	service.Modify(configure, requestFromUser)
 }

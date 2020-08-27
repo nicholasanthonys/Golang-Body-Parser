@@ -1,10 +1,11 @@
 {
-  "destinationUrl": "https://requestloggerbin.herokuapp.com/bin/15981abb-1214-4f25-bd80-725299deada0",
+  "destinationUrl": "http://localhost:3001",
   "method": "POST",
   "request": {
+    "transform": "ToForm",
     "adds": {
-      "Name": "Anthony",
-      "key1": "valueOfKey1",
+      "email": "abdulsalam@mail.com",
+      "password": "123456",
       "key2": "valueOfKey2",
       "mynewkey": "valueOfMyNewKey"
     },
@@ -17,8 +18,11 @@
     }
   },
   "response": {
+    "transform": "ToXml",
     "adds": {
       "key4": "valueOfKey4"
-    }
+    },
+    "deletes": [],
+    "modifies": {}
   }
 }
