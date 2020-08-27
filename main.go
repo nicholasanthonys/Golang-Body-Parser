@@ -96,36 +96,57 @@ func switcher(c echo.Context) error {
 
 	switch contentType {
 	case "application/json":
-		myJson, _ := ioutil.ReadAll(c.Request().Body)
-		requestFromUser, _ = service.FromJson(myJson)
+		reqByte, _ := ioutil.ReadAll(c.Request().Body)
+		requestFromUser, _ = service.FromJson(reqByte)
 
 	case "application/x-www-form-urlencoded":
 		requestFromUser = service.FromFormUrl(c)
+	case "application/xml":
+		reqByte, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			logrus.Warn("error read request byte xml")
+			logrus.Warn(err.Error())
+			os.Exit(1)
+		}
+		requestFromUser, err = service.FromXmL(reqByte)
+		if err != nil {
+			logrus.Warn("error service from xml")
+			os.Exit(1)
+		} else {
+			logrus.Warn("service from xml success, request from user is")
+			logrus.Warn(requestFromUser)
+		}
 
 	default:
 		logrus.Info("Content type not supported")
 		return c.JSON(http.StatusOK, "Type not supported")
 	}
 
-	//*do map modification
-	ModifyMap(configure, requestFromUser)
+	//*do map modification for request
+	service.DoCommandConfigure(configure.Request, requestFromUser)
 
 	//*send
 	response, err := service.Send(configure, requestFromUser)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, err.Error())
+	} else {
+		if response == nil {
+			defaultResponse := make(map[string]string)
+			defaultResponse["message"] = "No response returned from destination url server"
+			return c.JSON(http.StatusOK, defaultResponse)
+		}
 	}
 
 	switch configure.Response.Transform {
+	case "ToJson":
+		return c.JSONBlob(http.StatusOK, response)
 	case "ToXml":
 		return c.XMLBlob(http.StatusOK, response)
+	default:
+		defaultResponse := make(map[string]interface{})
+		defaultResponse["message"] = string(response)
+		return c.JSON(http.StatusBadRequest, defaultResponse)
 	}
-	return c.JSONBlob(http.StatusOK, response)
-}
 
-func ModifyMap(configure model.Configure, requestFromUser map[string]interface{}) {
-	service.Add(configure, requestFromUser)
-	service.Delete(configure, requestFromUser)
-	service.Modify(configure, requestFromUser)
 }

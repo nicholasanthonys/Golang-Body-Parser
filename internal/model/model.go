@@ -4,7 +4,7 @@ type Configure struct {
 	DestinationUrl string  `json:"destinationurl"`
 	Method         string  `json:"method"`
 	Request        Command `json:"request"`
-	Response       Command `json:response`
+	Response       Command `json:"response"`
 }
 
 type Command struct {

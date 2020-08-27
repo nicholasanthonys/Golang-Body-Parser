@@ -6,10 +6,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Add(configure model.Configure, requestFromUser map[string]interface{}) {
+func Add(command model.Command, requestFromUser map[string]interface{}) {
 	logrus.Info("request form user is")
 	logrus.Info(requestFromUser)
-	for key, value := range configure.Request.Adds {
+	for key, value := range command.Adds {
 		logrus.Info("Key: ", key, " Value: "+
 			"", value)
 		//* if key is not exist, add to map
@@ -20,10 +20,10 @@ func Add(configure model.Configure, requestFromUser map[string]interface{}) {
 	}
 }
 
-func Modify(configure model.Configure, requestFromUser map[string]interface{}) {
+func Modify(command model.Command, requestFromUser map[string]interface{}) {
 	fmt.Println("Modify")
 	//*modify key from configure.json to requestFromUser Map
-	for key, value := range configure.Request.Modifies {
+	for key, value := range command.Modifies {
 		fmt.Println("Key:", key, "Value:", value)
 		if requestFromUser[key] != nil {
 			requestFromUser[key] = value
@@ -32,12 +32,18 @@ func Modify(configure model.Configure, requestFromUser map[string]interface{}) {
 	}
 }
 
-func Delete(configure model.Configure, requestFromUser map[string]interface{}) {
+func Delete(command model.Command, requestFromUser map[string]interface{}) {
 	//*delete dari map
 	fmt.Println("Deletes")
-	for key, value := range configure.Request.Deletes {
+	for key, value := range command.Deletes {
 		fmt.Println("key is ", key, "value is ", value)
 		delete(requestFromUser, value)
 
 	}
+}
+
+func DoCommandConfigure(command model.Command, requestFromUser map[string]interface{}) {
+	Add(command, requestFromUser)
+	Delete(command, requestFromUser)
+	Modify(command, requestFromUser)
 }

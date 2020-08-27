@@ -34,6 +34,8 @@ func ToJson(myMap map[string]interface{}) ([]byte, error) {
 		logrus.Warn(err.Error())
 		return nil, err
 	}
+	logrus.Warn("From transform .go, jsonByte is")
+	logrus.Warn(string(jsonByte))
 	return jsonByte, nil
 }
 

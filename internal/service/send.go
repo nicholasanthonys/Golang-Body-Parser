@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/json"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -26,6 +27,7 @@ func Send(configure model.Configure, requestFromUser map[string]interface{}) ([]
 			return nil, err
 		}
 		logrus.Warn("request from user after transform")
+		resultByte, _ := json.MarshalIndent(requestFromUser, " ", " ")
 		logrus.Warn(string(resultByte))
 	}
 
@@ -98,6 +100,10 @@ func Send(configure model.Configure, requestFromUser map[string]interface{}) ([]
 
 	if err != nil {
 		return nil, err
+	} else {
+
+		logrus.Warn("result byte after receive rmodify is")
+		logrus.Warn(string(resultByte))
 	}
 
 	//*response to map
