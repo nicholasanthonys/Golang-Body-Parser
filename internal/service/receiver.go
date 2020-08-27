@@ -9,18 +9,21 @@ import (
 
 func Receiver(contentType string, configure model.Configure, responseByte []byte) ([]byte, error) {
 	transform := configure.Response.Transform
-	if transform == "ToJson" || transform == "ToXml" {
+
+	switch transform {
+	case "ToJson", "ToXml":
 		transformFunction := LoadFunctionFromModule(transform)
 		resMap := make(map[string]interface{})
 		logrus.Info("content type is ", contentType)
 		if len(contentType) > 0 {
-
+			//* if content type contain application/json
 			if strings.Contains(contentType, "application/json") {
 				resMap, _ = FromJson(responseByte)
 				logrus.Warn("Content type contain application json")
 
 			} else {
-				//*xml
+				//* if content type contain application/xml
+
 				logrus.Warn("application contain xml")
 				err := xml.Unmarshal(responseByte, resMap)
 				if err != nil {
@@ -43,11 +46,12 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 				logrus.Fatal(err.Error())
 				return nil, err
 			}
-
 			return resultByte, nil
 		}
 		return nil, nil
+	default:
+		return []byte("transform response " + transform + " not supported"), nil
+
 	}
-	return []byte("transform response " + transform + " not supported"), nil
 
 }
