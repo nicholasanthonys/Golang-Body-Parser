@@ -8,8 +8,11 @@ import (
 )
 
 func Send(configure model.Configure, requestFromUser map[string]interface{}) ([]byte, error) {
+
+	//*get transform command
 	transformRequest := configure.Request.Transform
-	// constructing body to send
+
+	//* constructing body to send
 	body, err := TransformBody(configure, requestFromUser)
 
 	if err != nil {
@@ -18,10 +21,16 @@ func Send(configure model.Configure, requestFromUser map[string]interface{}) ([]
 	}
 	//*kalau body nil ? masih harus di handle
 
+	//*get method
 	method := configure.Method
+	//*get url
 	url := configure.DestinationUrl
+	//*declare request
 	var req *http.Request
+	logrus.Warn("body is")
+	logrus.Warn((body))
 
+	//*constructing request
 	req, _ = http.NewRequest(method, url, body)
 
 	// set content type for header
@@ -43,14 +52,19 @@ func doRequest(req *http.Request, configure model.Configure) ([]byte, error) {
 		return nil, err
 	}
 
+	//*read response body as byte
 	respByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		logrus.Warn("Error read body")
 		return nil, err
 	}
+
+	//*get response content type
 	contentType := res.Header.Get("Content-Type")
 	logrus.Warn("content type is")
 	logrus.Warn(contentType)
+
+	//*Modifty responseByte in Receiver and get  byte from response that has been modified
 	receiverByte, err := Receiver(contentType, configure, respByte)
 
 	if err != nil {
@@ -59,17 +73,24 @@ func doRequest(req *http.Request, configure model.Configure) ([]byte, error) {
 		logrus.Warn("result byte after receive rmodify is")
 		logrus.Warn(string(receiverByte))
 	}
+
+	//* return the receiver byte that has been modified
 	return receiverByte, nil
 }
 
 func setContentTypeHeader(transformRequest string, header *http.Header) {
+	//*set content type header based on transformRequest
 	switch transformRequest {
 	case "ToJson":
 		logrus.Warn("ToJson2 triggered")
 		header.Add("Content-Type", "application/json")
 	case "ToXml":
-		header.Add("Content-Type", "application/xml")
+		header.Add("Content-Type", "application/xml;ty=4")
 	case "ToForm":
 		header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
+
+	//header.Add("X-M2M-Origin", "cb2fa393d28a9bec:d8b54af6b70649c5")
+	//header.Add("Accept", "application/xml")
+
 }

@@ -1,32 +1,22 @@
 {
-  "destinationUrl": "http://localhost:3001",
+  "destinationUrl": "https://platform.antares.id:8443/~/antares-cse/antares-id/shadow-SmartEyeAplication/MyFirstDevice",
   "method": "POST",
   "request": {
-    "transform": "ToForm",
+    "transform": "ToXml",
     "adds": {
-      "email": "abdulsalam@mail.com",
-      "password": "123456",
-      "key2": "valueOfKey2",
-      "mynewkey": "valueOfMyNewKey"
     },
     "deletes": [
-      "myrequest",
-      "key4"
     ],
     "modifies": {
-      "key3": "ModifyKey3"
     }
   },
   "response": {
-    "transform": "ToJson",
+    "transform": "ToXml",
     "adds": {
-      "key5": "valueOfKey5"
     },
     "deletes": [
-      "email"
     ],
     "modifies": {
-      "password" : "12345678900000"
     }
   }
 }
