@@ -1,22 +1,55 @@
 {
-  "destinationUrl": "https://platform.antares.id:8443/~/antares-cse/antares-id/shadow-SmartEyeAplication/MyFirstDevice",
+  "destinationUrl": "http://localhost:3001",
   "method": "POST",
   "request": {
-    "transform": "ToXml",
+    "transform": "ToJson",
     "adds": {
+      "header": {
+        "token": "tokenabc"
+      },
+      "body": {
+        "key1" : "keyToBeDeleted",
+        "user.address.street": "cibaduyut",
+        "user.mother.name" : "Sugiharti"
+      },
+      "query": {
+        "myquery": "valueOfMyQUery"
+      }
     },
-    "deletes": [
-    ],
+    "deletes": {
+      "header": [
+
+      ],
+      "body": [
+        "key1",
+        "user.name",
+        "user.address.street"
+      ]
+    },
     "modifies": {
+      "header": {
+      },
+      "body": {
+        "user.tes": "Kopo",
+        "wall" : "house",
+        "user.name" : "anthony",
+        "user.address.street" : "mutiara"
+      },
+      "query": {
+      }
     }
   },
   "response": {
-    "transform": "ToXml",
+    "transform": "ToJson",
     "adds": {
     },
-    "deletes": [
-    ],
+    "deletes": {
+      "body": [
+      ]
+    },
     "modifies": {
+      "body": {
+      }
     }
   }
 }
