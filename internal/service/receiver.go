@@ -20,7 +20,11 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 		transformFunction := LoadFunctionFromModule(transform)
 
 		//* create empty map
-		resMap := make(map[string]interface{})
+		resMap := model.Fields{
+			Header: make(map[string]interface{}),
+			Body:   make(map[string]interface{}),
+			Query:  make(map[string]interface{}),
+		}
 
 		//*check content type response
 		logrus.Info("content type is ", contentType)
@@ -29,7 +33,7 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 			if strings.Contains(contentType, "application/json") {
 
 				//* assign map resMap with response []byte based on response content type
-				resMap, _ = FromJson(responseByte)
+				resMap.Body, _ = FromJson(responseByte)
 				logrus.Warn("Content type contain application json")
 
 			} else if strings.Contains(contentType, "application/xml") {
@@ -37,26 +41,29 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 				logrus.Warn("application contain xml")
 
 				//* assign map resMap with response []byte based on response content type
-				resMap, _ = FromXmL(responseByte)
+				resMap.Body, _ = FromXmL(responseByte)
 				logrus.Warn("resmap is")
 				logrus.Warn(resMap)
 			} else if strings.Contains(contentType, "text/plain") {
 				//* if content type contain text/plain
-				resMap["message"] = string(responseByte)
+				resMap.Body["message"] = string(responseByte)
 			} else {
 				//* panic  if content type unknown
 			}
 
+			logrus.Warn("configure repsonse adds")
+			logrus.Warn(configure.Response.Adds)
 			//*modify map for response (add,delete,modify)
-			DoCommandConfigure(configure.Response, resMap)
+			DoCommandConfigureBody(configure.Response, resMap)
+
 			logrus.Warn("resmap after modify is")
 			logrus.Warn(resMap)
 
-			//*transform resMap that has been modified to byte json or byte xml (depend on the transform command)
-			resultByte, err := transformFunction(resMap)
+			//*transform resMap BODy that has been modified to byte json or byte xml (depend on the transform command)
+			resultByte, err := transformFunction(resMap.Body)
 
 			if err != nil {
-				logrus.Warn("error after transform function")
+				logrus.Warn("error after transform function in receiver ")
 				logrus.Fatal(err.Error())
 				return nil, err
 			}
@@ -67,7 +74,6 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 		return nil, nil
 	default:
 		return []byte("transform response " + transform + " not supported"), nil
-
 	}
 
 }

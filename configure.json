@@ -5,50 +5,59 @@
     "transform": "ToJson",
     "adds": {
       "header": {
-        "token": "tokenabc"
       },
       "body": {
-        "key1" : "keyToBeDeleted",
-        "user.address.street": "cibaduyut",
-        "user.mother.name" : "Sugiharti"
+        "user.tes": "tes",
+        "user.tes1.test2" : "add1"
       },
       "query": {
-        "myquery": "valueOfMyQUery"
+        "myQuery": "valueOfMyQuery",
+        "queryDeleted": "deleted"
       }
     },
     "deletes": {
       "header": [
-
       ],
       "body": [
-        "key1",
-        "user.name",
-        "user.address.street"
+      ],
+      "query": [
+        "queryDeleted"
       ]
     },
     "modifies": {
       "header": {
       },
       "body": {
-        "user.tes": "Kopo",
-        "wall" : "house",
-        "user.name" : "anthony",
-        "user.address.street" : "mutiara"
       },
       "query": {
+        "myQuery": "QueryModified",
+        "query1": "query1"
       }
     }
   },
   "response": {
-    "transform": "ToJson",
+    "transform": "ToXml",
     "adds": {
+      "header" : {
+
+      },
+      "body" : {
+        "user.address.street" : "kopo",
+        "user.address.streetNumber" : 20
+      },
+      "query" : {
+
+      }
     },
     "deletes": {
       "body": [
+        "user.tes"
       ]
     },
     "modifies": {
       "body": {
+        "user.profile.age": 10,
+        "user.name": "anthony"
       }
     }
   }

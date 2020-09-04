@@ -24,7 +24,7 @@ func init() {
 	log.Level = logrus.DebugLevel
 }
 
-var toXml func(map[string]interface{}) []byte
+var myMap map[string]interface{}
 
 func main() {
 
@@ -42,7 +42,7 @@ func main() {
 	e.Logger.Fatal(e.Start(":8888"))
 }
 
-func readConfigure(configure model.Configure) []byte {
+func readConfigure() []byte {
 	// Open our jsonFile
 	jsonFile, err := os.Open("configure.json")
 	// if we os.Open returns an error then handle it
@@ -64,12 +64,17 @@ func readConfigure(configure model.Configure) []byte {
 func switcher(c echo.Context) error {
 	//*Read file Configure
 	var configure model.Configure
-	configByte := readConfigure(configure)
+	configByte := readConfigure()
+
 	//* assign configure byte to configure
 	_ = json.Unmarshal(configByte, &configure)
 
 	//*this variable accept request from user
-	var requestFromUser map[string]interface{}
+	requestFromUser := model.Fields{
+		Header: make(map[string]interface{}),
+		Body:   make(map[string]interface{}),
+		Query:  make(map[string]interface{}),
+	}
 
 	//*check the content type user request
 	contentType := c.Request().Header["Content-Type"][0]
@@ -85,7 +90,7 @@ func switcher(c echo.Context) error {
 			logrus.Warn(err.Error())
 			os.Exit(1)
 		}
-		requestFromUser, err = service.FromJson(reqByte)
+		requestFromUser.Body, err = service.FromJson(reqByte)
 		if err != nil {
 			logrus.Warn("error service from Json")
 			logrus.Warn(err.Error())
@@ -94,7 +99,7 @@ func switcher(c echo.Context) error {
 
 	case "application/x-www-form-urlencoded":
 		//*transform x www form url encoded request user to map request from user
-		requestFromUser = service.FromFormUrl(c)
+		requestFromUser.Body = service.FromFormUrl(c)
 	case "application/xml":
 		//*transform xml request user to map request from user
 		reqByte, err := ioutil.ReadAll(c.Request().Body)
@@ -103,7 +108,7 @@ func switcher(c echo.Context) error {
 			logrus.Warn(err.Error())
 			os.Exit(1)
 		}
-		requestFromUser, err = service.FromXmL(reqByte)
+		requestFromUser.Body, err = service.FromXmL(reqByte)
 		if err != nil {
 			logrus.Warn("error service from xml")
 			os.Exit(1)
@@ -118,7 +123,7 @@ func switcher(c echo.Context) error {
 	}
 
 	//*do map modification for request
-	service.DoCommandConfigure(configure.Request, requestFromUser)
+	service.DoCommandConfigureBody(configure.Request, requestFromUser)
 
 	//*send to destination url
 	response, err := service.Send(configure, requestFromUser)

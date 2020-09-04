@@ -7,13 +7,13 @@ import (
 	"net/http"
 )
 
-func Send(configure model.Configure, requestFromUser map[string]interface{}) ([]byte, error) {
+func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, error) {
 
 	//*get transform command
 	transformRequest := configure.Request.Transform
 
 	//* constructing body to send
-	body, err := TransformBody(configure, requestFromUser)
+	body, err := TransformBody(configure, requestFromUser.Body)
 
 	if err != nil {
 		logrus.Warn("error constructing body to send")
@@ -32,6 +32,14 @@ func Send(configure model.Configure, requestFromUser map[string]interface{}) ([]
 
 	//*constructing request
 	req, _ = http.NewRequest(method, url, body)
+
+	//* Add, Delete, Modify Header
+	DoCommandConfigureHeader(configure.Request, &req.Header)
+
+	q := req.URL.Query()
+	//* Add, Delete, Modify Query
+	DoCommandConfigureQuery(configure.Request, &q)
+	req.URL.RawQuery = q.Encode()
 
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
@@ -85,12 +93,9 @@ func setContentTypeHeader(transformRequest string, header *http.Header) {
 		logrus.Warn("ToJson2 triggered")
 		header.Add("Content-Type", "application/json")
 	case "ToXml":
-		header.Add("Content-Type", "application/xml;ty=4")
+		header.Add("Content-Type", "application/xml")
 	case "ToForm":
 		header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
-
-	//header.Add("X-M2M-Origin", "cb2fa393d28a9bec:d8b54af6b70649c5")
-	//header.Add("Accept", "application/xml")
 
 }

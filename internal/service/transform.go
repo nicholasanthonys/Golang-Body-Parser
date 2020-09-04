@@ -45,7 +45,7 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 	resultByte, err = transformFunction(requestFromUser)
 
 	if err != nil {
-		logrus.Warn("error after transform function")
+		logrus.Warn("error after transform function in service transform")
 		logrus.Fatal(err.Error())
 		return nil, err
 	}
