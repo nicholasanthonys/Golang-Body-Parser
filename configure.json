@@ -2,23 +2,21 @@
   "destinationUrl": "http://localhost:3001",
   "method": "POST",
   "request": {
-    "transform": "ToJson",
+    "transform": "ToForm",
     "adds": {
       "header": {
       },
       "body": {
-        "user.tes": "tes",
-        "user.tes1.test2" : "add1"
+        "user.age": 20
       },
       "query": {
-        "myQuery": "valueOfMyQuery",
-        "queryDeleted": "deleted"
       }
     },
     "deletes": {
       "header": [
       ],
       "body": [
+        "key1"
       ],
       "query": [
         "queryDeleted"
@@ -28,36 +26,29 @@
       "header": {
       },
       "body": {
+        "user.name": "anthony"
       },
       "query": {
-        "myQuery": "QueryModified",
-        "query1": "query1"
       }
     }
   },
   "response": {
-    "transform": "ToXml",
+    "transform": "ToJson",
     "adds": {
-      "header" : {
-
+      "header": {
       },
-      "body" : {
-        "user.address.street" : "kopo",
-        "user.address.streetNumber" : 20
+      "body": {
+        "address": "modified"
       },
-      "query" : {
-
+      "query": {
       }
     },
     "deletes": {
       "body": [
-        "user.tes"
       ]
     },
     "modifies": {
       "body": {
-        "user.profile.age": 10,
-        "user.name": "anthony"
       }
     }
   }

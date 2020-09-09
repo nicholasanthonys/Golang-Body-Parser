@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
@@ -60,6 +61,21 @@ func readConfigure() []byte {
 
 }
 
+func errorWriter(c echo.Context, configure model.Configure, err error, status int) error {
+	responseMap := make(map[string]interface{})
+	responseMap["message"] = err.Error()
+	switch configure.Response.Transform {
+	case "ToXml":
+		logrus.Warn(err.Error())
+		xmlByte, _ := x2j.MapToXml(responseMap)
+		return c.XMLBlob(status, xmlByte)
+
+	default:
+		logrus.Warn(err.Error())
+		return c.JSON(status, responseMap)
+	}
+}
+
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
 func switcher(c echo.Context) error {
 	//*Read file Configure
@@ -87,14 +103,13 @@ func switcher(c echo.Context) error {
 		reqByte, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			logrus.Warn("error read request byte Json")
-			logrus.Warn(err.Error())
-			os.Exit(1)
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		}
 		requestFromUser.Body, err = service.FromJson(reqByte)
 		if err != nil {
 			logrus.Warn("error service from Json")
-			logrus.Warn(err.Error())
-			os.Exit(1)
+
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		}
 
 	case "application/x-www-form-urlencoded":
@@ -105,13 +120,14 @@ func switcher(c echo.Context) error {
 		reqByte, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			logrus.Warn("error read request byte xml")
-			logrus.Warn(err.Error())
-			os.Exit(1)
+
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		}
 		requestFromUser.Body, err = service.FromXmL(reqByte)
 		if err != nil {
 			logrus.Warn("error service from xml")
-			os.Exit(1)
+
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		} else {
 			logrus.Warn("service from xml success, request from user is")
 			logrus.Warn(requestFromUser)

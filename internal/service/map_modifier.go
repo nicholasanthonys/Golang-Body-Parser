@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 )
 
@@ -13,12 +14,20 @@ func AddRecursive(listTraverse []string, value string, in interface{}, index int
 
 	if index == len(listTraverse)-1 {
 		logrus.Info("last ", listTraverse[index])
-		in.(map[string]interface{})[listTraverse[index]] = value
+		logrus.Warn("reflect type of")
+		logrus.Warn(reflect.TypeOf(in))
+		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+			in.(map[string]interface{})[listTraverse[index]] = value
+		}
+
 		return in
 	}
 	//* allocate new map if map[key] null
 	if in.(map[string]interface{})[listTraverse[index]] == nil {
+		logrus.Warn("map strin ginterface ", listTraverse[index], " is nil")
 		in.(map[string]interface{})[listTraverse[index]] = make(map[string]interface{})
+	} else {
+		logrus.Warn("map strin ginterface ", listTraverse[index], " not nil")
 	}
 	in.(map[string]interface{})[listTraverse[index]] = AddRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
 	return in.(map[string]interface{})
@@ -26,10 +35,13 @@ func AddRecursive(listTraverse []string, value string, in interface{}, index int
 
 func ModifyRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
-		if in.(map[string]interface{})[listTraverse[index]] == nil {
-			return nil
+
+		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+			if in.(map[string]interface{})[listTraverse[index]] == nil {
+				return nil
+			}
+			in.(map[string]interface{})[listTraverse[index]] = value
 		}
-		in.(map[string]interface{})[listTraverse[index]] = value
 		return in
 	}
 
