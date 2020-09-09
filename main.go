@@ -138,6 +138,8 @@ func switcher(c echo.Context) error {
 		return c.JSON(http.StatusOK, "Type not supported")
 	}
 
+	logrus.Info("request form user before do command configure")
+	logrus.Info(requestFromUser)
 	//*do map modification for request
 	service.DoCommandConfigureBody(configure.Request, requestFromUser)
 

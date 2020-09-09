@@ -43,7 +43,8 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 	transformFunction := LoadFunctionFromModule(transformRequest)
 	//transform from map to Json or XML
 	resultByte, err = transformFunction(requestFromUser)
-
+	logrus.Info("request from user before transform")
+	logrus.Info(requestFromUser)
 	if err != nil {
 		logrus.Warn("error after transform function in service transform")
 		logrus.Fatal(err.Error())

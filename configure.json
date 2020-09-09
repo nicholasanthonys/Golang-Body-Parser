@@ -2,12 +2,13 @@
   "destinationUrl": "http://localhost:3001",
   "method": "POST",
   "request": {
-    "transform": "ToForm",
+    "transform": "ToXml",
     "adds": {
       "header": {
       },
       "body": {
-        "user.age": 20
+        "user.tes.age": 20,
+        "tes.tes1.lol" : "lol"
       },
       "query": {
       }
@@ -26,7 +27,8 @@
       "header": {
       },
       "body": {
-        "user.name": "anthony"
+        "user": "anthony",
+        "tes.tes1" : "fu"
       },
       "query": {
       }

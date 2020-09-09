@@ -22,15 +22,21 @@ func AddRecursive(listTraverse []string, value string, in interface{}, index int
 
 		return in
 	}
-	//* allocate new map if map[key] null
-	if in.(map[string]interface{})[listTraverse[index]] == nil {
-		logrus.Warn("map strin ginterface ", listTraverse[index], " is nil")
-		in.(map[string]interface{})[listTraverse[index]] = make(map[string]interface{})
-	} else {
-		logrus.Warn("map strin ginterface ", listTraverse[index], " not nil")
+
+	if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+		//* allocate new map if map[key] null
+		if in.(map[string]interface{})[listTraverse[index]] == nil {
+			logrus.Warn("map strin ginterface ", listTraverse[index], " is nil")
+			in.(map[string]interface{})[listTraverse[index]] = make(map[string]interface{})
+		} else {
+			logrus.Warn("map strin ginterface ", listTraverse[index], " not nil")
+		}
+		in.(map[string]interface{})[listTraverse[index]] = AddRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
+		return in.(map[string]interface{})
 	}
-	in.(map[string]interface{})[listTraverse[index]] = AddRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
-	return in.(map[string]interface{})
+
+	return in
+
 }
 
 func ModifyRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
@@ -44,11 +50,13 @@ func ModifyRecursive(listTraverse []string, value string, in interface{}, index 
 		}
 		return in
 	}
-
-	if in.(map[string]interface{})[listTraverse[index]] != nil {
-		ModifyRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
-		return in.(map[string]interface{})
+	if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+		if in.(map[string]interface{})[listTraverse[index]] != nil {
+			ModifyRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
+			return in.(map[string]interface{})
+		}
 	}
+
 	return nil
 
 }
