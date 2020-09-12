@@ -51,7 +51,6 @@ func readConfigure() []byte {
 		fmt.Println(err)
 	}
 
-	logrus.Info("Successfully Opened configure.json")
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
@@ -76,7 +75,7 @@ func errorWriter(c echo.Context, configure model.Configure, err error, status in
 	}
 }
 
-//* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
+//* Function that transform request to mpa[string] interface{}, Read configure J SON and return value
 func switcher(c echo.Context) error {
 	//*Read file Configure
 	var configure model.Configure
@@ -94,7 +93,6 @@ func switcher(c echo.Context) error {
 
 	//*check the content type user request
 	contentType := c.Request().Header["Content-Type"][0]
-	logrus.Info(contentType)
 
 	switch contentType {
 	case "application/json":
@@ -106,6 +104,7 @@ func switcher(c echo.Context) error {
 			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		}
 		requestFromUser.Body, err = service.FromJson(reqByte)
+
 		if err != nil {
 			logrus.Warn("error service from Json")
 
@@ -134,12 +133,23 @@ func switcher(c echo.Context) error {
 		}
 
 	default:
-		logrus.Info("Content type not supported")
+		logrus.Warn("Content type not supported")
 		return c.JSON(http.StatusOK, "Type not supported")
 	}
 
-	logrus.Info("request form user before do command configure")
-	logrus.Info(requestFromUser)
+	//*get header value
+	for key, val := range c.Request().Header {
+
+		requestFromUser.Header[key] = val
+	}
+
+	//*get query value
+
+	for key, val := range c.QueryParams() {
+
+		requestFromUser.Query[key] = val
+	}
+
 	//*do map modification for request
 	service.DoCommandConfigureBody(configure.Request, requestFromUser)
 

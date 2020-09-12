@@ -27,18 +27,16 @@ func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, erro
 	url := configure.DestinationUrl
 	//*declare request
 	var req *http.Request
-	logrus.Warn("body is")
-	logrus.Warn((body))
 
 	//*constructing request
 	req, _ = http.NewRequest(method, url, body)
 
 	//* Add, Delete, Modify Header
-	DoCommandConfigureHeader(configure.Request, &req.Header)
+	DoCommandConfigureHeader(configure.Request, requestFromUser, &req.Header)
 
 	q := req.URL.Query()
 	//* Add, Delete, Modify Query
-	DoCommandConfigureQuery(configure.Request, &q)
+	DoCommandConfigureQuery(configure.Request, requestFromUser, &q)
 	req.URL.RawQuery = q.Encode()
 
 	// set content type for header
@@ -69,8 +67,8 @@ func doRequest(req *http.Request, configure model.Configure) ([]byte, error) {
 
 	//*get response content type
 	contentType := res.Header.Get("Content-Type")
-	logrus.Warn("content type is")
-	logrus.Warn(contentType)
+	//logrus.Warn("content type is")
+	//logrus.Warn(contentType)
 
 	//*Modifty responseByte in Receiver and get  byte from response that has been modified
 	receiverByte, err := Receiver(contentType, configure, respByte)
@@ -90,7 +88,7 @@ func setContentTypeHeader(transformRequest string, header *http.Header) {
 	//*set content type header based on transformRequest
 	switch transformRequest {
 	case "ToJson":
-		logrus.Warn("ToJson2 triggered")
+
 		header.Add("Content-Type", "application/json")
 	case "ToXml":
 		header.Add("Content-Type", "application/xml")

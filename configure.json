@@ -5,30 +5,30 @@
     "transform": "ToXml",
     "adds": {
       "header": {
+        "tes": "ololol",
+        "tes2" : "$body[user][name][0]"
       },
       "body": {
-        "user.tes.age": 20,
-        "tes.tes1.lol" : "lol"
+        "user.address": "$header[Content-Type][0]",
+        "user.age": "tes1",
+        "user.query": "$query[tes][0]"
       },
       "query": {
+        "tesquery": "$header[Content-Type][0]"
       }
     },
     "deletes": {
       "header": [
       ],
       "body": [
-        "key1"
       ],
       "query": [
-        "queryDeleted"
       ]
     },
     "modifies": {
       "header": {
       },
       "body": {
-        "user": "anthony",
-        "tes.tes1" : "fu"
       },
       "query": {
       }
@@ -40,7 +40,6 @@
       "header": {
       },
       "body": {
-        "address": "modified"
       },
       "query": {
       }

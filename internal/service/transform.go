@@ -34,8 +34,7 @@ func TransformBody(configure model.Configure, requestFromUser map[string]interfa
 
 func Transform(configure model.Configure, requestFromUser map[string]interface{}) ([]byte, error) {
 	transformRequest := configure.Request.Transform
-	logrus.Warn("Transform request is")
-	logrus.Warn(transformRequest)
+
 	var resultByte []byte
 	var err error
 
@@ -43,15 +42,12 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 	transformFunction := LoadFunctionFromModule(transformRequest)
 	//transform from map to Json or XML
 	resultByte, err = transformFunction(requestFromUser)
-	logrus.Info("request from user before transform")
-	logrus.Info(requestFromUser)
+
 	if err != nil {
 		logrus.Warn("error after transform function in service transform")
 		logrus.Fatal(err.Error())
 		return nil, err
 	}
-	logrus.Info("request from user after transform")
-	logrus.Info(string(resultByte))
 
 	return resultByte, nil
 }
