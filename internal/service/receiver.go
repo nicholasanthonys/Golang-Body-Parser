@@ -3,14 +3,39 @@ package service
 import (
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
-func Receiver(contentType string, configure model.Configure, responseByte []byte) ([]byte, error) {
+func Receiver(configure model.Configure, res *http.Response) ([]byte, error) {
+	//*read response body as byte
+	responseByte, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		logrus.Warn("Error read body")
+		return nil, err
+	}
+
+	//*get response content type
+	contentType := res.Header.Get("Content-Type")
+	logrus.Warn("content type response is")
+	logrus.Warn(contentType)
+
 	//* get transform command
 	transform := configure.Response.Transform
 	logrus.Warn("response byte is ")
 	logrus.Warn(string(responseByte))
+
+	resMap := model.Fields{
+		Header: make(map[string]interface{}),
+		Body:   make(map[string]interface{}),
+		Query:  make(map[string]interface{}),
+	}
+
+	//*get header value
+	for key, val := range res.Header {
+		resMap.Header[key] = val
+	}
 
 	//switch case transform
 	switch transform {
@@ -20,11 +45,6 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 		transformFunction := LoadFunctionFromModule(transform)
 
 		//* create empty map
-		resMap := model.Fields{
-			Header: make(map[string]interface{}),
-			Body:   make(map[string]interface{}),
-			Query:  make(map[string]interface{}),
-		}
 
 		//*check content type response
 		logrus.Info("content type is ", contentType)
@@ -53,8 +73,14 @@ func Receiver(contentType string, configure model.Configure, responseByte []byte
 
 			logrus.Warn("configure repsonse adds")
 			logrus.Warn(configure.Response.Adds)
-			//*modify map for response (add,delete,modify)
+
+
+			//*modify map for response header (add,delete,modify)
+			DoCommandConfigureHeader(configure.Response, resMap)
+
+			//*modify map for response body(add,delete,modify)
 			DoCommandConfigureBody(configure.Response, resMap)
+
 
 			logrus.Warn("resmap after modify is")
 			logrus.Warn(resMap)

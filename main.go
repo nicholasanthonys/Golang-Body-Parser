@@ -144,14 +144,16 @@ func switcher(c echo.Context) error {
 	}
 
 	//*get query value
-
 	for key, val := range c.QueryParams() {
-
 		requestFromUser.Query[key] = val
 	}
 
-	//*do map modification for request
+	//*Add delete, modify body
 	service.DoCommandConfigureBody(configure.Request, requestFromUser)
+	//* Add, Delete, Modify Header
+	service.DoCommandConfigureHeader(configure.Request, requestFromUser)
+	//*add, delete, modify query
+	service.DoCommandConfigureQuery(configure.Request, requestFromUser)
 
 	//*send to destination url
 	response, err := service.Send(configure, requestFromUser)

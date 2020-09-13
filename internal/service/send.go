@@ -1,10 +1,12 @@
 package service
 
 import (
+	"fmt"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"net/http"
+	"net/url"
+	"reflect"
 )
 
 func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, error) {
@@ -31,12 +33,13 @@ func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, erro
 	//*constructing request
 	req, _ = http.NewRequest(method, url, body)
 
-	//* Add, Delete, Modify Header
-	DoCommandConfigureHeader(configure.Request, requestFromUser, &req.Header)
+	//*set Header
+	setHeader(requestFromUser, &req.Header)
 
 	q := req.URL.Query()
-	//* Add, Delete, Modify Query
-	DoCommandConfigureQuery(configure.Request, requestFromUser, &q)
+
+	//*set query
+	setQuery(requestFromUser, &q)
 	req.URL.RawQuery = q.Encode()
 
 	// set content type for header
@@ -58,20 +61,10 @@ func doRequest(req *http.Request, configure model.Configure) ([]byte, error) {
 		return nil, err
 	}
 
-	//*read response body as byte
-	respByte, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		logrus.Warn("Error read body")
-		return nil, err
-	}
 
-	//*get response content type
-	contentType := res.Header.Get("Content-Type")
-	//logrus.Warn("content type is")
-	//logrus.Warn(contentType)
 
 	//*Modifty responseByte in Receiver and get  byte from response that has been modified
-	receiverByte, err := Receiver(contentType, configure, respByte)
+	receiverByte, err := Receiver( configure, res )
 
 	if err != nil {
 		return nil, err
@@ -96,4 +89,29 @@ func setContentTypeHeader(transformRequest string, header *http.Header) {
 		header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
 
+}
+
+func setHeader(requestFromUser model.Fields, header *http.Header) {
+	//actually set the header based on map header
+	for key, value := range requestFromUser.Header {
+		if key != "Content-Type" {
+
+			vt := reflect.TypeOf(value).Kind()
+			if vt == reflect.Slice {
+				header.Add(key, fmt.Sprintf("%v", value.([]string)[0]))
+			} else {
+				header.Add(key, fmt.Sprintf("%s", value))
+			}
+
+		}
+
+	}
+}
+
+func setQuery(requestFromUser model.Fields, q *url.Values) {
+	//* Add
+	for key, value := range requestFromUser.Query {
+		q.Set(key, fmt.Sprintf("%v", value))
+		logrus.Info("q get is ", q.Get(key))
+	}
 }
