@@ -6,7 +6,7 @@
     "adds": {
       "header": {
         "tes": "ololol",
-        "tes2" : "$body[user][name][0]"
+        "tes2": "$body[user][name][0]"
       },
       "body": {
         "user.address": "$header[Content-Type][0]",
@@ -29,6 +29,8 @@
       "header": {
       },
       "body": {
+        "user.lol": "user lol",
+        "user.name": "$body[user][cars][0]"
       },
       "query": {
       }
@@ -38,8 +40,11 @@
     "transform": "ToJson",
     "adds": {
       "header": {
+        "tesheaderresponse": "tesheaderresponseffuuu"
       },
       "body": {
+        "user.name": "$header[Content-Type][0]",
+        "user.response": "$header[tesheaderresponse]"
       },
       "query": {
       }

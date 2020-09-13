@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
-	"net/http"
-	"net/url"
+
 	"reflect"
 	"strconv"
 	"strings"
@@ -129,7 +128,7 @@ func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields)
 	}
 }
 
-func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields, header *http.Header) {
+func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields, ) {
 	//*Add to map header
 	for key, value := range command.Adds.Header {
 		realValue := checkValue(value, requestFromUser)
@@ -139,30 +138,18 @@ func DoCommandConfigureHeader(command model.Command, requestFromUser model.Field
 
 	}
 
-	//actually set the header based on map header
-	for key, value := range requestFromUser.Header {
-		if key != "Content-Type" {
-
-			vt := reflect.TypeOf(value).Kind()
-			if vt == reflect.Slice {
-				header.Add(key, fmt.Sprintf("%v", value.([]string)[0]))
-			} else {
-				header.Add(key, fmt.Sprintf("%s", value))
-			}
-
-		}
-
-	}
-
 	//*Delete
 	for _, key := range command.Deletes.Header {
-		header.Del(key)
+		//header.Del(key)
+		delete(requestFromUser.Header, key)
 	}
 
 	//* Modify
 	for key, value := range command.Modifies.Header {
-		if len(header.Get(key)) > 0 {
-			header.Set(key, fmt.Sprintf("%v", value))
+		existValue := fmt.Sprintf("%s", requestFromUser.Header[key])
+		if len(existValue) > 0 {
+			requestFromUser.Header[key] = value
+
 		}
 	}
 
@@ -257,7 +244,7 @@ func validateValue(value string) ([]string, string) {
 
 }
 
-func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields, q *url.Values) {
+func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields) {
 	//* Add
 	for key, value := range requestFromUser.Query {
 		realValue := checkValue(value, requestFromUser)
@@ -265,19 +252,18 @@ func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields
 
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Query, 0)
 
-		q.Set(key, fmt.Sprintf("%v", realValue))
-		logrus.Info("q get is ", q.Get(key))
 	}
 
 	//* Delete
 	for _, key := range command.Deletes.Query {
-		q.Del(key)
+		delete(requestFromUser.Query, key)
 	}
 
 	//* Modify
 	for key, value := range command.Modifies.Query {
-		if len(q.Get(key)) > 0 {
-			q.Set(key, fmt.Sprintf("%v", value))
+		existingValue := fmt.Sprintf("%s", requestFromUser.Query[key])
+		if len(existingValue) > 0 {
+			requestFromUser.Query[key] = value
 		}
 	}
 }
