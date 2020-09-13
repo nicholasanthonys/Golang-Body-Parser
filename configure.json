@@ -1,28 +1,56 @@
 {
-  "destinationUrl": "https://requestloggerbin.herokuapp.com/bin/77503266-b986-4b8b-a450-3b7f31f187b8",
+  "destinationUrl": "http://localhost:3001",
   "method": "POST",
   "request": {
-    "transform": "ToJson",
+    "transform": "ToXml",
     "adds": {
-      "email": "abdulsalam@mail.com",
-      "password": "123456",
-      "key2": "valueOfKey2",
-      "mynewkey": "valueOfMyNewKey"
+      "header": {
+        "tes": "ololol",
+        "tes2" : "$body[user][name][0]"
+      },
+      "body": {
+        "user.address": "$header[Content-Type][0]",
+        "user.age": "tes1",
+        "user.query": "$query[tes][0]"
+      },
+      "query": {
+        "tesquery": "$header[Content-Type][0]"
+      }
     },
-    "deletes": [
-      "myrequest",
-      "key4"
-    ],
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    },
     "modifies": {
-      "key3": "ModifyKey3"
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
     }
   },
   "response": {
-    "transform": "ToForm",
+    "transform": "ToJson",
     "adds": {
-      "key5": "valueOfKey5"
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
     },
-    "deletes": [],
-    "modifies": {}
+    "deletes": {
+      "body": [
+      ]
+    },
+    "modifies": {
+      "body": {
+      }
+    }
   }
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
@@ -11,7 +12,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"plugin"
 )
 
 var log = logrus.New()
@@ -25,7 +25,7 @@ func init() {
 	log.Level = logrus.DebugLevel
 }
 
-var toXml func(map[string]interface{}) []byte
+var myMap map[string]interface{}
 
 func main() {
 
@@ -43,7 +43,7 @@ func main() {
 	e.Logger.Fatal(e.Start(":8888"))
 }
 
-func readConfigure(configure model.Configure) []byte {
+func readConfigure() []byte {
 	// Open our jsonFile
 	jsonFile, err := os.Open("configure.json")
 	// if we os.Open returns an error then handle it
@@ -51,7 +51,6 @@ func readConfigure(configure model.Configure) []byte {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened configure.json")
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
@@ -61,76 +60,107 @@ func readConfigure(configure model.Configure) []byte {
 
 }
 
-func Load(c echo.Context) error {
-	plug, err := plugin.Open("./plugin/transform.so")
-	if err != nil {
-		logrus.Warn("Unable to load plugin module")
+func errorWriter(c echo.Context, configure model.Configure, err error, status int) error {
+	responseMap := make(map[string]interface{})
+	responseMap["message"] = err.Error()
+	switch configure.Response.Transform {
+	case "ToXml":
 		logrus.Warn(err.Error())
-		c.JSON(http.StatusInternalServerError, err)
-		os.Exit(1)
+		xmlByte, _ := x2j.MapToXml(responseMap)
+		return c.XMLBlob(status, xmlByte)
 
-	}
-	_, err = plug.Lookup("ToJson")
-	if err != nil {
-		logrus.Warn("Unable to Lookup plugin module")
+	default:
 		logrus.Warn(err.Error())
-		c.JSON(http.StatusInternalServerError, err)
-		os.Exit(1)
+		return c.JSON(status, responseMap)
 	}
-	return c.JSON(http.StatusOK, "load succeess")
 }
 
-//* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
+//* Function that transform request to mpa[string] interface{}, Read configure J SON and return value
 func switcher(c echo.Context) error {
 	//*Read file Configure
 	var configure model.Configure
-	configByte := readConfigure(configure)
+	configByte := readConfigure()
+
+	//* assign configure byte to configure
 	_ = json.Unmarshal(configByte, &configure)
 
 	//*this variable accept request from user
-	var requestFromUser map[string]interface{}
+	requestFromUser := model.Fields{
+		Header: make(map[string]interface{}),
+		Body:   make(map[string]interface{}),
+		Query:  make(map[string]interface{}),
+	}
 
-	//*check the content type
+	//*check the content type user request
 	contentType := c.Request().Header["Content-Type"][0]
-	logrus.Info(contentType)
 
 	switch contentType {
 	case "application/json":
-		reqByte, _ := ioutil.ReadAll(c.Request().Body)
-		requestFromUser, _ = service.FromJson(reqByte)
+
+		//*transform JSON request user to map request from user
+		reqByte, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			logrus.Warn("error read request byte Json")
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
+		}
+		requestFromUser.Body, err = service.FromJson(reqByte)
+
+		if err != nil {
+			logrus.Warn("error service from Json")
+
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
+		}
 
 	case "application/x-www-form-urlencoded":
-		requestFromUser = service.FromFormUrl(c)
+		//*transform x www form url encoded request user to map request from user
+		requestFromUser.Body = service.FromFormUrl(c)
 	case "application/xml":
+		//*transform xml request user to map request from user
 		reqByte, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			logrus.Warn("error read request byte xml")
-			logrus.Warn(err.Error())
-			os.Exit(1)
+
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		}
-		requestFromUser, err = service.FromXmL(reqByte)
+		requestFromUser.Body, err = service.FromXmL(reqByte)
 		if err != nil {
 			logrus.Warn("error service from xml")
-			os.Exit(1)
+
+			return errorWriter(c, configure, err, http.StatusInternalServerError)
 		} else {
 			logrus.Warn("service from xml success, request from user is")
 			logrus.Warn(requestFromUser)
 		}
 
 	default:
-		logrus.Info("Content type not supported")
+		logrus.Warn("Content type not supported")
 		return c.JSON(http.StatusOK, "Type not supported")
 	}
 
-	//*do map modification for request
-	service.DoCommandConfigure(configure.Request, requestFromUser)
+	//*get header value
+	for key, val := range c.Request().Header {
 
-	//*send
+		requestFromUser.Header[key] = val
+	}
+
+	//*get query value
+
+	for key, val := range c.QueryParams() {
+
+		requestFromUser.Query[key] = val
+	}
+
+	//*do map modification for request
+	service.DoCommandConfigureBody(configure.Request, requestFromUser)
+
+	//*send to destination url
 	response, err := service.Send(configure, requestFromUser)
 
 	if err != nil {
+		//* return internal server error if there are any errors
 		return c.JSON(http.StatusInternalServerError, err.Error())
 	} else {
+		//* if there are no response from destination url, return a message
 		if response == nil {
 			defaultResponse := make(map[string]string)
 			defaultResponse["message"] = "No response returned from destination url server"
@@ -138,6 +168,7 @@ func switcher(c echo.Context) error {
 		}
 	}
 
+	//*return response
 	switch configure.Response.Transform {
 	case "ToJson":
 		return c.JSONBlob(http.StatusOK, response)

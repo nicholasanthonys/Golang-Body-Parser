@@ -17,7 +17,7 @@ func FromFormUrl(c echo.Context) map[string]interface{} {
 		logrus.Info("key is ", key, " value is ", value, "length is ", len(value))
 
 		if len(value) > 1 {
-			logrus.Warn("KEY ", key, " LENGTH IS ", len(value))
+
 			myMap[key] = value
 		} else {
 			myMap[key] = c.FormValue(key)

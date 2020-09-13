@@ -9,12 +9,19 @@ type Configure struct {
 
 type Command struct {
 	Transform string       `json:"transform"`
-	Adds      StructAdd    `json:"adds"`
-	Deletes   []string     `json:"deletes"`
-	Modifies  StructModify `json:"modifies"`
+	Adds      Fields       `json:"adds"`
+	Deletes   DeleteFields `json:"deletes"`
+	Modifies  Fields       `json:"modifies"`
 }
 
-type StructAdd map[string]interface {
+type Fields struct {
+	Header map[string]interface{} `json:"header"`
+	Body   map[string]interface{} `json:"body"`
+	Query  map[string]interface{} `json:"query"`
 }
 
-type StructModify map[string]interface{}
+type DeleteFields struct {
+	Header []string `json:"header"`
+	Body   []string `json:"body"`
+	Query  []string `json:"query"`
+}
