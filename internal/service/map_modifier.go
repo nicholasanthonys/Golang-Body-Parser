@@ -275,7 +275,7 @@ func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields
 }
 
 //* if c request method
-func DoCommand(method string, command model.Command, requestFromUser model.Fields) {
+func DoCommand(command model.Command, requestFromUser model.Fields) {
 
 	DoCommandConfigureHeader(command, requestFromUser)
 	DoCommandConfigureQuery(command, requestFromUser)

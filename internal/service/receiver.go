@@ -74,10 +74,8 @@ func Receiver(configure model.Configure, res *http.Response, method string) ([]b
 			logrus.Warn("configure repsonse adds")
 			logrus.Warn(configure.Response.Adds)
 
-			_, find := Find(configure.Methods, method)
-			if find {
-				DoCommand("POST", configure.Response, resMap)
-			}
+			//* response always do Command
+			DoCommand(configure.Response, resMap)
 
 			logrus.Warn("resmap after modify is")
 			logrus.Warn(resMap)

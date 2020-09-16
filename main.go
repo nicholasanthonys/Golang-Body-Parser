@@ -157,13 +157,13 @@ func switcher(c echo.Context) error {
 	for key, val := range c.QueryParams() {
 		requestFromUser.Query[key] = val
 	}
-	_, find := service.Find(configure.Methods, c.Request().Method)
+	_, find := service.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
-		service.DoCommand(c.Request().Method, configure.Request, requestFromUser)
+		service.DoCommand(configure.Request, requestFromUser)
 	}
 
 	//*send to destination url
-	response, err := service.Send(configure, requestFromUser, c.Request().Method)
+	response, err := service.Send(configure, requestFromUser, configure.Request.MethodUsed)
 
 	if err != nil {
 		//* return internal server error if there are any errors

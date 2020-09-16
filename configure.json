@@ -1,7 +1,11 @@
 {
-  "destinationUrl": "http://localhost:3001",
-  "method": ["PUT"],
+  "methods": [
+    "PUT",
+    "POST"
+  ],
   "request": {
+    "destinationUrl": "http://localhost:3001",
+    "methodUsed": "POST",
     "transform": "ToXml",
     "adds": {
       "header": {
@@ -28,11 +32,9 @@
     },
     "modifies": {
       "header": {
-        "Tesheader" : "$header[Content-Type][0]"
+        "Tesheader": "$header[Content-Type][0]"
       },
       "body": {
-
-
       },
       "query": {
       }

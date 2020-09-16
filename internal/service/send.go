@@ -26,7 +26,7 @@ func Send(configure model.Configure, requestFromUser model.Fields, method string
 	//*get method
 
 	//*get url
-	url := configure.DestinationUrl
+	url := configure.Request.DestinationUrl
 	//*declare request
 	var req *http.Request
 
