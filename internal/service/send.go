@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, error) {
+func Send(configure model.Configure, requestFromUser model.Fields, method string) ([]byte, error) {
 
 	//*get transform command
 	transformRequest := configure.Request.Transform
@@ -24,13 +24,14 @@ func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, erro
 	//*kalau body nil ? masih harus di handle
 
 	//*get method
-	method := configure.Method
+
 	//*get url
 	url := configure.DestinationUrl
 	//*declare request
 	var req *http.Request
 
 	//*constructing request
+	logrus.Info("method is ", method)
 	req, _ = http.NewRequest(method, url, body)
 
 	//*set Header
@@ -45,10 +46,10 @@ func Send(configure model.Configure, requestFromUser model.Fields) ([]byte, erro
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
 
-	return doRequest(req, configure)
+	return doRequest(req, configure, method)
 }
 
-func doRequest(req *http.Request, configure model.Configure) ([]byte, error) {
+func doRequest(req *http.Request, configure model.Configure, method string) ([]byte, error) {
 
 	//* do request
 	client := http.Client{}
@@ -61,10 +62,8 @@ func doRequest(req *http.Request, configure model.Configure) ([]byte, error) {
 		return nil, err
 	}
 
-
-
 	//*Modifty responseByte in Receiver and get  byte from response that has been modified
-	receiverByte, err := Receiver( configure, res )
+	receiverByte, err := Receiver(configure, res, method)
 
 	if err != nil {
 		return nil, err

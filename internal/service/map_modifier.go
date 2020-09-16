@@ -85,7 +85,7 @@ func checkValue(value interface{}, requestFromUser model.Fields) interface{} {
 	if reflect.String == vt {
 		//*validate if value has $ or not
 		listTraverseVal, destination := validateValue(fmt.Sprintf("%v", value))
-
+		logrus.Info("list traveres value is ", listTraverseVal)
 		if listTraverseVal != nil {
 			if destination == "body" {
 				realValue = getValue(listTraverseVal, requestFromUser.Body, 0)
@@ -99,6 +99,7 @@ func checkValue(value interface{}, requestFromUser model.Fields) interface{} {
 		}
 
 	} else {
+		logrus.Info("return real value")
 		realValue = value
 	}
 	return realValue
@@ -128,12 +129,15 @@ func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields)
 	}
 }
 
-func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields, ) {
+func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields) {
 	//*Add to map header
 	for key, value := range command.Adds.Header {
 		realValue := checkValue(value, requestFromUser)
 		listTraverseKey := strings.Split(key, ".")
-
+		logrus.Info("list traversal is ", listTraverseKey)
+		logrus.Info("key is ", key)
+		logrus.Info("value is ", value)
+		logrus.Info("real value add header is ", realValue)
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Header, 0)
 
 	}
@@ -146,9 +150,11 @@ func DoCommandConfigureHeader(command model.Command, requestFromUser model.Field
 
 	//* Modify
 	for key, value := range command.Modifies.Header {
-		existValue := fmt.Sprintf("%s", requestFromUser.Header[key])
+
+		existValue := fmt.Sprintf("%s", requestFromUser.Header[strings.Title(key)])
 		if len(existValue) > 0 {
-			requestFromUser.Header[key] = value
+			realValue := checkValue(value, requestFromUser)
+			requestFromUser.Header[key] = realValue
 
 		}
 	}
@@ -266,4 +272,12 @@ func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields
 			requestFromUser.Query[key] = value
 		}
 	}
+}
+
+//* if c request method
+func DoCommand(method string, command model.Command, requestFromUser model.Fields) {
+
+	DoCommandConfigureHeader(command, requestFromUser)
+	DoCommandConfigureQuery(command, requestFromUser)
+	DoCommandConfigureBody(command, requestFromUser)
 }

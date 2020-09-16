@@ -27,6 +27,13 @@ func init() {
 
 var myMap map[string]interface{}
 
+func middle(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(e echo.Context) error {
+		logrus.Info("method is ", e.Request().Method)
+		return e.JSON(200, e.Request().Method)
+		return next(e)
+	}
+}
 func main() {
 
 	// Echo instance
@@ -35,9 +42,12 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	//e.Use(middle)
 
 	// Routes
 	e.POST("/", switcher)
+	e.PUT("/", switcher)
+	e.GET("/", switcher)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8888"))
@@ -147,16 +157,13 @@ func switcher(c echo.Context) error {
 	for key, val := range c.QueryParams() {
 		requestFromUser.Query[key] = val
 	}
-
-	//*Add delete, modify body
-	service.DoCommandConfigureBody(configure.Request, requestFromUser)
-	//* Add, Delete, Modify Header
-	service.DoCommandConfigureHeader(configure.Request, requestFromUser)
-	//*add, delete, modify query
-	service.DoCommandConfigureQuery(configure.Request, requestFromUser)
+	_, find := service.Find(configure.Methods, c.Request().Method)
+	if find {
+		service.DoCommand(c.Request().Method, configure.Request, requestFromUser)
+	}
 
 	//*send to destination url
-	response, err := service.Send(configure, requestFromUser)
+	response, err := service.Send(configure, requestFromUser, c.Request().Method)
 
 	if err != nil {
 		//* return internal server error if there are any errors

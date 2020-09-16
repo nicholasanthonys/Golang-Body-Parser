@@ -1,17 +1,18 @@
 {
   "destinationUrl": "http://localhost:3001",
-  "method": "POST",
+  "method": ["PUT"],
   "request": {
     "transform": "ToXml",
     "adds": {
       "header": {
         "tes": "ololol",
-        "tes2": "$body[user][name][0]"
+        "headeraddress": "$body[user][name][0]"
       },
       "body": {
         "user.address": "$header[Content-Type][0]",
         "user.age": "tes1",
-        "user.query": "$query[tes][0]"
+        "user.query": "$query[tes][0]",
+        "user.lol": "$body[user][name]"
       },
       "query": {
         "tesquery": "$header[Content-Type][0]"
@@ -27,10 +28,11 @@
     },
     "modifies": {
       "header": {
+        "Tesheader" : "$header[Content-Type][0]"
       },
       "body": {
-        "user.lol": "user lol",
-        "user.name": "$body[user][cars][0]"
+
+
       },
       "query": {
       }
@@ -40,7 +42,7 @@
     "transform": "ToJson",
     "adds": {
       "header": {
-        "tesheaderresponse": "tesheaderresponseffuuu"
+        "tesheaderresponse": "$header[Content-Type]"
       },
       "body": {
         "user.name": "$header[Content-Type][0]",

@@ -1,10 +1,10 @@
 package model
 
 type Configure struct {
-	DestinationUrl string  `json:"destinationurl"`
-	Method         string  `json:"method"`
-	Request        Command `json:"request"`
-	Response       Command `json:"response"`
+	DestinationUrl string   `json:"destinationurl"`
+	Methods        []string `json:"method"`
+	Request        Command  `json:"request"`
+	Response       Command  `json:"response"`
 }
 
 type Command struct {

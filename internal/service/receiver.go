@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func Receiver(configure model.Configure, res *http.Response) ([]byte, error) {
+func Receiver(configure model.Configure, res *http.Response, method string) ([]byte, error) {
 	//*read response body as byte
 	responseByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -74,13 +74,10 @@ func Receiver(configure model.Configure, res *http.Response) ([]byte, error) {
 			logrus.Warn("configure repsonse adds")
 			logrus.Warn(configure.Response.Adds)
 
-
-			//*modify map for response header (add,delete,modify)
-			DoCommandConfigureHeader(configure.Response, resMap)
-
-			//*modify map for response body(add,delete,modify)
-			DoCommandConfigureBody(configure.Response, resMap)
-
+			_, find := Find(configure.Methods, method)
+			if find {
+				DoCommand("POST", configure.Response, resMap)
+			}
 
 			logrus.Warn("resmap after modify is")
 			logrus.Warn(resMap)
