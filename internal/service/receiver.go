@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func Receiver(configure model.Configure, res *http.Response, method string) ([]byte, error) {
+func Receiver(configure model.Configure, res *http.Response, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
 	//*read response body as byte
 	responseByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -42,7 +42,7 @@ func Receiver(configure model.Configure, res *http.Response, method string) ([]b
 	case "ToJson", "ToXml":
 
 		//* load function transform from plugin based on transform command
-		transformFunction := LoadFunctionFromModule(transform)
+		//transformFunction := LoadFunctionFromModule(transform)
 
 		//* create empty map
 
@@ -75,26 +75,27 @@ func Receiver(configure model.Configure, res *http.Response, method string) ([]b
 			logrus.Warn(configure.Response.Adds)
 
 			//* response always do Command
-			DoCommand(configure.Response, resMap)
+			DoCommand(configure.Response, resMap, arrRes)
 
 			logrus.Warn("resmap after modify is")
 			logrus.Warn(resMap)
+			return resMap.Body, nil
 
-			//*transform resMap BODy that has been modified to byte json or byte xml (depend on the transform command)
-			resultByte, err := transformFunction(resMap.Body)
-
-			if err != nil {
-				logrus.Warn("error after transform function in receiver ")
-				logrus.Fatal(err.Error())
-				return nil, err
-			}
-
-			//return resultByte from modified resMap
-			return resultByte, nil
+			////*transform resMap BODy that has been modified to byte json or byte xml (depend on the transform command)
+			//resultByte, err := transformFunction(resMap.Body)
+			//
+			//if err != nil {
+			//	logrus.Warn("error after transform function in receiver ")
+			//	logrus.Fatal(err.Error())
+			//	return nil, err
+			//}
+			//
+			////return resultByte from modified resMap
+			//return resultByte, nil
 		}
 		return nil, nil
 	default:
-		return []byte("transform response " + transform + " not supported"), nil
+		return nil, nil
 	}
 
 }

@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func Send(configure model.Configure, requestFromUser model.Fields, method string) ([]byte, error) {
+func Send(configure model.Configure, requestFromUser model.Fields, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
 
 	//*get transform command
 	transformRequest := configure.Request.Transform
@@ -46,10 +46,10 @@ func Send(configure model.Configure, requestFromUser model.Fields, method string
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
 
-	return doRequest(req, configure, method)
+	return doRequest(req, configure, method, arrRes)
 }
 
-func doRequest(req *http.Request, configure model.Configure, method string) ([]byte, error) {
+func doRequest(req *http.Request, configure model.Configure, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
 
 	//* do request
 	client := http.Client{}
@@ -63,17 +63,17 @@ func doRequest(req *http.Request, configure model.Configure, method string) ([]b
 	}
 
 	//*Modifty responseByte in Receiver and get  byte from response that has been modified
-	receiverByte, err := Receiver(configure, res, method)
+	receiverMap, err := Receiver(configure, res, method, arrRes)
 
 	if err != nil {
 		return nil, err
 	} else {
 		logrus.Warn("result byte after receive rmodify is")
-		logrus.Warn(string(receiverByte))
+		logrus.Warn((receiverMap))
 	}
 
 	//* return the receiver byte that has been modified
-	return receiverByte, nil
+	return receiverMap, nil
 }
 
 func setContentTypeHeader(transformRequest string, header *http.Header) {

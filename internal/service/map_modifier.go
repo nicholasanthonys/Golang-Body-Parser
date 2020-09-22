@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
-
 	"reflect"
 	"strconv"
 	"strings"
@@ -78,7 +77,7 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 	return nil
 }
 
-func checkValue(value interface{}, requestFromUser model.Fields) interface{} {
+func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[string]interface{}) interface{} {
 	var realValue interface{}
 	vt := reflect.TypeOf(value).Kind()
 
@@ -93,6 +92,19 @@ func checkValue(value interface{}, requestFromUser model.Fields) interface{} {
 				realValue = getValue(listTraverseVal, requestFromUser.Header, 0)
 			} else if destination == "query" {
 				realValue = getValue(listTraverseVal, requestFromUser.Query, 0)
+			} else if destination == "response" {
+				logrus.Info("list traversal response is ", listTraverseVal)
+				tempSplit := strings.Split(listTraverseVal[0], "")
+				logrus.Info("index is ")
+				index, _ := strconv.Atoi(tempSplit[0])
+				logrus.Info("arr ressis ")
+				logrus.Info(arrRes[index])
+				logrus.Info("eliminate index list traversal")
+				listTraverseVal = listTraverseVal[1:]
+				logrus.Info("list traversal become")
+				logrus.Info(listTraverseVal)
+				logrus.Info("traverse response")
+				realValue = getValue(listTraverseVal, arrRes[index], 0)
 			}
 		} else {
 			realValue = value
@@ -105,11 +117,11 @@ func checkValue(value interface{}, requestFromUser model.Fields) interface{} {
 	return realValue
 }
 
-func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields) {
+func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 
 	//*Do add
 	for key, value := range command.Adds.Body {
-		realValue := checkValue(value, requestFromUser)
+		realValue := checkValue(value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
 
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Body, 0)
@@ -123,16 +135,16 @@ func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields)
 
 	//*Do Modify
 	for key, value := range command.Modifies.Body {
-		realValue := checkValue(value, requestFromUser)
+		realValue := checkValue(value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
 		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Body, 0)
 	}
 }
 
-func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields) {
+func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 	//*Add to map header
 	for key, value := range command.Adds.Header {
-		realValue := checkValue(value, requestFromUser)
+		realValue := checkValue(value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
 		logrus.Info("list traversal is ", listTraverseKey)
 		logrus.Info("key is ", key)
@@ -153,7 +165,7 @@ func DoCommandConfigureHeader(command model.Command, requestFromUser model.Field
 
 		existValue := fmt.Sprintf("%s", requestFromUser.Header[strings.Title(key)])
 		if len(existValue) > 0 {
-			realValue := checkValue(value, requestFromUser)
+			realValue := checkValue(value, requestFromUser, arrRes)
 			requestFromUser.Header[key] = realValue
 
 		}
@@ -183,6 +195,8 @@ func getValue(listTraverse []string, in interface{}, index int) interface{} {
 
 			case reflect.Map:
 
+				logrus.Info(in, " is map")
+				logrus.Info("returned in map is ", in.(map[string]interface{})[listTraverse[index]])
 				//logrus.Info(in, " is map ", rt.Elem())
 				return in.(map[string]interface{})[listTraverse[index]]
 			default:
@@ -193,9 +207,14 @@ func getValue(listTraverse []string, in interface{}, index int) interface{} {
 		}
 
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+			logrus.Info(in, " is map string interface")
+			logrus.Info("list traverse index is ", listTraverse[index])
+			logrus.Info("map nya ")
+			logrus.Info(in.(map[string]interface{})[listTraverse[index]])
 			//logrus.Warn("type is map string interface")
 			//* allocate new map if map[key] null
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
+				logrus.Info("returned in is ", in)
 				return in
 			}
 			return getValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
@@ -224,6 +243,9 @@ func validateValue(value string) ([]string, string) {
 		destination = "query"
 		value = string(value[6:])
 
+	} else if strings.HasPrefix(value, "$response") {
+		destination = "response"
+		value = string(value[9:])
 	} else {
 		return nil, value
 	}
@@ -250,10 +272,10 @@ func validateValue(value string) ([]string, string) {
 
 }
 
-func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields) {
+func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 	//* Add
 	for key, value := range requestFromUser.Query {
-		realValue := checkValue(value, requestFromUser)
+		realValue := checkValue(value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
 
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Query, 0)
@@ -275,9 +297,9 @@ func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields
 }
 
 //* if c request method
-func DoCommand(command model.Command, requestFromUser model.Fields) {
+func DoCommand(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 
-	DoCommandConfigureHeader(command, requestFromUser)
-	DoCommandConfigureQuery(command, requestFromUser)
-	DoCommandConfigureBody(command, requestFromUser)
+	DoCommandConfigureHeader(command, requestFromUser, arrRes)
+	DoCommandConfigureQuery(command, requestFromUser, arrRes)
+	DoCommandConfigureBody(command, requestFromUser, arrRes)
 }
