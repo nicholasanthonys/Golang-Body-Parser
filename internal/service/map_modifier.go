@@ -2,13 +2,15 @@ package service
 
 import (
 	"fmt"
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/sirupsen/logrus"
 )
 
+// AddRecursive is a function that do the add key-value based on the listtraverse
 func AddRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
 
 	if index == len(listTraverse)-1 {
@@ -34,6 +36,7 @@ func AddRecursive(listTraverse []string, value string, in interface{}, index int
 
 }
 
+// ModifyRecursive is a function that do modify key-value based on listTraverse
 func ModifyRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
 
@@ -56,6 +59,7 @@ func ModifyRecursive(listTraverse []string, value string, in interface{}, index 
 
 }
 
+// DeleteRecursive is a function that do the deletion of key based on list traverse
 func DeleteRecursive(listTraverse []string, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
 
@@ -77,6 +81,7 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 	return nil
 }
 
+// checkValue is a function that check the value type value from configure and retrieve the value from header,body, or query
 func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[string]interface{}) interface{} {
 	var realValue interface{}
 	vt := reflect.TypeOf(value).Kind()
@@ -117,6 +122,7 @@ func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[st
 	return realValue
 }
 
+//DoCommandConfigureBody is a wrapper function to do Add, Deletion and Modify for body
 func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 
 	//*Do add
@@ -141,6 +147,7 @@ func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields,
 	}
 }
 
+// DoCommandConfigureHeader is a wrapper function that do add, modify, delete for header
 func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 	//*Add to map header
 	for key, value := range command.Adds.Header {
@@ -272,6 +279,7 @@ func validateValue(value string) ([]string, string) {
 
 }
 
+// DoCommandConfigureQuery is a wrapper function that do add, modify, delete for query
 func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 	//* Add
 	for key, value := range requestFromUser.Query {

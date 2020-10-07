@@ -56,3 +56,18 @@ func TransformToFormUrl(myMap map[string]interface{}) url.Values {
 	myForm := MapToFormUrl(myMap)
 	return myForm
 }
+
+func TransformMapToByte(configure model.Configure, resMap map[string]interface{}) ([]byte, error) {
+	//*return response
+
+	var err error
+	transformFunction := LoadFunctionFromModule(configure.Response.Transform)
+	transformResultByte, err := transformFunction(resMap)
+
+	if err != nil {
+		logrus.Warn("error after transform function in receiver ")
+		logrus.Fatal(err.Error())
+		return nil, err
+	}
+	return transformResultByte, err
+}

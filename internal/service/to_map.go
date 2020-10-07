@@ -2,14 +2,15 @@ package service
 
 import (
 	"fmt"
+	"net/url"
+
 	"github.com/clbanning/mxj"
 	"github.com/clbanning/mxj/j2x"
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
-	"net/url"
 )
 
-//* x wwww form url encoded loop field
+// FromFormUrl is a function that transform formUrl into map string interface
 func FromFormUrl(c echo.Context) map[string]interface{} {
 	myMap := make(map[string]interface{})
 	c.Request().ParseForm()

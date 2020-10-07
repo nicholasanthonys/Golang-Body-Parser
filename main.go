@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 var log = logrus.New()
@@ -125,7 +124,7 @@ func switcher(c echo.Context) error {
 		//*append to arr map strign inter
 		arrRes = append(arrRes, resultMap)
 
-		resByte, _ := transforMapToByte(configure, resultMap)
+		resByte, _ := service.TransformMapToByte(configure, resultMap)
 
 		arrResByte = append(arrResByte, resByte)
 	}
@@ -136,7 +135,7 @@ func switcher(c echo.Context) error {
 	//d["lol"] = b2
 	////db, _ := j2x.MapToJson(d)
 	//c.JSON(200, d)
-	return responseWriter(configures[0], arrRes, arrResByte, c)
+	return service.ResponseWriter(configures[0], arrRes, arrResByte, c)
 }
 
 func process(configure model.Configure, c echo.Context, arrRes []map[string]interface{}) (int, map[string]interface{}) {
@@ -228,61 +227,4 @@ func process(configure model.Configure, c echo.Context, arrRes []map[string]inte
 
 	return http.StatusOK, response
 
-}
-
-func transforMapToByte(configure model.Configure, resMap map[string]interface{}) ([]byte, error) {
-	//*return response
-
-	var err error
-	transformFunction := service.LoadFunctionFromModule(configure.Response.Transform)
-	transformResultByte, err := transformFunction(resMap)
-
-	if err != nil {
-		logrus.Warn("error after transform function in receiver ")
-		logrus.Fatal(err.Error())
-		return nil, err
-	}
-	return transformResultByte, err
-
-	//switch configure.Response.Transform {
-	//case "ToJson", "ToXml":
-	//
-	//	return c.JSONBlob(200, resultByte)
-	//	//if err != nil {
-	//	//	logrus.Warn("error after transform function in receiver ")
-	//	//	logrus.Fatal(err.Error())
-	//	//	return nil, err
-	//	//}
-	//
-	//default:
-	//
-	//	_ = json.Unmarshal([]byte("Type Not Supported"), &result)
-	//
-	//}
-	//logrus.Warn("returning result")
-	//if err != nil {
-	//	result = err.Error()
-	//	logrus.Warn("error response writer is ")
-	//	logrus.Warn(err.Error())
-	//}
-	//return nil
-
-}
-
-func responseWriter(configure model.Configure, resultMap []map[string]interface{}, arrByte [][]byte, c echo.Context) error {
-	switch configure.Response.Transform {
-	case "ToJson":
-		return c.JSON(200, resultMap)
-	case "ToXml":
-		newResMap := make(map[string]interface{})
-		for i, res := range resultMap {
-			byteRes, _ := x2j.MapToXml(res)
-			index := strconv.Itoa(i)
-			newResMap["response"+index] = byteRes
-		}
-		resByte, _ := x2j.MapToXml(newResMap)
-		return c.XMLBlob(200, resByte)
-	default:
-		return c.JSON(404, "Type Not Supported")
-	}
 }
