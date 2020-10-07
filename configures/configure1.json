@@ -33,7 +33,7 @@
     }
   },
   "response": {
-    "transform": "ToXml",
+    "transform": "ToJson",
     "adds": {
       "header": {
       },

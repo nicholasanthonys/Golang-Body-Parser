@@ -38,6 +38,7 @@
       "header": {
       },
       "body": {
+        "user.tes" : "$response[0][user][name]"
       },
       "query": {
       }

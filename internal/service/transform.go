@@ -2,6 +2,8 @@ package service
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/clbanning/mxj/x2j"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -70,4 +72,27 @@ func TransformMapToByte(configure model.Configure, resMap map[string]interface{}
 		return nil, err
 	}
 	return transformResultByte, err
+}
+
+func TransformMapToArrByte(resMap map[string]interface{}) [][]byte {
+	myslice := make([]interface{}, 0)
+	for _, val := range resMap {
+		myslice = append(myslice, val)
+	}
+
+	output := make([][]byte, 2)
+	for i, v := range myslice {
+		output[i] = PassInterface(v)
+	}
+
+	return output
+}
+
+func PassInterface(v interface{}) []byte {
+	b, ok := x2j.MapToXml(v.(map[string]interface{}))
+
+	fmt.Println(ok)
+	fmt.Println(b)
+
+	return b
 }

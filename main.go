@@ -129,13 +129,8 @@ func switcher(c echo.Context) error {
 		arrResByte = append(arrResByte, resByte)
 	}
 
-	//b2, _ := j2x.MapToJson(arrRes[0])
-	//d := make(map[string]interface{})
-	//d["tes"] = b2
-	//d["lol"] = b2
-	////db, _ := j2x.MapToJson(d)
-	//c.JSON(200, d)
-	return service.ResponseWriter(configures[0], arrRes, arrResByte, c)
+	//*response terakhir
+	return service.ResponseWriter(configures[len(configures)-1], arrRes[len(arrRes)-1], c)
 }
 
 func process(configure model.Configure, c echo.Context, arrRes []map[string]interface{}) (int, map[string]interface{}) {
