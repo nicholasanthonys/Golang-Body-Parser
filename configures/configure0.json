@@ -10,7 +10,7 @@
       "header": {
       },
       "body": {
-        "user.address": "$response[0][user][name]"
+        "user.address": "from configure0.json"
       },
       "query": {
       }
@@ -33,12 +33,11 @@
     }
   },
   "response": {
-    "transform": "ToXml",
+    "transform": "ToJson",
     "adds": {
       "header": {
       },
       "body": {
-        "user.tes" : "$response[0][user][name]"
       },
       "query": {
       }

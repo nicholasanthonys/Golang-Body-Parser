@@ -268,7 +268,7 @@ func validateValue(value string) ([]string, string) {
 				listTraverse = append(listTraverse, temp)
 				temp = ""
 			} else {
-				//*
+				//* add character to temp
 				temp += val
 			}
 		}

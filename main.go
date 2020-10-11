@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
@@ -11,7 +10,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"os"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 var log = logrus.New()
@@ -44,65 +45,36 @@ func main() {
 	e.Use(middleware.Recover())
 	//e.Use(middle)
 
-	// Routes
-	e.POST("/", switcher)
-	e.PUT("/", switcher)
-	e.GET("/", switcher)
+	// Routes serial execution
+	e.POST("/serial", doSerial)
+	e.PUT("/serial", doSerial)
+	e.GET("/serial", doSerial)
+
+	// Routes parallel execution
+	e.POST("/parallel", doParallel)
+	e.PUT("/parallel", doParallel)
+	e.GET("/parallel", doParallel)
 
 	// Start server
 	e.Logger.Fatal(e.Start(":8888"))
 }
 
-func getListFolder(dirname string) ([]os.FileInfo, error) {
-	files, err := ioutil.ReadDir(dirname)
-	if err != nil {
-		return nil, err
-	}
+func worker(id int, wg *sync.WaitGroup, configure model.Configure, c echo.Context, arrRes []map[string]interface{}, mapRes map[string]interface{}, requestBody []byte) {
+	defer wg.Done()
+	fmt.Println("worker for id  ", id)
+	_, resultMap := process(configure, c, arrRes, requestBody)
+	//temp := make(map[string]interface{})
+	//temp["configure"+strconv.Itoa(id)] = resultMap
+	arrRes[id] = resultMap
+	mapRes["configure"+strconv.Itoa(id)] = resultMap
 
-	for _, file := range files {
-		fmt.Println(file.Name())
-	}
-	return files, nil
-
+	logrus.Info("worker ", id, " done")
 }
 
-func readConfigure(path string) []byte {
-	// Open our jsonFile
-	jsonFile, err := os.Open(path)
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// defer the closing of our jsonFile so that we can parse it later on
-	defer jsonFile.Close()
-
-	// read our opened xmlFile as a byte array.
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	return byteValue
-
-}
-
-func errorWriter(c echo.Context, configure model.Configure, err error, status int) error {
-	responseMap := make(map[string]interface{})
-	responseMap["message"] = err.Error()
-	switch configure.Response.Transform {
-	case "ToXml":
-		logrus.Warn(err.Error())
-		xmlByte, _ := x2j.MapToXml(responseMap)
-		return c.XMLBlob(status, xmlByte)
-
-	default:
-		logrus.Warn(err.Error())
-		return c.JSON(status, responseMap)
-	}
-}
-
-//* Function that transform request to mpa[string] interface{}, Read configure J SON and return value
-func switcher(c echo.Context) error {
-	var arrRes []map[string]interface{}
-
-	files, err := getListFolder("./configures")
+func doParallel(c echo.Context) error {
+	var wg sync.WaitGroup
+	requestBody, _ := ioutil.ReadAll(c.Request().Body)
+	files, err := service.GetListFolder("./configures")
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -111,29 +83,79 @@ func switcher(c echo.Context) error {
 
 	//*Read file Configure
 	var configures []model.Configure
-	var arrResByte [][]byte
-	for _, file := range files {
+
+	arrRes := make([]map[string]interface{}, 10)
+	mapRes := make(map[string]interface{})
+	for index, file := range files {
 		var configure model.Configure
-		configByte := readConfigure("./configures/" + file.Name())
-		//* assign configure byte to configure
-		_ = json.Unmarshal(configByte, &configure)
-		configures = append(configures, configure)
+		if strings.Contains(file.Name(), "configure") {
+			configByte := service.ReadConfigure("./configures/" + file.Name())
+			//* assign configure byte to configure
+			_ = json.Unmarshal(configByte, &configure)
+			configures = append(configures, configure)
 
-		_, resultMap := process(configure, c, arrRes)
+			wg.Add(1)
+			go worker(index, &wg, configure, c, arrRes, mapRes, requestBody)
 
-		//*append to arr map strign inter
-		arrRes = append(arrRes, resultMap)
+		}
 
-		resByte, _ := service.TransformMapToByte(configure, resultMap)
+	}
+	wg.Wait()
 
-		arrResByte = append(arrResByte, resByte)
+	var parallelConfig model.ParallelConfigure
+	parallelConfigByte := service.ReadConfigure("./configures/parallel.json")
+
+	_ = json.Unmarshal(parallelConfigByte, &parallelConfig)
+	index := parallelConfig.ConfigureIndex
+
+	//*use the latest configures and the latest response
+	return service.ResponseWriter(configures[index], arrRes[index], c)
+}
+
+//* Function that transform request to mpa[string] interface{}, Read configure J SON and return value
+func doSerial(c echo.Context) error {
+	files, err := service.GetListFolder("./configures")
+	if err != nil {
+		resMap := make(map[string]string)
+		resMap["message"] = "Problem In Reading File. " + err.Error()
+		return c.JSON(http.StatusInternalServerError, resMap)
 	}
 
-	//*response terakhir
+	reqByte, err := ioutil.ReadAll(c.Request().Body)
+	if err != nil {
+		resMap := make(map[string]string)
+		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
+		return c.JSON(http.StatusInternalServerError, resMap)
+	}
+
+	//*Read file Configure
+	var configures []model.Configure //* slice for configures file (JSON)
+
+	var arrRes []map[string]interface{} ///*slice that contains response in map string interface
+
+	for _, file := range files {
+		var configure model.Configure
+		if strings.Contains(file.Name(), "configure") {
+
+			configByte := service.ReadConfigure("./configures/" + file.Name())
+			//* assign configure byte to configure
+			_ = json.Unmarshal(configByte, &configure)
+			configures = append(configures, configure)
+
+			_, resultMap := process(configure, c, arrRes, reqByte)
+
+			//*append to arr map string inter
+			arrRes = append(arrRes, resultMap)
+
+		}
+
+	}
+
+	//*use the latest configures and the latest response
 	return service.ResponseWriter(configures[len(configures)-1], arrRes[len(arrRes)-1], c)
 }
 
-func process(configure model.Configure, c echo.Context, arrRes []map[string]interface{}) (int, map[string]interface{}) {
+func process(configure model.Configure, c echo.Context, arrRes []map[string]interface{}, reqByte []byte) (int, map[string]interface{}) {
 
 	//*this variable accept request from user
 	requestFromUser := model.Fields{
@@ -144,19 +166,12 @@ func process(configure model.Configure, c echo.Context, arrRes []map[string]inte
 	resMap := make(map[string]interface{})
 	//*check the content type user request
 	contentType := c.Request().Header["Content-Type"][0]
-
+	var err error
 	switch contentType {
 	case "application/json":
 
 		//*transform JSON request user to map request from user
-		reqByte, err := ioutil.ReadAll(c.Request().Body)
-		if err != nil {
-			logrus.Warn("error read request byte Json")
-			resMap["message"] = err.Error()
-			return http.StatusInternalServerError, resMap
-		}
 		requestFromUser.Body, err = service.FromJson(reqByte)
-
 		if err != nil {
 			logrus.Warn("error service from Json")
 			resMap["message"] = err.Error()
@@ -168,7 +183,6 @@ func process(configure model.Configure, c echo.Context, arrRes []map[string]inte
 		requestFromUser.Body = service.FromFormUrl(c)
 	case "application/xml":
 		//*transform xml request user to map request from user
-		reqByte, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			logrus.Warn("error read request byte xml")
 			resMap["message"] = err.Error()
@@ -200,8 +214,11 @@ func process(configure model.Configure, c echo.Context, arrRes []map[string]inte
 	for key, val := range c.QueryParams() {
 		requestFromUser.Query[key] = val
 	}
+
 	_, find := service.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
+		logrus.Info("do modification")
+		//* Do the Map Modification if method is find/available
 		service.DoCommand(configure.Request, requestFromUser, arrRes)
 	}
 
