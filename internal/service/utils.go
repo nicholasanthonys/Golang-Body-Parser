@@ -49,7 +49,7 @@ func ReadConfigure(path string) []byte {
 
 }
 
-func ResponseWriter(configure model.Configure, resultMap map[string]interface{}, c echo.Context) error {
+func ResponseWriter(configure model.Configure, resultMap interface{}, c echo.Context) error {
 	switch configure.Response.Transform {
 	case "ToJson":
 		return c.JSON(200, resultMap)
@@ -61,7 +61,7 @@ func ResponseWriter(configure model.Configure, resultMap map[string]interface{},
 		//	index := strconv.Itoa(i)
 		//	newResMap["response"] = byteRes
 		//}
-		resByte, _ := x2j.MapToXml(resultMap)
+		resByte, _ := x2j.MapToXml(resultMap.(map[string]interface{}))
 		return c.XMLBlob(200, resByte)
 	default:
 		return c.JSON(404, "Type Not Supported")

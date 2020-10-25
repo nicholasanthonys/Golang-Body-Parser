@@ -10,8 +10,7 @@
       "header": {
       },
       "body": {
-        "user.header": "$query[query][0]",
-        "user.tes" : "$body[user][cars][0]"
+        "user.configures" : "from configure 1.json"
       },
       "query": {
       }

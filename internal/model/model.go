@@ -27,7 +27,7 @@ type DeleteFields struct {
 	Query  []string `json:"query"`
 }
 
-type ParallelConfigure struct {
-	ConfigureIndex int     `json:"configureIndex"`
-	Response       Command `json:"response"`
+type ParallelResponse struct {
+	Configure string  `json:"configure"`
+	Response  Command `json:"response"`
 }

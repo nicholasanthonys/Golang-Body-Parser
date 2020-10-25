@@ -1,0 +1,22 @@
+{
+  "configure": "configure0.json",
+  "response": {
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    },
+    "modifies": {
+      "body": {
+      }
+    }
+  }
+}

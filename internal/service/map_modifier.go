@@ -89,7 +89,7 @@ func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[st
 	if reflect.String == vt {
 		//*validate if value has $ or not
 		listTraverseVal, destination := validateValue(fmt.Sprintf("%v", value))
-		logrus.Info("list traveres value is ", listTraverseVal)
+		//logrus.Info("list traveres value is ", listTraverseVal)
 		if listTraverseVal != nil {
 			if destination == "body" {
 				realValue = getValue(listTraverseVal, requestFromUser.Body, 0)

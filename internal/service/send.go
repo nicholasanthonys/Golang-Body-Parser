@@ -110,6 +110,6 @@ func setQuery(requestFromUser model.Fields, q *url.Values) {
 	//* Add
 	for key, value := range requestFromUser.Query {
 		q.Set(key, fmt.Sprintf("%v", value))
-		logrus.Info("q get is ", q.Get(key))
+		//logrus.Info("q get is ", q.Get(key))
 	}
 }

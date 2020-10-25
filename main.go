@@ -10,7 +10,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 )
@@ -59,15 +58,16 @@ func main() {
 	e.Logger.Fatal(e.Start(":8888"))
 }
 
-func worker(id int, wg *sync.WaitGroup, configure model.Configure, c echo.Context, arrRes []map[string]interface{}, mapRes map[string]interface{}, requestBody []byte) {
+func worker(id int, wg *sync.WaitGroup, configure model.Configure, c echo.Context, arrRes *[]map[string]interface{}, mapRes map[string]interface{}, requestBody []byte, fileName string) {
 	defer wg.Done()
 	fmt.Println("worker for id  ", id)
-	_, resultMap := process(configure, c, arrRes, requestBody)
-	//temp := make(map[string]interface{})
-	//temp["configure"+strconv.Itoa(id)] = resultMap
-	arrRes[id] = resultMap
-	mapRes["configure"+strconv.Itoa(id)] = resultMap
-
+	_, resultMap := process(configure, c, *arrRes, requestBody)
+	////temp := make(map[string]interface{})
+	////temp["configure"+strconv.Itoa(id)] = resultMap
+	//*arrRes = append(*arrRes,resultMap)
+	//logrus.Info("arr res after push is ", *arrRes)
+	mapRes[fileName] = resultMap
+	logrus.Info("map res is ", mapRes)
 	logrus.Info("worker ", id, " done")
 }
 
@@ -81,10 +81,9 @@ func doParallel(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, resMap)
 	}
 
-	//*Read file Configure
-	var configures []model.Configure
+	var configures = make(map[string]model.Configure)
 
-	arrRes := make([]map[string]interface{}, 10)
+	arrRes := make([]map[string]interface{}, 0)
 	mapRes := make(map[string]interface{})
 
 	for index, file := range files {
@@ -93,24 +92,23 @@ func doParallel(c echo.Context) error {
 			configByte := service.ReadConfigure("./configures/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
-			configures = append(configures, configure)
+			configures[file.Name()] = configure
 
 			wg.Add(1)
-			go worker(index, &wg, configure, c, arrRes, mapRes, requestBody)
+			go worker(index, &wg, configure, c, &arrRes, mapRes, requestBody, file.Name())
 
 		}
 
 	}
 	wg.Wait()
 
-	var parallelConfig model.ParallelConfigure
-	parallelConfigByte := service.ReadConfigure("./configures/parallel.json")
+	var parallelResponse model.ParallelResponse
+	parallelConfigByte := service.ReadConfigure("./configures/response.json")
 
-	_ = json.Unmarshal(parallelConfigByte, &parallelConfig)
-	index := parallelConfig.ConfigureIndex
+	_ = json.Unmarshal(parallelConfigByte, &parallelResponse)
 
 	//*use the latest configures and the latest response
-	return service.ResponseWriter(configures[index], arrRes[index], c)
+	return service.ResponseWriter(configures[parallelResponse.Configure], mapRes[parallelResponse.Configure], c)
 }
 
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
