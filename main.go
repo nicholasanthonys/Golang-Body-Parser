@@ -86,6 +86,7 @@ func doParallel(c echo.Context) error {
 
 	arrRes := make([]map[string]interface{}, 10)
 	mapRes := make(map[string]interface{})
+
 	for index, file := range files {
 		var configure model.Configure
 		if strings.Contains(file.Name(), "configure") {
@@ -112,7 +113,7 @@ func doParallel(c echo.Context) error {
 	return service.ResponseWriter(configures[index], arrRes[index], c)
 }
 
-//* Function that transform request to mpa[string] interface{}, Read configure J SON and return value
+//* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
 func doSerial(c echo.Context) error {
 	files, err := service.GetListFolder("./configures")
 	if err != nil {

@@ -97,18 +97,22 @@ func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[st
 				realValue = getValue(listTraverseVal, requestFromUser.Header, 0)
 			} else if destination == "query" {
 				realValue = getValue(listTraverseVal, requestFromUser.Query, 0)
+
+				index, _ := strconv.Atoi(listTraverseVal[len(listTraverseVal)-1])
+
+				stringWithoutBracket := stringToSplice(realValue.(string), "")
+
+				mysplice := strings.Split(stringWithoutBracket[0], " ")
+				realValue = mysplice[index]
+
 			} else if destination == "response" {
-				logrus.Info("list traversal response is ", listTraverseVal)
+
 				tempSplit := strings.Split(listTraverseVal[0], "")
-				logrus.Info("index is ")
+
 				index, _ := strconv.Atoi(tempSplit[0])
-				logrus.Info("arr ressis ")
-				logrus.Info(arrRes[index])
-				logrus.Info("eliminate index list traversal")
+
 				listTraverseVal = listTraverseVal[1:]
-				logrus.Info("list traversal become")
-				logrus.Info(listTraverseVal)
-				logrus.Info("traverse response")
+
 				realValue = getValue(listTraverseVal, arrRes[index], 0)
 			}
 		} else {
@@ -116,7 +120,7 @@ func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[st
 		}
 
 	} else {
-		logrus.Info("return real value")
+
 		realValue = value
 	}
 	return realValue
@@ -153,10 +157,6 @@ func DoCommandConfigureHeader(command model.Command, requestFromUser model.Field
 	for key, value := range command.Adds.Header {
 		realValue := checkValue(value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
-		logrus.Info("list traversal is ", listTraverseKey)
-		logrus.Info("key is ", key)
-		logrus.Info("value is ", value)
-		logrus.Info("real value add header is ", realValue)
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Header, 0)
 
 	}
@@ -214,12 +214,7 @@ func getValue(listTraverse []string, in interface{}, index int) interface{} {
 		}
 
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
-			logrus.Info(in, " is map string interface")
-			logrus.Info("list traverse index is ", listTraverse[index])
-			logrus.Info("map nya ")
-			logrus.Info(in.(map[string]interface{})[listTraverse[index]])
-			//logrus.Warn("type is map string interface")
-			//* allocate new map if map[key] null
+
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
 				logrus.Info("returned in is ", in)
 				return in
@@ -227,7 +222,6 @@ func getValue(listTraverse []string, in interface{}, index int) interface{} {
 			return getValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
 
 		} else {
-			//logrus.Warn(in, " not ", " map string interface")
 			return nil
 		}
 	}
@@ -237,28 +231,33 @@ func getValue(listTraverse []string, in interface{}, index int) interface{} {
 
 func validateValue(value string) ([]string, string) {
 
-	listTraverse := make([]string, 0)
 	var destination string
 
 	if strings.HasPrefix(value, "$body") {
 		destination = "body"
-		value = string(value[5:])
+		value = value[5:]
 	} else if strings.HasPrefix(value, "$header") {
 		destination = "header"
-		value = string(value[7:])
+		value = value[7:]
 	} else if strings.HasPrefix(value, "$query") {
 		destination = "query"
-		value = string(value[6:])
-
+		value = value[6:]
 	} else if strings.HasPrefix(value, "$response") {
 		destination = "response"
-		value = string(value[9:])
+		value = value[9:]
 	} else {
 		return nil, value
 	}
 
+	return stringToSplice(value, ""), destination
+
+}
+
+func stringToSplice(value string, separator string) []string {
 	//*split become [tes],[tos]
-	arraySplit := strings.Split(value, "")
+	listTraverse := make([]string, 0)
+
+	arraySplit := strings.Split(value, separator)
 
 	temp := ""
 	for _, val := range arraySplit {
@@ -266,6 +265,7 @@ func validateValue(value string) ([]string, string) {
 			if val == "]" {
 				//*push
 				listTraverse = append(listTraverse, temp)
+
 				temp = ""
 			} else {
 				//* add character to temp
@@ -274,9 +274,7 @@ func validateValue(value string) ([]string, string) {
 		}
 
 	}
-
-	return listTraverse, destination
-
+	return listTraverse
 }
 
 // DoCommandConfigureQuery is a wrapper function that do add, modify, delete for query

@@ -18,13 +18,13 @@ func Receiver(configure model.Configure, res *http.Response, method string, arrR
 
 	//*get response content type
 	contentType := res.Header.Get("Content-Type")
-	logrus.Warn("content type response is")
-	logrus.Warn(contentType)
+	//logrus.Warn("content type response is")
+	//logrus.Warn(contentType)
 
 	//* get transform command
 	transform := configure.Response.Transform
-	logrus.Warn("response byte is ")
-	logrus.Warn(string(responseByte))
+	//logrus.Warn("response byte is ")
+	//logrus.Warn(string(responseByte))
 
 	resMap := model.Fields{
 		Header: make(map[string]interface{}),

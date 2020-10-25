@@ -10,6 +10,8 @@
       "header": {
       },
       "body": {
+        "user.header": "$query[query][0]",
+        "user.tes" : "$body[user][cars][0]"
       },
       "query": {
       }
@@ -26,6 +28,7 @@
       "header": {
       },
       "body": {
+
       },
       "query": {
       }
@@ -37,7 +40,6 @@
       "header": {
       },
       "body": {
-        "user.tes": "user tes "
       },
       "query": {
       }

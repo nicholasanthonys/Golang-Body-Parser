@@ -31,7 +31,6 @@ func Send(configure model.Configure, requestFromUser model.Fields, method string
 	var req *http.Request
 
 	//*constructing request
-	logrus.Info("method is ", method)
 	req, _ = http.NewRequest(method, url, body)
 
 	//*set Header

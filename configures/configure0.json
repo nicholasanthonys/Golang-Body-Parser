@@ -2,6 +2,7 @@
   "methods": [
     "PUT"
   ],
+  "path" : "/persons/:person/transactions/:transactionId",
   "request": {
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
@@ -10,7 +11,6 @@
       "header": {
       },
       "body": {
-        "user.address": "from configure0.json"
       },
       "query": {
       }

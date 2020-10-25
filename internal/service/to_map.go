@@ -15,10 +15,7 @@ func FromFormUrl(c echo.Context) map[string]interface{} {
 	myMap := make(map[string]interface{})
 	c.Request().ParseForm()
 	for key, value := range c.Request().Form { // range over map
-		logrus.Info("key is ", key, " value is ", value, "length is ", len(value))
-
 		if len(value) > 1 {
-
 			myMap[key] = value
 		} else {
 			myMap[key] = c.FormValue(key)
