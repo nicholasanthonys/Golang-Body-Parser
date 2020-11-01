@@ -26,9 +26,9 @@ func AddRecursive(listTraverse []string, value string, in interface{}, index int
 	if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 		//* allocate new map if map[key] null
 		if in.(map[string]interface{})[listTraverse[index]] == nil {
-			logrus.Warn("map string interface ", listTraverse[index], " is nil")
 			in.(map[string]interface{})[listTraverse[index]] = make(map[string]interface{})
 		}
+		//* recursively traverse the map
 		in.(map[string]interface{})[listTraverse[index]] = AddRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
 		return in.(map[string]interface{})
 	}
@@ -95,9 +95,6 @@ func checkValue(c echo.Context, value interface{}, requestFromUser model.Fields,
 		if listTraverseVal != nil {
 			if destination == "body" {
 				realValue = GetValue(listTraverseVal, requestFromUser.Body, 0)
-				logrus.Info("real value body is")
-				logrus.Info(realValue)
-				logrus.Info("request from user body is ", requestFromUser.Body)
 			} else if destination == "header" {
 				realValue = GetValue(listTraverseVal, requestFromUser.Header, 0)
 			} else if destination == "query" {
@@ -193,7 +190,6 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 				return in.([]string)[indexInt]
 			case reflect.Map:
 				logrus.Info(in, " is map")
-				logrus.Info("returned in map is ", in.(map[string]interface{})[listTraverse[index]])
 				return in.(map[string]interface{})[listTraverse[index]]
 			default:
 				// return the whole interface

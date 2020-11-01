@@ -25,16 +25,6 @@ func init() {
 	log.Level = logrus.DebugLevel
 }
 
-var myMap map[string]interface{}
-
-//func middle(next echo.HandlerFunc) echo.HandlerFunc {
-//	return func(e echo.Context) error {
-//		logrus.Info("method is ", e.Request().Method)
-//		return e.JSON(200, e.Request().Method)
-//		return next(e)
-//	}
-//}
-
 func main() {
 	// Echo instance
 	e := echo.New()
@@ -280,11 +270,8 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 		wrapperUser.Request.Param[value] = c.Param(value)
 	}
 
-	logrus.Info("request from user query is ", wrapperUser.Request.Query)
-
 	_, find := service.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
-		logrus.Info("do modification")
 		//* Do the Map Modification if method is find/available
 		service.DoCommand(c, configure.Request, wrapperUser.Request, arrayWrapper)
 	}
