@@ -54,6 +54,7 @@ func ReadConfigure(path string) []byte {
 
 //*ResponseWriter is a function that will return response
 func ResponseWriter(configure model.Configure, resultMap interface{}, c echo.Context) error {
+	logrus.Info("result map is ", resultMap)
 	switch configure.Response.Transform {
 	case "ToJson":
 		return c.JSON(200, resultMap)

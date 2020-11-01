@@ -8,11 +8,13 @@ import (
 	"strings"
 )
 
-func Receiver(configure model.Configure, res *http.Response, requestFromUserResponse model.Fields, arrRes []map[string]interface{}) (map[string]interface{}, error) {
+func Receiver(configure model.Configure, res *http.Response, requestFromUserResponse *model.Fields) (*model.Fields, error) {
+
 	//*read response body as byte
 	responseByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		logrus.Warn("Error read body")
+		logrus.Info(err.Error())
 		return nil, err
 	}
 
@@ -21,16 +23,11 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 	//* get transform command
 	transform := configure.Response.Transform
 
-	//resMap := model.Fields{
-	//	Header: make(map[string]interface{}),
-	//	Body:   make(map[string]interface{}),
-	//	Query:  make(map[string]interface{}),
-	//}
-
-	//*get header value
-	for key, val := range requestFromUserResponse.Header {
-		requestFromUserResponse.Header[key] = val
+	//*set header value for response
+	for key, _ := range res.Header {
+		requestFromUserResponse.Header[key] = res.Header.Get(key)
 	}
+	//logrus.Info("request user response header is ", requestFromUserResponse.Header)
 
 	//switch case transform
 	switch transform {
@@ -54,12 +51,7 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 			} else {
 				//* panic  if content type unknown
 			}
-
-			//* response always do Command
-			DoCommand(nil, configure.Response, requestFromUserResponse, arrRes)
-
-			return requestFromUserResponse.Body, nil
-
+			return requestFromUserResponse, nil
 		}
 		return nil, nil
 	default:

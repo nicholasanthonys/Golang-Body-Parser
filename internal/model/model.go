@@ -23,6 +23,7 @@ type Wrapper struct {
 }
 
 type Fields struct {
+	Param  map[string]interface{}
 	Header map[string]interface{} `json:"header"`
 	Body   map[string]interface{} `json:"body"`
 	Query  map[string]interface{} `json:"query"`

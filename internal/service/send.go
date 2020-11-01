@@ -9,7 +9,7 @@ import (
 	"reflect"
 )
 
-func Send(configure model.Configure, requestFromUser model.Wrapper, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
+func Send(configure model.Configure, requestFromUser *model.Wrapper, method string) (*http.Response, error) {
 
 	//*get transform command
 	transformRequest := configure.Request.Transform
@@ -23,8 +23,6 @@ func Send(configure model.Configure, requestFromUser model.Wrapper, method strin
 	}
 	//*kalau body nil ? masih harus di handle
 
-	//*get method
-
 	//*get url
 	url := configure.Request.DestinationUrl
 	//*declare request
@@ -34,45 +32,31 @@ func Send(configure model.Configure, requestFromUser model.Wrapper, method strin
 	req, _ = http.NewRequest(method, url, body)
 
 	//*set Header
-	setHeader(requestFromUser, &req.Header)
+	setHeader(*requestFromUser, &req.Header)
 
 	q := req.URL.Query()
 
 	//*set query
-	setQuery(requestFromUser, &q)
+	setQuery(*requestFromUser, &q)
 	req.URL.RawQuery = q.Encode()
 
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
 
-	return doRequest(req, configure, method, requestFromUser.Response, arrRes)
+	return doRequest(req)
 }
 
-func doRequest(req *http.Request, configure model.Configure, method string, requestFromUserResponse model.Fields, arrRes []map[string]interface{}) (map[string]interface{}, error) {
-
+func doRequest(req *http.Request) (*http.Response, error) {
 	//* do request
 	client := http.Client{}
 	res, err := client.Do(req)
-	defer res.Body.Close()
-
 	if err != nil {
 		logrus.Warn("Error response")
 		logrus.Warn(err.Error())
 		return nil, err
 	}
 
-	//*Modifty responseByte in Receiver and get  byte from response that has been modified
-	receiverMap, err := Receiver(configure, res, requestFromUserResponse, arrRes)
-
-	if err != nil {
-		return nil, err
-	} else {
-		logrus.Warn("result byte after receive rmodify is")
-		logrus.Warn((receiverMap))
-	}
-
-	//* return the receiver byte that has been modified
-	return receiverMap, nil
+	return res, nil
 }
 
 func setContentTypeHeader(transformRequest string, header *http.Header) {
