@@ -9,13 +9,13 @@ import (
 	"reflect"
 )
 
-func Send(configure model.Configure, requestFromUser model.Fields, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
+func Send(configure model.Configure, requestFromUser model.Wrapper, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
 
 	//*get transform command
 	transformRequest := configure.Request.Transform
 
 	//* constructing body to send
-	body, err := TransformBody(configure, requestFromUser.Body)
+	body, err := TransformBody(configure, requestFromUser.Request.Body)
 
 	if err != nil {
 		logrus.Warn("error constructing body to send")
@@ -45,10 +45,10 @@ func Send(configure model.Configure, requestFromUser model.Fields, method string
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
 
-	return doRequest(req, configure, method, arrRes)
+	return doRequest(req, configure, method, requestFromUser.Response, arrRes)
 }
 
-func doRequest(req *http.Request, configure model.Configure, method string, arrRes []map[string]interface{}) (map[string]interface{}, error) {
+func doRequest(req *http.Request, configure model.Configure, method string, requestFromUserResponse model.Fields, arrRes []map[string]interface{}) (map[string]interface{}, error) {
 
 	//* do request
 	client := http.Client{}
@@ -62,7 +62,7 @@ func doRequest(req *http.Request, configure model.Configure, method string, arrR
 	}
 
 	//*Modifty responseByte in Receiver and get  byte from response that has been modified
-	receiverMap, err := Receiver(configure, res, method, arrRes)
+	receiverMap, err := Receiver(configure, res, requestFromUserResponse, arrRes)
 
 	if err != nil {
 		return nil, err
@@ -89,9 +89,9 @@ func setContentTypeHeader(transformRequest string, header *http.Header) {
 
 }
 
-func setHeader(requestFromUser model.Fields, header *http.Header) {
+func setHeader(requestFromUser model.Wrapper, header *http.Header) {
 	//actually set the header based on map header
-	for key, value := range requestFromUser.Header {
+	for key, value := range requestFromUser.Request.Header {
 		if key != "Content-Type" {
 
 			vt := reflect.TypeOf(value).Kind()
@@ -106,9 +106,9 @@ func setHeader(requestFromUser model.Fields, header *http.Header) {
 	}
 }
 
-func setQuery(requestFromUser model.Fields, q *url.Values) {
+func setQuery(requestFromUser model.Wrapper, q *url.Values) {
 	//* Add
-	for key, value := range requestFromUser.Query {
+	for key, value := range requestFromUser.Request.Query {
 		q.Set(key, fmt.Sprintf("%v", value))
 		//logrus.Info("q get is ", q.Get(key))
 	}

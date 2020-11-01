@@ -1,9 +1,11 @@
 package model
 
 type Configure struct {
-	Methods  []string `json:"methods"`
-	Request  Command  `json:"request"`
-	Response Command  `json:"response"`
+	ConfigureBased string   `json:"configureBased"`
+	Methods        []string `json:"methods"`
+	Path           string   `json:"path"`
+	Request        Command  `json:"request"`
+	Response       Command  `json:"response"`
 }
 
 type Command struct {
@@ -13,6 +15,11 @@ type Command struct {
 	Adds           Fields       `json:"adds"`
 	Deletes        DeleteFields `json:"deletes"`
 	Modifies       Fields       `json:"modifies"`
+}
+
+type Wrapper struct {
+	Request  Fields
+	Response Fields
 }
 
 type Fields struct {
@@ -25,9 +32,4 @@ type DeleteFields struct {
 	Header []string `json:"header"`
 	Body   []string `json:"body"`
 	Query  []string `json:"query"`
-}
-
-type ParallelResponse struct {
-	Configure string  `json:"configure"`
-	Response  Command `json:"response"`
 }

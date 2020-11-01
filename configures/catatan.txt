@@ -1,4 +1,13 @@
-{
+nanti parallel.json diubah namanya ke response.json untuk menangani response
+//  "configureIndex": 0,
+  "header" : {
+    "nama" : "$response[0].body.tes" $response[0].header.content-type
+    "tes" : "nicho"
+  },
+  body : {
+
+  }
+skema : {
   "methods": [
     "PUT"
   ],
@@ -11,9 +20,17 @@
       "header": {
       },
       "body": {
-        "user.query"  : "$query[tes][0]"
+        "user.address": "$header[Content-Type][0]",
+        "user.age": "tes1",
+        "user.query": "$query[tes][0]",
+        "user.lol": "$body[user][name]"
+        "user.address": "$request[0].params.person",
+        "user.tes": "$request[0].params.transactionId"
+           "user.header": "$query[query][0]",
+                "user.tes" : "$body[user][cars][0]"
       },
       "query": {
+       "tesquery": "$header[Content-Type][0]"
       }
     },
     "deletes": {
@@ -28,7 +45,6 @@
       "header": {
       },
       "body": {
-
       },
       "query": {
       }
@@ -40,7 +56,6 @@
       "header": {
       },
       "body": {
-        "configresponse" : "from response configure 1 json"
       },
       "query": {
       }

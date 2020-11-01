@@ -8,8 +8,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
+//* Find is a function that will find item in slice of string
 func Find(slice []string, val string) (int, bool) {
 	for i, item := range slice {
 		if item == val {
@@ -32,6 +34,7 @@ func GetListFolder(dirname string) ([]os.FileInfo, error) {
 
 }
 
+//* ReadConfigure is a function that will read configure.json File.
 func ReadConfigure(path string) []byte {
 	// Open our jsonFile
 	jsonFile, err := os.Open(path)
@@ -49,26 +52,21 @@ func ReadConfigure(path string) []byte {
 
 }
 
+//*ResponseWriter is a function that will return response
 func ResponseWriter(configure model.Configure, resultMap interface{}, c echo.Context) error {
 	switch configure.Response.Transform {
 	case "ToJson":
 		return c.JSON(200, resultMap)
 	case "ToXml":
-		//newResMap := make(map[string]interface{})
-
-		//for i, res := range resultMap {
-		//	byteRes, _ := x2j.MapToXml(res)
-		//	index := strconv.Itoa(i)
-		//	newResMap["response"] = byteRes
-		//}
 		resByte, _ := x2j.MapToXml(resultMap.(map[string]interface{}))
 		return c.XMLBlob(200, resByte)
 	default:
+		logrus.Info("type not supported")
 		return c.JSON(404, "Type Not Supported")
 	}
-
 }
 
+//*ErrorWriter is a function that will return Error Response
 func ErrorWriter(c echo.Context, configure model.Configure, err error, status int) error {
 	responseMap := make(map[string]interface{})
 	responseMap["message"] = err.Error()
@@ -82,4 +80,54 @@ func ErrorWriter(c echo.Context, configure model.Configure, err error, status in
 		logrus.Warn(err.Error())
 		return c.JSON(status, responseMap)
 	}
+}
+
+//* RemoveSquareBracketAndConvertToSlice is a function that will remove the square bracket
+//* and convert values into slice
+func RemoveSquareBracketAndConvertToSlice(value string, separator string) []string {
+	listTraverse := make([]string, 0)
+	temp := ""
+	arraySplit := strings.Split(value, separator)
+	for _, val := range arraySplit {
+		if val != "[" {
+			if val == "]" {
+				//*push
+				listTraverse = append(listTraverse, temp)
+				temp = ""
+			} else {
+				//* add character to temp
+				temp += val
+			}
+		}
+
+	}
+	return listTraverse
+}
+
+// SanitizeValue is a function that will remove the dollar sign from the value in configure.json.
+// we remove the dollar sign example :  $body[user], and only pick the rest of the word ex : body[user] */
+func SanitizeValue(value string) ([]string, string) {
+	var destination string
+	var sanitized string
+	if strings.HasPrefix(value, "$body") {
+		destination = "body"
+		sanitized = value[5:]
+	} else if strings.HasPrefix(value, "$header") {
+		destination = "header"
+		sanitized = value[7:]
+	} else if strings.HasPrefix(value, "$query") {
+		destination = "query"
+		sanitized = value[6:]
+	} else if strings.HasPrefix(value, "$response") {
+		destination = "response"
+		sanitized = value[9:]
+	} else if strings.HasPrefix(value, "$path") {
+		destination = "path"
+		sanitized = value[5:]
+	} else {
+		return nil, value
+	}
+
+	//* We call this function to remove square bracket. ex : $body[user] will become :  body user (as a slice)
+	return RemoveSquareBracketAndConvertToSlice(sanitized, ""), destination
 }

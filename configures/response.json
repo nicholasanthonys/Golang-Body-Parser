@@ -1,11 +1,13 @@
 {
-  "configure": "configure0.json",
+  "configureBased": "",
   "response": {
     "transform": "ToJson",
     "adds": {
       "header": {
       },
       "body": {
+        "user.tes" : "configure1.json-$body[user][name]"
+
       },
       "query": {
       }

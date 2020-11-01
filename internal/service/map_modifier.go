@@ -2,23 +2,21 @@ package service
 
 import (
 	"fmt"
+	"github.com/labstack/echo"
+	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 )
 
 // AddRecursive is a function that do the add key-value based on the listtraverse
 func AddRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
 
 	if index == len(listTraverse)-1 {
-
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 			in.(map[string]interface{})[listTraverse[index]] = value
 		}
-
 		return in
 	}
 
@@ -82,38 +80,38 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 }
 
 // checkValue is a function that check the value type value from configure and retrieve the value from header,body, or query
-func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[string]interface{}) interface{} {
+func checkValue(c echo.Context, value interface{}, requestFromUser model.Fields, arrRes []map[string]interface{}) interface{} {
+	//*declare empty result
 	var realValue interface{}
+	//* check the type of the value
 	vt := reflect.TypeOf(value).Kind()
 
 	if reflect.String == vt {
-		//*validate if value has $ or not
-		listTraverseVal, destination := validateValue(fmt.Sprintf("%v", value))
-		//logrus.Info("list traveres value is ", listTraverseVal)
+		//* We Call Sanitizevalue to clear the value from the square bracket and the Dollar Sign
+		listTraverseVal, destination := SanitizeValue(fmt.Sprintf("%v", value))
 		if listTraverseVal != nil {
 			if destination == "body" {
-				realValue = getValue(listTraverseVal, requestFromUser.Body, 0)
+				realValue = GetValue(listTraverseVal, requestFromUser.Body, 0)
 			} else if destination == "header" {
-				realValue = getValue(listTraverseVal, requestFromUser.Header, 0)
+				realValue = GetValue(listTraverseVal, requestFromUser.Header, 0)
 			} else if destination == "query" {
-				realValue = getValue(listTraverseVal, requestFromUser.Query, 0)
-
+				//* for query is a little bit different. Query is stored as array. GetValue will return that array
+				realValue = GetValue(listTraverseVal, requestFromUser.Query, 0)
+				//* We have to get the index from listTraverseVal
 				index, _ := strconv.Atoi(listTraverseVal[len(listTraverseVal)-1])
-
-				stringWithoutBracket := stringToSplice(realValue.(string), "")
-
+				//* We remove the square bracket and convert it into slice of string
+				stringWithoutBracket := RemoveSquareBracketAndConvertToSlice(realValue.(string), "")
+				//* we need to split it index 0
 				mysplice := strings.Split(stringWithoutBracket[0], " ")
 				realValue = mysplice[index]
 
 			} else if destination == "response" {
-
 				tempSplit := strings.Split(listTraverseVal[0], "")
-
 				index, _ := strconv.Atoi(tempSplit[0])
-
 				listTraverseVal = listTraverseVal[1:]
-
-				realValue = getValue(listTraverseVal, arrRes[index], 0)
+				realValue = GetValue(listTraverseVal, arrRes[index], 0)
+			} else if destination == "path" {
+				realValue = c.Param(listTraverseVal[0])
 			}
 		} else {
 			realValue = value
@@ -127,13 +125,13 @@ func checkValue(value interface{}, requestFromUser model.Fields, arrRes []map[st
 }
 
 //DoCommandConfigureBody is a wrapper function to do Add, Deletion and Modify for body
-func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
-
-	//*Do add
+func DoCommandConfigureBody(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
+	//* Add key
 	for key, value := range command.Adds.Body {
-		realValue := checkValue(value, requestFromUser, arrRes)
+		//*get the value
+		realValue := checkValue(c, value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
-
+		logrus.Info("list traverse key is ", listTraverseKey)
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Body, 0)
 	}
 
@@ -145,17 +143,17 @@ func DoCommandConfigureBody(command model.Command, requestFromUser model.Fields,
 
 	//*Do Modify
 	for key, value := range command.Modifies.Body {
-		realValue := checkValue(value, requestFromUser, arrRes)
+		realValue := checkValue(c, value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
 		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Body, 0)
 	}
 }
 
 // DoCommandConfigureHeader is a wrapper function that do add, modify, delete for header
-func DoCommandConfigureHeader(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
+func DoCommandConfigureHeader(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 	//*Add to map header
 	for key, value := range command.Adds.Header {
-		realValue := checkValue(value, requestFromUser, arrRes)
+		realValue := checkValue(c, value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Header, 0)
 
@@ -163,64 +161,57 @@ func DoCommandConfigureHeader(command model.Command, requestFromUser model.Field
 
 	//*Delete
 	for _, key := range command.Deletes.Header {
-		//header.Del(key)
 		delete(requestFromUser.Header, key)
 	}
 
 	//* Modify
 	for key, value := range command.Modifies.Header {
-
 		existValue := fmt.Sprintf("%s", requestFromUser.Header[strings.Title(key)])
 		if len(existValue) > 0 {
-			realValue := checkValue(value, requestFromUser, arrRes)
+			realValue := checkValue(c, value, requestFromUser, arrRes)
 			requestFromUser.Header[key] = realValue
-
 		}
 	}
-
 }
 
-func getValue(listTraverse []string, in interface{}, index int) interface{} {
-
+//* GetValue is a function that will recursively traverse the whole map
+//* get the value based on the listTraverse
+func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 	if len(listTraverse) > 0 {
-
 		if index == len(listTraverse)-1 {
-
+			//*check the type of the target
 			rt := reflect.TypeOf(in)
-
 			switch rt.Kind() {
 			case reflect.Slice:
 				var indexInt int
-
 				//*check type slice element
 				et := reflect.TypeOf(in).Elem().Kind()
+				//* example :  $body[user][name][0]. Now we have the 0 as index type string. we need to
+				//* convert the 0 to become integer
 				indexInt, _ = strconv.Atoi(listTraverse[index])
+				//*if the type of the interface is slice
 				if et == reflect.Interface {
 					return in.([]interface{})[indexInt]
 				}
 				return in.([]string)[indexInt]
-
 			case reflect.Map:
-
 				logrus.Info(in, " is map")
 				logrus.Info("returned in map is ", in.(map[string]interface{})[listTraverse[index]])
-				//logrus.Info(in, " is map ", rt.Elem())
 				return in.(map[string]interface{})[listTraverse[index]]
 			default:
-				//logrus.Info(in, "is something else entirely")
+				// return the whole interface
 				return in
 			}
-
 		}
 
+		//*if the type is map, we need to traverse recursively again
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
-
+			//*if the map is nil, return interface
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
-				logrus.Info("returned in is ", in)
 				return in
 			}
-			return getValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
-
+			//* recursively traverse the map again
+			return GetValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
 		} else {
 			return nil
 		}
@@ -229,63 +220,13 @@ func getValue(listTraverse []string, in interface{}, index int) interface{} {
 	return in
 }
 
-func validateValue(value string) ([]string, string) {
-
-	var destination string
-
-	if strings.HasPrefix(value, "$body") {
-		destination = "body"
-		value = value[5:]
-	} else if strings.HasPrefix(value, "$header") {
-		destination = "header"
-		value = value[7:]
-	} else if strings.HasPrefix(value, "$query") {
-		destination = "query"
-		value = value[6:]
-	} else if strings.HasPrefix(value, "$response") {
-		destination = "response"
-		value = value[9:]
-	} else {
-		return nil, value
-	}
-
-	return stringToSplice(value, ""), destination
-
-}
-
-func stringToSplice(value string, separator string) []string {
-	//*split become [tes],[tos]
-	listTraverse := make([]string, 0)
-
-	arraySplit := strings.Split(value, separator)
-
-	temp := ""
-	for _, val := range arraySplit {
-		if val != "[" {
-			if val == "]" {
-				//*push
-				listTraverse = append(listTraverse, temp)
-
-				temp = ""
-			} else {
-				//* add character to temp
-				temp += val
-			}
-		}
-
-	}
-	return listTraverse
-}
-
 // DoCommandConfigureQuery is a wrapper function that do add, modify, delete for query
-func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
+func DoCommandConfigureQuery(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 	//* Add
 	for key, value := range requestFromUser.Query {
-		realValue := checkValue(value, requestFromUser, arrRes)
+		realValue := checkValue(c, value, requestFromUser, arrRes)
 		listTraverseKey := strings.Split(key, ".")
-
 		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Query, 0)
-
 	}
 
 	//* Delete
@@ -302,10 +243,32 @@ func DoCommandConfigureQuery(command model.Command, requestFromUser model.Fields
 	}
 }
 
-//* if c request method
-func DoCommand(command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
+//*DoCommand is a function that will do the command from configure.json for Header, Query, and Body
+//* Here, we call DoCommandConfigure for each Header, Query, and Body
+func DoCommand(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []map[string]interface{}) {
 
-	DoCommandConfigureHeader(command, requestFromUser, arrRes)
-	DoCommandConfigureQuery(command, requestFromUser, arrRes)
-	DoCommandConfigureBody(command, requestFromUser, arrRes)
+	DoCommandConfigureHeader(c, command, requestFromUser, arrRes)
+	DoCommandConfigureQuery(c, command, requestFromUser, arrRes)
+	DoCommandConfigureBody(c, command, requestFromUser, arrRes)
+}
+
+func RetrieveValueFromMap(myMap map[string]interface{}, listTraverse []string) {
+	//if index == len(listTraverse)-1 {
+	//
+	//	if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+	//		if in.(map[string]interface{})[listTraverse[index]] == nil {
+	//			return nil
+	//		}
+	//		in.(map[string]interface{})[listTraverse[index]] = value
+	//	}
+	//	return in
+	//}
+	//if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+	//	if in.(map[string]interface{})[listTraverse[index]] != nil {
+	//		ModifyRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
+	//		return in.(map[string]interface{})
+	//	}
+	//}
+	//
+	//return nil
 }
