@@ -58,10 +58,10 @@ func main() {
 	e.Logger.Fatal(e.Start(":8888"))
 }
 
-func worker(wg *sync.WaitGroup, configure model.Configure, c echo.Context, mapRes map[string]*model.Wrapper, requestFromUser model.Wrapper, requestBody []byte, fileName string) {
+func worker(wg *sync.WaitGroup, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte, fileName string) {
 	defer wg.Done()
-	_, resultMap := process(configure, c, &requestFromUser, nil, requestBody)
-	mapRes[fileName] = resultMap
+	process(configure, c, &requestFromUser, mapWrapper, requestBody)
+	mapWrapper[fileName] = requestFromUser
 }
 
 func doParallel(c echo.Context) error {
@@ -78,19 +78,14 @@ func doParallel(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, resMap)
 	}
 
-	var configures = make(map[string]model.Configure)
-	var mapC = make(map[string]echo.Context)
-	mapWrapper := make(map[string]*model.Wrapper)
+	mapWrapper := make(map[string]model.Wrapper)
 
 	for _, file := range files {
 		var configure model.Configure
 		if strings.Contains(file.Name(), "configure") {
-			configByte := service.ReadConfigure("./configures/" + file.Name())
-			//* assign configure byte to configure
-			_ = json.Unmarshal(configByte, &configure)
-			configures[file.Name()] = configure
-			mapC[file.Name()] = c
+
 			requestFromUser := model.Wrapper{
+				Configure: configure,
 				Request: model.Fields{
 					Param:  make(map[string]interface{}),
 					Header: make(map[string]interface{}),
@@ -104,6 +99,11 @@ func doParallel(c echo.Context) error {
 					Query:  make(map[string]interface{}),
 				},
 			}
+			configByte := service.ReadConfigure("./configures/" + file.Name())
+			//* assign configure byte to configure
+			_ = json.Unmarshal(configByte, &configure)
+			requestFromUser.Configure = configure
+
 			wg.Add(1)
 			go worker(&wg, configure, c, mapWrapper, requestFromUser, requestBody, file.Name())
 
@@ -118,31 +118,49 @@ func doParallel(c echo.Context) error {
 	_ = json.Unmarshal(parallelConfigByte, &parallelResponse)
 
 	//*now we need to parse the response.json command
-	parsedMap := parseResponseParallel(mapWrapper, parallelResponse)
-	return service.ResponseWriter(parallelResponse, parsedMap, c)
+	resultWrapper := parseResponseParallel(mapWrapper, parallelResponse)
+	return service.ResponseWriter(resultWrapper, c)
 }
 
-func parseResponseParallel(mapWrapper map[string]*model.Wrapper, parallelResponse model.Configure) map[string]interface{} {
-	var resultMap = make(map[string]interface{})
+func parseResponseParallel(mapWrapper map[string]model.Wrapper, parallelResponse model.Configure) model.Wrapper {
+	//var resultMap = make(map[string]interface{})
+	//fields := model.Fields{
+	//	Param:  make(map[string]interface{}),
+	//	Header: make(map[string]interface{}),
+	//	Body:   make(map[string]interface{}),
+	//	Query:  make(map[string]interface{}),
+	//}
+
+	resultWrapper := model.Wrapper{
+		Configure: model.Configure{},
+		Request:   model.Fields{},
+		Response: model.Fields{
+			Param:  make(map[string]interface{}),
+			Header: make(map[string]interface{}),
+			Body:   make(map[string]interface{}),
+			Query:  make(map[string]interface{}),
+		},
+	}
+
 	for key, value := range parallelResponse.Response.Adds.Body {
 		stringValue := fmt.Sprintf("%v", value)
-		if strings.HasPrefix(stringValue, "configure") {
-			// * split between $configure-value
-			valueSplice := strings.Split(stringValue, "-")
-			//* get the traverse key
-			listTraverseKey := strings.Split(key, ".")
-			//* sanitized value from square bracket and dollar sign
-			sanitizedValue, _ := service.SanitizeValue(fmt.Sprintf("%v", valueSplice[1]))
-			//* get the real value
-			realValue := service.GetValue(sanitizedValue, mapWrapper[valueSplice[0]].Response.Body, 0)
-			///* add recursive key-value
-			service.AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), resultMap, 0)
-
+		if strings.HasPrefix(stringValue, "$configure") {
+			//// * split between $configure-$request-value
+			//valueSplice := strings.Split(stringValue, "-")
+			////* get the traverse key
+			//listTraverseKey := strings.Split(key, ".")
+			////* sanitized value from square bracket and dollar sign
+			//sanitizedValue, _ := service.SanitizeValue(fmt.Sprintf("%v", valueSplice[1]))
+			////* get the real value
+			//realValue := service.GetValue(sanitizedValue, mapWrapper[valueSplice[0]].Response.Body, 0)
+			/////* add recursive key-value
+			////service.AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), resultMap, 0)
+			service.DoCommandConfigureBody(parallelResponse.Response, resultWrapper.Response, mapWrapper)
 		} else {
-			resultMap[key] = value
+			resultWrapper.Response.Body[key] = value
 		}
 	}
-	return resultMap
+	return resultWrapper
 }
 
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
@@ -163,21 +181,16 @@ func doSerial(c echo.Context) error {
 	}
 
 	//*Read file ConfigureBased
-	var configures []model.Configure //* slice for configures file (JSON)
-
-	var arrayWrapper []model.Wrapper ///*slice that contains wrapper
+	//var configures []model.Configure                //* slice for configures file (JSON)
+	var mapWrapper = make(map[string]model.Wrapper) ///*slice that contains wrapper
 
 	for _, file := range files {
 		var configure model.Configure
 		if strings.Contains(file.Name(), "configure") {
 
-			configByte := service.ReadConfigure("./configures/" + file.Name())
-			//* assign configure byte to configure
-			_ = json.Unmarshal(configByte, &configure)
-			configures = append(configures, configure)
-
 			//* Make a wrapper for each configuration
 			requestFromUser := model.Wrapper{
+				Configure: configure,
 				Request: model.Fields{
 					Param:  make(map[string]interface{}),
 					Header: make(map[string]interface{}),
@@ -192,24 +205,27 @@ func doSerial(c echo.Context) error {
 				},
 			}
 
-			process(configure, c, &requestFromUser, arrayWrapper, reqByte)
+			configByte := service.ReadConfigure("./configures/" + file.Name())
+			//* assign configure byte to configure
+			_ = json.Unmarshal(configByte, &configure)
+			requestFromUser.Configure = configure
+
+			process(configure, c, &requestFromUser, mapWrapper, reqByte)
 
 			//*store to temporary map
 			//*append to arr map string model wrapper
-			arrayWrapper = append(arrayWrapper, requestFromUser)
+			mapWrapper[file.Name()] = requestFromUser
 
 		}
 
 	}
 
-	logrus.Info("array wrapper len is ", len(arrayWrapper))
-	logrus.Info(arrayWrapper[1].Response.Body)
-
 	//*use the latest configures and the latest response
-	return service.ResponseWriter(configures[len(configures)-1], arrayWrapper[len(arrayWrapper)-1].Response.Body, c)
+	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
+	return service.ResponseWriter(mapWrapper["configure1.json"], c)
 }
 
-func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, arrayWrapper []model.Wrapper, reqByte []byte) (int, *model.Wrapper) {
+func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (int, *model.Wrapper) {
 
 	//*this variable accept request from user
 
@@ -232,17 +248,18 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 		//*transform x www form url encoded request user to map request from user
 		wrapperUser.Request.Body = service.FromFormUrl(c)
 	case "application/xml":
+
+		//if err != nil {
+		//	logrus.Warn("error read request byte xml")
+		//	wrapperUser.Response.Body["message"] = err.Error()
+		//	return http.StatusInternalServerError, nil
+		//}
 		//*transform xml request user to map request from user
-		if err != nil {
-			logrus.Warn("error read request byte xml")
-			wrapperUser.Response.Body["message"] = err.Error()
-			return http.StatusInternalServerError, wrapperUser
-		}
 		wrapperUser.Request.Body, err = service.FromXmL(reqByte)
 		if err != nil {
 			logrus.Warn("error service from xml")
 			wrapperUser.Response.Body["message"] = err.Error()
-			return http.StatusInternalServerError, wrapperUser
+			return http.StatusInternalServerError, nil
 		} else {
 			logrus.Warn("service from xml success, request from user is")
 			logrus.Warn(wrapperUser.Request)
@@ -273,7 +290,7 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 	_, find := service.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
 		//* Do the Map Modification if method is find/available
-		service.DoCommand(c, configure.Request, wrapperUser.Request, arrayWrapper)
+		service.DoCommand(configure.Request, wrapperUser.Request, mapWrapper)
 	}
 
 	//*send to destination url
@@ -287,19 +304,19 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 	}
 
 	//* response always do Command
-	service.DoCommand(nil, configure.Response, wrapperUser.Response, arrayWrapper)
+	service.DoCommand(configure.Response, wrapperUser.Response, mapWrapper)
 
-	if err != nil {
-		//* return internal server error if there are any errors
-		wrapperUser.Response.Body["message"] = err.Error()
-		return http.StatusInternalServerError, nil
-	} else {
-		//* if there are no response from destination url, return a message
-		if response == nil {
-			wrapperUser.Response.Body["message"] = "No response returned from destination url server"
-			return http.StatusOK, nil
-		}
-	}
+	//if err != nil {
+	//	//* return internal server error if there are any errors
+	//	wrapperUser.Response.Body["message"] = err.Error()
+	//	return http.StatusInternalServerError, nil
+	//} else {
+	//	//* if there are no response from destination url, return a message
+	//	if response == nil {
+	//		wrapperUser.Response.Body["message"] = "No response returned from destination url server"
+	//		return http.StatusOK, nil
+	//	}
+	//}
 
 	return http.StatusOK, wrapperUser
 

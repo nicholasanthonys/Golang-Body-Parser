@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/labstack/echo"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"reflect"
@@ -83,7 +82,7 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 }
 
 // checkValue is a function that check the value type value from configure and retrieve the value from header,body, or query
-func checkValue(c echo.Context, value interface{}, requestFromUser model.Fields, arrRes []model.Wrapper) interface{} {
+func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 	//*declare empty result
 	var realValue interface{}
 	//* check the type of the value
@@ -94,19 +93,14 @@ func checkValue(c echo.Context, value interface{}, requestFromUser model.Fields,
 		listTraverseVal, destination := SanitizeValue(fmt.Sprintf("%v", value))
 		if listTraverseVal != nil {
 			if destination == "body" {
-				realValue = GetValue(listTraverseVal, requestFromUser.Body, 0)
+				realValue = GetValue(listTraverseVal, takeFrom.Body, 0)
 			} else if destination == "header" {
-				realValue = GetValue(listTraverseVal, requestFromUser.Header, 0)
+				realValue = GetValue(listTraverseVal, takeFrom.Header, 0)
 			} else if destination == "query" {
-				realValue = GetValue(listTraverseVal, requestFromUser.Query, 0)
-			} else if destination == "response" {
-				tempSplit := strings.Split(listTraverseVal[0], "")
-				index, _ := strconv.Atoi(tempSplit[0])
-				listTraverseVal = listTraverseVal[1:]
-				//* masih hardcode
-				realValue = GetValue(listTraverseVal, arrRes[index].Response.Body, 0)
+				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
-				realValue = c.Param(listTraverseVal[0])
+				//realValue = c.Param(listTraverseVal[0])
+				realValue = takeFrom.Param[listTraverseVal[0]]
 			}
 		} else {
 			realValue = value
@@ -120,50 +114,113 @@ func checkValue(c echo.Context, value interface{}, requestFromUser model.Fields,
 }
 
 //DoCommandConfigureBody is a wrapper function to do Add, Deletion and Modify for body
-func DoCommandConfigureBody(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []model.Wrapper) {
+//* Wrapper : wrapper that want to be add
+func DoCommandConfigureBody(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
+
 	//* Add key
 	for key, value := range command.Adds.Body {
 		//*get the value
-		realValue := checkValue(c, value, requestFromUser, arrRes)
+		//*split value : $configure1.json-$request-$body[user][name]
+		var realValue interface{}
+		//* if value has prefix $configure
+		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
+			splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
+			//remove dollar sign
+			splittedValue[0] = RemoveDollar(splittedValue[0])
+			if splittedValue[1] == "$request" {
+				//* get the request from fields
+				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+			} else {
+				//* get the response from fields
+				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+			}
+		} else {
+			realValue = fmt.Sprintf("%v", value)
+		}
+
 		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Body, 0)
+		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Body, 0)
 	}
 
 	//* Do Deletion
 	for _, key := range command.Deletes.Body {
 		listTraverse := strings.Split(key, ".")
-		DeleteRecursive(listTraverse, requestFromUser.Body, 0)
+		DeleteRecursive(listTraverse, fields.Body, 0)
 	}
 
 	//*Do Modify
 	for key, value := range command.Modifies.Body {
-		realValue := checkValue(c, value, requestFromUser, arrRes)
+		//*get the value
+		//*split value : $configure1.json-$request-$body[user][name]
+		splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
+		//remove dollar sign
+		splittedValue[0] = RemoveDollar(splittedValue[0])
+		logrus.Info("splitted value 0 is ", splittedValue[0])
+		var realValue interface{}
+		if splittedValue[1] == "$request" {
+			//* get the request from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+		} else {
+			//* get the response from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+		}
+		if splittedValue[1] == "$request" {
+			//* get the request from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+		} else {
+			//* get the response from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+		}
 		listTraverseKey := strings.Split(key, ".")
-		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Body, 0)
+		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Body, 0)
 	}
 }
 
 // DoCommandConfigureHeader is a wrapper function that do add, modify, delete for header
-func DoCommandConfigureHeader(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []model.Wrapper) {
+func DoCommandConfigureHeader(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
 	//*Add to map header
 	for key, value := range command.Adds.Header {
-		realValue := checkValue(c, value, requestFromUser, arrRes)
+		//*get the value
+		//*split value : $configure1.json-$request-$body[user][name]
+		splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
+		logrus.Info("splitted value 0 is ", splittedValue[0])
+		var realValue interface{}
+		if splittedValue[1] == "$request" {
+			//* get the request from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+		} else {
+			//* get the response from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+		}
+
 		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Header, 0)
+		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Header, 0)
 
 	}
 
 	//*Delete
 	for _, key := range command.Deletes.Header {
-		delete(requestFromUser.Header, key)
+		delete(fields.Header, key)
 	}
 
 	//* Modify
 	for key, value := range command.Modifies.Header {
-		existValue := fmt.Sprintf("%s", requestFromUser.Header[strings.Title(key)])
+		existValue := fmt.Sprintf("%s", fields.Header[strings.Title(key)])
 		if len(existValue) > 0 {
-			realValue := checkValue(c, value, requestFromUser, arrRes)
-			requestFromUser.Header[key] = realValue
+			//*get the value
+			//*split value : $configure1.json-$request-$body[user][name]
+			splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
+			logrus.Info("splitted value 0 is ", splittedValue[0])
+			var realValue interface{}
+			if splittedValue[1] == "$request" {
+				//* get the request from fields
+				realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+			} else {
+				//* get the response from fields
+				realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+			}
+
+			fields.Header[key] = realValue
 		}
 	}
 }
@@ -214,33 +271,62 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 }
 
 // DoCommandConfigureQuery is a wrapper function that do add, modify, delete for query
-func DoCommandConfigureQuery(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []model.Wrapper) {
+func DoCommandConfigureQuery(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
 	//* Add
-	for key, value := range requestFromUser.Query {
-		realValue := checkValue(c, value, requestFromUser, arrRes)
+	for key, value := range fields.Query {
+		//*get the value
+		//*split value : $configure1.json-$request-$body[user][name]
+		splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
+
+		splittedValue[0] = RemoveDollar(splittedValue[0])
+		logrus.Info("key is ", key, " splitted value 0 is ", splittedValue[0])
+		var realValue interface{}
+		if splittedValue[1] == "$request" {
+			//* get the request from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+		} else {
+			//* get the response from fields
+			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+		}
+
 		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), requestFromUser.Query, 0)
+		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Query, 0)
 	}
 
 	//* Delete
 	for _, key := range command.Deletes.Query {
-		delete(requestFromUser.Query, key)
+		delete(fields.Query, key)
 	}
 
 	//* Modify
 	for key, value := range command.Modifies.Query {
-		existingValue := fmt.Sprintf("%s", requestFromUser.Query[key])
+		existingValue := fmt.Sprintf("%s", fields.Query[key])
 		if len(existingValue) > 0 {
-			requestFromUser.Query[key] = value
+
+			//*get the value
+			//*split value : $configure1.json-$request-$body[user][name]
+			splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
+			logrus.Info("splitted value 0 is ", splittedValue[0])
+			var realValue interface{}
+			if splittedValue[1] == "$request" {
+				//* get the request from fields
+				realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+			} else {
+				//* get the response from fields
+				realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+			}
+
+			fields.Query[key] = realValue
 		}
 	}
 }
 
 //*DoCommand is a function that will do the command from configure.json for Header, Query, and Body
 //* Here, we call DoCommandConfigure for each Header, Query, and Body
-func DoCommand(c echo.Context, command model.Command, requestFromUser model.Fields, arrRes []model.Wrapper) {
+//* fields is field that want to be modify
+func DoCommand(command model.Command, fields model.Fields, arrRes map[string]model.Wrapper) {
 
-	DoCommandConfigureHeader(c, command, requestFromUser, arrRes)
-	DoCommandConfigureQuery(c, command, requestFromUser, arrRes)
-	DoCommandConfigureBody(c, command, requestFromUser, arrRes)
+	//DoCommandConfigureHeader(command, fields, arrRes)
+	//DoCommandConfigureQuery(command, fields, arrRes)
+	DoCommandConfigureBody(command, fields, arrRes)
 }

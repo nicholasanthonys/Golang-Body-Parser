@@ -18,8 +18,9 @@ type Command struct {
 }
 
 type Wrapper struct {
-	Request  Fields
-	Response Fields
+	Configure Configure
+	Request   Fields
+	Response  Fields
 }
 
 type Fields struct {

@@ -53,13 +53,13 @@ func ReadConfigure(path string) []byte {
 }
 
 //*ResponseWriter is a function that will return response
-func ResponseWriter(configure model.Configure, resultMap interface{}, c echo.Context) error {
-	logrus.Info("result map is ", resultMap)
-	switch configure.Response.Transform {
+func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
+
+	switch wrapper.Configure.Response.Transform {
 	case "ToJson":
-		return c.JSON(200, resultMap)
+		return c.JSON(200, wrapper.Response.Body)
 	case "ToXml":
-		resByte, _ := x2j.MapToXml(resultMap.(map[string]interface{}))
+		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
 		return c.XMLBlob(200, resByte)
 	default:
 		logrus.Info("type not supported")
@@ -131,4 +131,8 @@ func SanitizeValue(value string) ([]string, string) {
 
 	//* We call this function to remove square bracket. ex : $body[user] will become :  body user (as a slice)
 	return RemoveSquareBracketAndConvertToSlice(sanitized, ""), destination
+}
+
+func RemoveDollar(value string) string {
+	return value[1:]
 }
