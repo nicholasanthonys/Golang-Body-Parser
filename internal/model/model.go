@@ -9,6 +9,7 @@ type Configure struct {
 }
 
 type Command struct {
+	Separator      string       `json:"separator"`
 	DestinationUrl string       `json:"destinationUrl"`
 	MethodUsed     string       `json:"methodUsed"`
 	Transform      string       `json:"transform"`

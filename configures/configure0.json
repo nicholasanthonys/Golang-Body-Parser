@@ -3,7 +3,9 @@
     "PUT"
   ],
   "path" : "/user/:userId",
+
   "request": {
+    "separator": "#",
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
     "transform": "ToJson",
@@ -35,6 +37,7 @@
     }
   },
   "response": {
+    "separator": "#",
     "transform": "ToJson",
     "adds": {
       "header": {

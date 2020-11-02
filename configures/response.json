@@ -1,13 +1,15 @@
 {
   "configureBased": "",
   "response": {
+    "separator": "--",
     "transform": "ToJson",
     "adds": {
       "header": {
       },
       "body": {
-        "user.tes" : "configure1.json-$body[user][name]"
-
+        "user.tes": "$configure1.json--$request--$header[Content-Type]",
+        "configure1.path": "$configure1.json--$request--$path[person]",
+        "configure1.query": "$configure1.json--$request--$query[tesquery]"
       },
       "query": {
       }

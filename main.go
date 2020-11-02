@@ -112,28 +112,17 @@ func doParallel(c echo.Context) error {
 	}
 	wg.Wait()
 
-	//*read configure response.json
-	var parallelResponse model.Configure
-	parallelConfigByte := service.ReadConfigure("./configures/response.json")
-	_ = json.Unmarshal(parallelConfigByte, &parallelResponse)
-
 	//*now we need to parse the response.json command
-	resultWrapper := parseResponseParallel(mapWrapper, parallelResponse)
+	resultWrapper := parseResponseParallel(mapWrapper)
 	return service.ResponseWriter(resultWrapper, c)
 }
 
-func parseResponseParallel(mapWrapper map[string]model.Wrapper, parallelResponse model.Configure) model.Wrapper {
-	//var resultMap = make(map[string]interface{})
-	//fields := model.Fields{
-	//	Param:  make(map[string]interface{}),
-	//	Header: make(map[string]interface{}),
-	//	Body:   make(map[string]interface{}),
-	//	Query:  make(map[string]interface{}),
-	//}
+func parseResponseParallel(mapWrapper map[string]model.Wrapper) model.Wrapper {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{},
-		Request:   model.Fields{},
+
+		Request: model.Fields{},
 		Response: model.Fields{
 			Param:  make(map[string]interface{}),
 			Header: make(map[string]interface{}),
@@ -142,7 +131,21 @@ func parseResponseParallel(mapWrapper map[string]model.Wrapper, parallelResponse
 		},
 	}
 
-	for key, value := range parallelResponse.Response.Adds.Body {
+	parallelConfigByte := service.ReadConfigure("./configures/response.json")
+	_ = json.Unmarshal(parallelConfigByte, &resultWrapper.Configure)
+
+	//* meants that the response is based from configurex.json
+	if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
+		keyConfigure := service.RemoveDollar(resultWrapper.Configure.ConfigureBased)
+		//*check if key exist in the map
+		if _, ok := mapWrapper[keyConfigure]; ok {
+			//* get configureX.json from map wrapper
+			resultWrapper.Response = mapWrapper[keyConfigure].Response
+		}
+
+	}
+
+	for key, value := range resultWrapper.Configure.Response.Adds.Body {
 		stringValue := fmt.Sprintf("%v", value)
 		if strings.HasPrefix(stringValue, "$configure") {
 			//// * split between $configure-$request-value
@@ -155,11 +158,18 @@ func parseResponseParallel(mapWrapper map[string]model.Wrapper, parallelResponse
 			//realValue := service.GetValue(sanitizedValue, mapWrapper[valueSplice[0]].Response.Body, 0)
 			/////* add recursive key-value
 			////service.AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), resultMap, 0)
-			service.DoCommandConfigureBody(parallelResponse.Response, resultWrapper.Response, mapWrapper)
+			//service.DoCommandConfigureBody(resultWrapper.Configure.Response, resultWrapper.Response, mapWrapper)
+			//*add
+			service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, resultWrapper.Configure.Response.Separator, resultWrapper.Response.Body, mapWrapper)
+			service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, resultWrapper.Configure.Response.Separator, resultWrapper.Response.Body, mapWrapper)
+			service.DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 		} else {
 			resultWrapper.Response.Body[key] = value
 		}
 	}
+
+	logrus.Info("result wrapper is")
+	logrus.Info(resultWrapper)
 	return resultWrapper
 }
 
@@ -303,20 +313,7 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 		return 0, nil
 	}
 
-	//* response always do Command
 	service.DoCommand(configure.Response, wrapperUser.Response, mapWrapper)
-
-	//if err != nil {
-	//	//* return internal server error if there are any errors
-	//	wrapperUser.Response.Body["message"] = err.Error()
-	//	return http.StatusInternalServerError, nil
-	//} else {
-	//	//* if there are no response from destination url, return a message
-	//	if response == nil {
-	//		wrapperUser.Response.Body["message"] = "No response returned from destination url server"
-	//		return http.StatusOK, nil
-	//	}
-	//}
 
 	return http.StatusOK, wrapperUser
 

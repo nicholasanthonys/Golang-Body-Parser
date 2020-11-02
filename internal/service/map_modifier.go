@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// AddRecursive is a function that do the add key-value based on the listtraverse
+// AddRecursive is a function that do the add key-value based on the listTraverse
 func AddRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
@@ -83,6 +83,7 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 
 // checkValue is a function that check the value type value from configure and retrieve the value from header,body, or query
 func checkValue(value interface{}, takeFrom model.Fields) interface{} {
+	logrus.Info("check value for value ", value)
 	//*declare empty result
 	var realValue interface{}
 	//* check the type of the value
@@ -96,7 +97,9 @@ func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 				realValue = GetValue(listTraverseVal, takeFrom.Body, 0)
 			} else if destination == "header" {
 				realValue = GetValue(listTraverseVal, takeFrom.Header, 0)
+				logrus.Info("header value for list traverseval ", listTraverseVal, " is ", realValue)
 			} else if destination == "query" {
+				logrus.Info("list traverse val for query is ", listTraverseVal)
 				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
 				//realValue = c.Param(listTraverseVal[0])
@@ -111,118 +114,6 @@ func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 		realValue = value
 	}
 	return realValue
-}
-
-//DoCommandConfigureBody is a wrapper function to do Add, Deletion and Modify for body
-//* Wrapper : wrapper that want to be add
-func DoCommandConfigureBody(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
-
-	//* Add key
-	for key, value := range command.Adds.Body {
-		//*get the value
-		//*split value : $configure1.json-$request-$body[user][name]
-		var realValue interface{}
-		//* if value has prefix $configure
-		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
-			splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
-			//remove dollar sign
-			splittedValue[0] = RemoveDollar(splittedValue[0])
-			if splittedValue[1] == "$request" {
-				//* get the request from fields
-				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
-			} else {
-				//* get the response from fields
-				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
-			}
-		} else {
-			realValue = fmt.Sprintf("%v", value)
-		}
-
-		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Body, 0)
-	}
-
-	//* Do Deletion
-	for _, key := range command.Deletes.Body {
-		listTraverse := strings.Split(key, ".")
-		DeleteRecursive(listTraverse, fields.Body, 0)
-	}
-
-	//*Do Modify
-	for key, value := range command.Modifies.Body {
-		//*get the value
-		//*split value : $configure1.json-$request-$body[user][name]
-		splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
-		//remove dollar sign
-		splittedValue[0] = RemoveDollar(splittedValue[0])
-		logrus.Info("splitted value 0 is ", splittedValue[0])
-		var realValue interface{}
-		if splittedValue[1] == "$request" {
-			//* get the request from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
-		} else {
-			//* get the response from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
-		}
-		if splittedValue[1] == "$request" {
-			//* get the request from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
-		} else {
-			//* get the response from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
-		}
-		listTraverseKey := strings.Split(key, ".")
-		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Body, 0)
-	}
-}
-
-// DoCommandConfigureHeader is a wrapper function that do add, modify, delete for header
-func DoCommandConfigureHeader(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
-	//*Add to map header
-	for key, value := range command.Adds.Header {
-		//*get the value
-		//*split value : $configure1.json-$request-$body[user][name]
-		splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
-		logrus.Info("splitted value 0 is ", splittedValue[0])
-		var realValue interface{}
-		if splittedValue[1] == "$request" {
-			//* get the request from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
-		} else {
-			//* get the response from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
-		}
-
-		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Header, 0)
-
-	}
-
-	//*Delete
-	for _, key := range command.Deletes.Header {
-		delete(fields.Header, key)
-	}
-
-	//* Modify
-	for key, value := range command.Modifies.Header {
-		existValue := fmt.Sprintf("%s", fields.Header[strings.Title(key)])
-		if len(existValue) > 0 {
-			//*get the value
-			//*split value : $configure1.json-$request-$body[user][name]
-			splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
-			logrus.Info("splitted value 0 is ", splittedValue[0])
-			var realValue interface{}
-			if splittedValue[1] == "$request" {
-				//* get the request from fields
-				realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
-			} else {
-				//* get the response from fields
-				realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
-			}
-
-			fields.Header[key] = realValue
-		}
-	}
 }
 
 //* GetValue is a function that will recursively traverse the whole map
@@ -270,44 +161,93 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 	return in
 }
 
-// DoCommandConfigureQuery is a wrapper function that do add, modify, delete for query
-func DoCommandConfigureQuery(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
-	//* Add
-	for key, value := range fields.Query {
+//*DoCommand is a function that will do the command from configure.json for Header, Query, and Body
+//* Here, we call DoCommandConfigure for each Header, Query, and Body
+//* fields is field that want to be modify
+func DoCommand(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
+
+	//*header
+	AddToWrapper(command.Adds.Header, command.Separator, fields.Header, takeFrom)
+	//*modify header
+	AddToWrapper(command.Modifies.Header, command.Separator, fields.Header, takeFrom)
+	//*Deletion Header
+	DeletionHeaderOrQuery(command.Deletes.Header, fields.Header)
+
+	//* Add Query
+	AddToWrapper(command.Adds.Query, command.Separator, fields.Query, takeFrom)
+	//*modify Query
+	AddToWrapper(command.Modifies.Query, command.Separator, fields.Query, takeFrom)
+	//*Deletion Query
+	DeletionHeaderOrQuery(command.Deletes.Query, fields.Query)
+
+	//* add body
+	AddToWrapper(command.Adds.Body, command.Separator, fields.Body, takeFrom)
+	//*modify body
+	AddToWrapper(command.Modifies.Body, command.Separator, fields.Body, takeFrom)
+	//*deletion to body
+	DeletionBody(command.Deletes, fields)
+
+}
+
+func DeletionBody(deleteField model.DeleteFields, fields model.Fields) {
+	//* Do Deletion
+	for _, key := range deleteField.Body {
+		listTraverse := strings.Split(key, ".")
+		DeleteRecursive(listTraverse, fields.Body, 0)
+	}
+}
+
+func DeletionHeaderOrQuery(deleteField []string, mapToBeDeleted map[string]interface{}) {
+	//* Do Deletion
+	for _, key := range deleteField {
+		delete(mapToBeDeleted, key)
+	}
+}
+
+//*AddToWrapper is a function that will add value to the specified key to a map
+func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper) {
+	//* Add key
+	for key, value := range commands {
 		//*get the value
 		//*split value : $configure1.json-$request-$body[user][name]
-		splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
-
-		splittedValue[0] = RemoveDollar(splittedValue[0])
-		logrus.Info("key is ", key, " splitted value 0 is ", splittedValue[0])
 		var realValue interface{}
-		if splittedValue[1] == "$request" {
-			//* get the request from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+		//* if value has prefix $configure
+		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
+			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
+			//remove dollar sign
+			splittedValue[0] = RemoveDollar(splittedValue[0])
+			if splittedValue[1] == "$request" {
+				//* get the request from fields
+
+				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+
+			} else {
+
+				//* get the response from fields
+				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+			}
 		} else {
-			//* get the response from fields
-			realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+			realValue = fmt.Sprintf("%v", value)
 		}
 
 		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), fields.Query, 0)
+		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeAdded, 0)
 	}
+}
 
-	//* Delete
-	for _, key := range command.Deletes.Query {
-		delete(fields.Query, key)
-	}
+//*ModifyWrapper is a function that will modify value based from specific key
+func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom map[string]model.Wrapper) {
+	for key, value := range commands {
 
-	//* Modify
-	for key, value := range command.Modifies.Query {
-		existingValue := fmt.Sprintf("%s", fields.Query[key])
-		if len(existingValue) > 0 {
+		var realValue interface{}
+		//* if value has prefix $configurex.json
+		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
+			//* split : $configure1.json-$request-$body[user]
+			//* into $configure1.json, $request, $body[user]
+			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
+			//remove dollar sign from $configure
+			splittedValue[0] = RemoveDollar(splittedValue[0])
 
-			//*get the value
-			//*split value : $configure1.json-$request-$body[user][name]
-			splittedValue := strings.Split(fmt.Sprintf("%v", value), "-") //$configure1.json, $request, $body[user][name]
-			logrus.Info("splitted value 0 is ", splittedValue[0])
-			var realValue interface{}
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
 				realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
@@ -316,17 +256,11 @@ func DoCommandConfigureQuery(command model.Command, fields model.Fields, takeFro
 				realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
 			}
 
-			fields.Query[key] = realValue
+		} else {
+			realValue = fmt.Sprintf("%v", value)
 		}
+
+		listTraverseKey := strings.Split(key, ".")
+		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeModified, 0)
 	}
-}
-
-//*DoCommand is a function that will do the command from configure.json for Header, Query, and Body
-//* Here, we call DoCommandConfigure for each Header, Query, and Body
-//* fields is field that want to be modify
-func DoCommand(command model.Command, fields model.Fields, arrRes map[string]model.Wrapper) {
-
-	//DoCommandConfigureHeader(command, fields, arrRes)
-	//DoCommandConfigureQuery(command, fields, arrRes)
-	DoCommandConfigureBody(command, fields, arrRes)
 }
