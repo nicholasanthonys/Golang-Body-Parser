@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -65,6 +66,7 @@ func worker(wg *sync.WaitGroup, configure model.Configure, c echo.Context, mapWr
 }
 
 func doParallel(c echo.Context) error {
+
 	//* declare a WaitGroup
 	var wg sync.WaitGroup
 
@@ -220,7 +222,11 @@ func doSerial(c echo.Context) error {
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
 
-			process(configure, c, &requestFromUser, mapWrapper, reqByte)
+			_, status, err := process(configure, c, &requestFromUser, mapWrapper, reqByte)
+
+			if err != nil {
+				return service.ErrorWriter(c, configure, err, status)
+			}
 
 			//*store to temporary map
 			//*append to arr map string model wrapper
@@ -235,11 +241,10 @@ func doSerial(c echo.Context) error {
 	return service.ResponseWriter(mapWrapper["configure1.json"], c)
 }
 
-func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (int, *model.Wrapper) {
+func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
 
 	//*this variable accept request from user
 
-	resMap := make(map[string]interface{})
 	//*check the content type user request
 	contentType := c.Request().Header["Content-Type"][0]
 	var err error
@@ -251,7 +256,7 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 		if err != nil {
 			logrus.Warn("error service from Json")
 			wrapperUser.Response.Body["message"] = err.Error()
-			return http.StatusInternalServerError, wrapperUser
+			return nil, http.StatusInternalServerError, err
 		}
 
 	case "application/x-www-form-urlencoded":
@@ -259,17 +264,12 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 		wrapperUser.Request.Body = service.FromFormUrl(c)
 	case "application/xml":
 
-		//if err != nil {
-		//	logrus.Warn("error read request byte xml")
-		//	wrapperUser.Response.Body["message"] = err.Error()
-		//	return http.StatusInternalServerError, nil
-		//}
 		//*transform xml request user to map request from user
 		wrapperUser.Request.Body, err = service.FromXmL(reqByte)
 		if err != nil {
 			logrus.Warn("error service from xml")
 			wrapperUser.Response.Body["message"] = err.Error()
-			return http.StatusInternalServerError, nil
+			return nil, http.StatusInternalServerError, err
 		} else {
 			logrus.Warn("service from xml success, request from user is")
 			logrus.Warn(wrapperUser.Request)
@@ -277,8 +277,9 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 
 	default:
 		logrus.Warn("Content type not supported")
+		resMap := make(map[string]interface{})
 		resMap["message"] = "Content type not supported"
-		return http.StatusBadRequest, wrapperUser
+		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
 	}
 
 	//*set header value
@@ -305,16 +306,20 @@ func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapp
 
 	//*send to destination url
 	response, err := service.Send(configure, wrapperUser, configure.Request.MethodUsed)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
+	}
 	//*Modifty responseByte in Receiver and get  byte from response that has been modified
 	_, err = service.Receiver(configure, response, &wrapperUser.Response)
+	//*close http
 	defer response.Body.Close()
-
 	if err != nil {
-		return 0, nil
+		return nil, http.StatusInternalServerError, err
 	}
 
+	//* Do Command Add, Modify, Deletion again
 	service.DoCommand(configure.Response, wrapperUser.Response, mapWrapper)
 
-	return http.StatusOK, wrapperUser
+	return wrapperUser, http.StatusOK, nil
 
 }

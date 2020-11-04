@@ -36,3 +36,8 @@ type DeleteFields struct {
 	Body   []string `json:"body"`
 	Query  []string `json:"query"`
 }
+
+// errorString is a trivial implementation of error.
+type ErrorString struct {
+	s string
+}

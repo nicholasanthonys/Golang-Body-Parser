@@ -169,21 +169,21 @@ func DoCommand(command model.Command, fields model.Fields, takeFrom map[string]m
 	//*header
 	AddToWrapper(command.Adds.Header, command.Separator, fields.Header, takeFrom)
 	//*modify header
-	AddToWrapper(command.Modifies.Header, command.Separator, fields.Header, takeFrom)
+	ModifyWrapper(command.Modifies.Header, command.Separator, fields.Header, takeFrom)
 	//*Deletion Header
 	DeletionHeaderOrQuery(command.Deletes.Header, fields.Header)
 
 	//* Add Query
 	AddToWrapper(command.Adds.Query, command.Separator, fields.Query, takeFrom)
 	//*modify Query
-	AddToWrapper(command.Modifies.Query, command.Separator, fields.Query, takeFrom)
+	ModifyWrapper(command.Modifies.Query, command.Separator, fields.Query, takeFrom)
 	//*Deletion Query
 	DeletionHeaderOrQuery(command.Deletes.Query, fields.Query)
 
 	//* add body
 	AddToWrapper(command.Adds.Body, command.Separator, fields.Body, takeFrom)
 	//*modify body
-	AddToWrapper(command.Modifies.Body, command.Separator, fields.Body, takeFrom)
+	ModifyWrapper(command.Modifies.Body, command.Separator, fields.Body, takeFrom)
 	//*deletion to body
 	DeletionBody(command.Deletes, fields)
 

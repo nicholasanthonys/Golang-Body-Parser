@@ -90,9 +90,9 @@ func setHeader(requestFromUser model.Wrapper, header *http.Header) {
 	}
 }
 
-func setQuery(requestFromUser model.Wrapper, q *url.Values) {
+func setQuery(wrapper model.Wrapper, q *url.Values) {
 	//* Add
-	for key, value := range requestFromUser.Request.Query {
+	for key, value := range wrapper.Request.Query {
 		q.Set(key, fmt.Sprintf("%v", value))
 		//logrus.Info("q get is ", q.Get(key))
 	}

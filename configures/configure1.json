@@ -3,12 +3,11 @@
     "PUT"
   ],
   "path": "/persons/:person/transactions/:transactionId",
-
   "request": {
     "separator": "#",
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
-    "transform": "ToJson",
+    "transform": "ToXml",
     "adds": {
       "header": {
       },
@@ -16,6 +15,7 @@
         "user.query": "from configure 1 json"
       },
       "query": {
+
       }
     },
     "deletes": {
@@ -32,6 +32,7 @@
       "body": {
       },
       "query": {
+        "tesquery" : "query1"
       }
     }
   },
