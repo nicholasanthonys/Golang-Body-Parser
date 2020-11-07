@@ -9,13 +9,13 @@ type Configure struct {
 }
 
 type Command struct {
-	Separator      string       `json:"separator"`
-	DestinationUrl string       `json:"destinationUrl"`
-	MethodUsed     string       `json:"methodUsed"`
-	Transform      string       `json:"transform"`
-	Adds           Fields       `json:"adds"`
-	Deletes        DeleteFields `json:"deletes"`
-	Modifies       Fields       `json:"modifies"`
+	DestinationPath string       `json:"destinationPath"`
+	DestinationUrl  string       `json:"destinationUrl"`
+	MethodUsed      string       `json:"methodUsed"`
+	Transform       string       `json:"transform"`
+	Adds            Fields       `json:"adds"`
+	Deletes         DeleteFields `json:"deletes"`
+	Modifies        Fields       `json:"modifies"`
 }
 
 type Wrapper struct {

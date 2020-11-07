@@ -2,18 +2,17 @@
   "methods": [
     "PUT"
   ],
-  "path": "/persons/:person/transactions/:transactionId",
+  "path": "/persons/:person/transactions/:transaction",
   "request": {
-    "path" : "/person/{{$configure1.json--$request--$header[Content-Type]}}",
-    "separator": "#",
+    "destinationPath" : "/{{$configure1.json--$request--$body[user][name]}}",
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
-    "transform": "ToXml",
+    "transform": "ToJson",
     "adds": {
       "header": {
       },
       "body": {
-
+        "tes" : "$configure1.json--$request--$body[user][name]"
       },
       "query": {
 
@@ -40,7 +39,6 @@
     }
   },
   "response": {
-    "separator": "#",
     "transform": "ToJson",
     "adds": {
       "header": {

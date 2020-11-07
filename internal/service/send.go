@@ -23,8 +23,11 @@ func Send(configure model.Configure, requestFromUser *model.Wrapper, method stri
 	}
 	//*kalau body nil ? masih harus di handle
 
-	//*get url
-	url := configure.Request.DestinationUrl
+	//*get url and append it with destination path
+	url := configure.Request.DestinationUrl + configure.Request.DestinationPath
+
+	logrus.Info("url is ", url)
+
 	//*declare request
 	var req *http.Request
 

@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
@@ -163,23 +164,23 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 func DoCommand(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper) {
 
 	//*header
-	AddToWrapper(command.Adds.Header, command.Separator, fields.Header, takeFrom)
+	AddToWrapper(command.Adds.Header, "--", fields.Header, takeFrom)
 	//*modify header
-	ModifyWrapper(command.Modifies.Header, command.Separator, fields.Header, takeFrom)
+	ModifyWrapper(command.Modifies.Header, "--", fields.Header, takeFrom)
 	//*Deletion Header
 	DeletionHeaderOrQuery(command.Deletes.Header, fields.Header)
 
 	//* Add Query
-	AddToWrapper(command.Adds.Query, command.Separator, fields.Query, takeFrom)
+	AddToWrapper(command.Adds.Query, "--", fields.Query, takeFrom)
 	//*modify Query
-	ModifyWrapper(command.Modifies.Query, command.Separator, fields.Query, takeFrom)
+	ModifyWrapper(command.Modifies.Query, "--", fields.Query, takeFrom)
 	//*Deletion Query
 	DeletionHeaderOrQuery(command.Deletes.Query, fields.Query)
 
 	//* add body
-	AddToWrapper(command.Adds.Body, command.Separator, fields.Body, takeFrom)
+	AddToWrapper(command.Adds.Body, "--", fields.Body, takeFrom)
 	//*modify body
-	ModifyWrapper(command.Modifies.Body, command.Separator, fields.Body, takeFrom)
+	ModifyWrapper(command.Modifies.Body, "--", fields.Body, takeFrom)
 	//*deletion to body
 	DeletionBody(command.Deletes, fields)
 
@@ -200,6 +201,52 @@ func DeletionHeaderOrQuery(deleteField []string, mapToBeDeleted map[string]inter
 	}
 }
 
+func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper) string {
+	//*example, what we got here is like this
+	//* /person/{{$configure1.json--$request--$body[user][name]/transaction/{{$configure1.json--$request--$body[user][name]}}
+	//* we need to split based from separator /, and looping and find if there is {{ }}
+	splittedPath := strings.Split(path, "/")
+	for _, val := range splittedPath {
+		if strings.Contains(val, "{{") && strings.Contains(val, "}}") {
+			logrus.Info(val)
+			removedBracket := RemoveCharacters(val, "{{}}")
+			logrus.Info("removed bracket is")
+			logrus.Info(removedBracket)
+
+			//*split value : $configure1.json-$request-$body[user][name]
+			var realValue interface{}
+			//* if value has prefix $configure
+			if strings.HasPrefix(fmt.Sprintf("%v", removedBracket), "$configure") {
+				splittedValue := strings.Split(fmt.Sprintf("%v", removedBracket), separator) //$configure1.json, $request, $body[user][name]
+
+				//remove dollar sign
+				splittedValue[0] = RemoveCharacters(splittedValue[0], "$")
+				if splittedValue[1] == "$request" {
+					//* get the request from fields
+
+					realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+
+				} else {
+
+					//* get the response from fields
+					realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+				}
+
+				if realValue != nil {
+					path = strings.Replace(path, val, realValue.(string), -1)
+				} else {
+					logrus.Info("real value for path is nil, returning path...")
+				}
+
+			}
+
+		}
+	}
+
+	return path
+
+}
+
 //*AddToWrapper is a function that will add value to the specified key to a map
 func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper) {
 	//* Add key
@@ -211,7 +258,7 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
 			//remove dollar sign
-			splittedValue[0] = RemoveDollar(splittedValue[0])
+			splittedValue[0] = RemoveCharacters(splittedValue[0], "$")
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
 
@@ -242,7 +289,7 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			//* into $configure1.json, $request, $body[user]
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
 			//remove dollar sign from $configure
-			splittedValue[0] = RemoveDollar(splittedValue[0])
+			splittedValue[0] = RemoveCharacters(splittedValue[0], "$")
 
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
