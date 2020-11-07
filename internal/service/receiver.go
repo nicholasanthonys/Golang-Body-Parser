@@ -27,7 +27,6 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 	for key, _ := range res.Header {
 		requestFromUserResponse.Header[key] = res.Header.Get(key)
 	}
-	//logrus.Info("request user response header is ", requestFromUserResponse.Header)
 
 	//switch case transform
 	switch transform {

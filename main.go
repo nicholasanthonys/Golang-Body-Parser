@@ -115,16 +115,15 @@ func doParallel(c echo.Context) error {
 	wg.Wait()
 
 	//*now we need to parse the response.json command
-	resultWrapper := parseResponseParallel(mapWrapper)
+	resultWrapper := parseResponse(mapWrapper)
 	return service.ResponseWriter(resultWrapper, c)
 }
 
-func parseResponseParallel(mapWrapper map[string]model.Wrapper) model.Wrapper {
+func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{},
-
-		Request: model.Fields{},
+		Request:   model.Fields{},
 		Response: model.Fields{
 			Param:  make(map[string]interface{}),
 			Header: make(map[string]interface{}),
@@ -144,33 +143,22 @@ func parseResponseParallel(mapWrapper map[string]model.Wrapper) model.Wrapper {
 			//* get configureX.json from map wrapper
 			resultWrapper.Response = mapWrapper[keyConfigure].Response
 		}
-
 	}
 
 	for key, value := range resultWrapper.Configure.Response.Adds.Body {
 		stringValue := fmt.Sprintf("%v", value)
 		if strings.HasPrefix(stringValue, "$configure") {
-			//// * split between $configure-$request-value
-			//valueSplice := strings.Split(stringValue, "-")
-			////* get the traverse key
-			//listTraverseKey := strings.Split(key, ".")
-			////* sanitized value from square bracket and dollar sign
-			//sanitizedValue, _ := service.SanitizeValue(fmt.Sprintf("%v", valueSplice[1]))
-			////* get the real value
-			//realValue := service.GetValue(sanitizedValue, mapWrapper[valueSplice[0]].Response.Body, 0)
-			/////* add recursive key-value
-			////service.AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), resultMap, 0)
-			//service.DoCommandConfigureBody(resultWrapper.Configure.Response, resultWrapper.Response, mapWrapper)
 			//*add
 			service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, resultWrapper.Configure.Response.Separator, resultWrapper.Response.Body, mapWrapper)
+			//*modify
 			service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, resultWrapper.Configure.Response.Separator, resultWrapper.Response.Body, mapWrapper)
+			//* delete
 			service.DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 		} else {
 			resultWrapper.Response.Body[key] = value
 		}
 	}
-
-	logrus.Info("result wrapper is")
+	logrus.Info("result is ")
 	logrus.Info(resultWrapper)
 	return resultWrapper
 }
@@ -238,7 +226,8 @@ func doSerial(c echo.Context) error {
 
 	//*use the latest configures and the latest response
 	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
-	return service.ResponseWriter(mapWrapper["configure1.json"], c)
+	resultWrapper := parseResponse(mapWrapper)
+	return service.ResponseWriter(resultWrapper, c)
 }
 
 func process(configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {

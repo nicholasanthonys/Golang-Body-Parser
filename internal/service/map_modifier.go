@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
@@ -83,7 +82,6 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 
 // checkValue is a function that check the value type value from configure and retrieve the value from header,body, or query
 func checkValue(value interface{}, takeFrom model.Fields) interface{} {
-	logrus.Info("check value for value ", value)
 	//*declare empty result
 	var realValue interface{}
 	//* check the type of the value
@@ -97,9 +95,7 @@ func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 				realValue = GetValue(listTraverseVal, takeFrom.Body, 0)
 			} else if destination == "header" {
 				realValue = GetValue(listTraverseVal, takeFrom.Header, 0)
-				logrus.Info("header value for list traverseval ", listTraverseVal, " is ", realValue)
 			} else if destination == "query" {
-				logrus.Info("list traverse val for query is ", listTraverseVal)
 				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
 				//realValue = c.Param(listTraverseVal[0])
@@ -137,7 +133,7 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 				}
 				return in.([]string)[indexInt]
 			case reflect.Map:
-				logrus.Info(in, " is map")
+
 				return in.(map[string]interface{})[listTraverse[index]]
 			default:
 				// return the whole interface

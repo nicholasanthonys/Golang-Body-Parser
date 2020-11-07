@@ -4,6 +4,7 @@
   ],
   "path": "/persons/:person/transactions/:transactionId",
   "request": {
+    "path" : "/person/{{$configure1.json--$request--$header[Content-Type]}}",
     "separator": "#",
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
@@ -12,16 +13,18 @@
       "header": {
       },
       "body": {
-        "user.query": "from configure 1 json"
+
       },
       "query": {
 
       }
+
     },
     "deletes": {
       "header": [
       ],
       "body": [
+
       ],
       "query": [
       ]
@@ -43,6 +46,7 @@
       "header": {
       },
       "body": {
+
       },
       "query": {
       }
