@@ -2,8 +2,9 @@
   "methods": [
     "PUT"
   ],
-  "path" : "/user/:userId",
+  "path": "/user/:userId",
   "request": {
+    "destinationPath": "",
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
     "transform": "ToJson",
@@ -11,10 +12,11 @@
       "header": {
       },
       "body": {
-
-
+        "user.last_name": "peter",
+        "user.id": 0
       },
       "query": {
+        "address" : "kopo"
       }
     },
     "deletes": {
@@ -40,7 +42,6 @@
       "header": {
       },
       "body": {
-        "tesresponse" : "this response from configure 0"
       },
       "query": {
       }

@@ -12,7 +12,8 @@
       "header": {
       },
       "body": {
-        "tes" : "$configure1.json--$request--$body[user][name]"
+        "user.last_name": "parker",
+        "user.id": 1
       },
       "query": {
 
@@ -32,9 +33,10 @@
       "header": {
       },
       "body": {
+
       },
       "query": {
-        "tesquery" : "query1"
+
       }
     }
   },
@@ -55,6 +57,7 @@
     },
     "modifies": {
       "body": {
+        "user.name" : "Peter Parker"
       }
     }
   }

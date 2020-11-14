@@ -24,7 +24,12 @@ func SetRouteHandler() *echo.Echo {
 	e.Use(middleware.Recover())
 	//e.Use(middle)
 
-	files, _ := GetListFolder("./configures")
+	files, err := GetListFolder("./configures")
+
+	if err != nil {
+		logrus.Error("error reading directory ./configures")
+
+	}
 
 	//*set path based from configure
 	for _, file := range files {
@@ -50,7 +55,12 @@ func SetRouteHandler() *echo.Echo {
 
 func worker(wg *sync.WaitGroup, fileName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
 	defer wg.Done()
-	process(fileName, configure, c, &requestFromUser, mapWrapper, requestBody)
+	_, status, err := process(fileName, configure, c, &requestFromUser, mapWrapper, requestBody)
+	if err != nil {
+		logrus.Error("Go Worker - Error Process")
+		logrus.Error(err.Error())
+		logrus.Error("status : ", status)
+	}
 	mapWrapper[fileName] = requestFromUser
 }
 
