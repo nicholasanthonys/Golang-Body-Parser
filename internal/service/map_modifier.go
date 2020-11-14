@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/openpgp/errors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -100,7 +101,10 @@ func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
 				//realValue = c.Param(listTraverseVal[0])
-				realValue = takeFrom.Param[listTraverseVal[0]]
+				if len(listTraverseVal) > 0 {
+					realValue = takeFrom.Param[listTraverseVal[0]]
+				}
+
 			}
 		} else {
 			realValue = value
@@ -122,23 +126,29 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 			rt := reflect.TypeOf(in)
 			switch rt.Kind() {
 			case reflect.Slice:
-				var indexInt int
+				logrus.Info("type is slice")
 				//*check type slice element
-				et := reflect.TypeOf(in).Elem().Kind()
 				//* example :  $body[user][name][0]. Now we have the 0 as index type string. we need to
 				//* convert the 0 to become integer
-				indexInt, _ = strconv.Atoi(listTraverse[index])
+				indexInt, err := strconv.Atoi(listTraverse[index])
+				if err != nil {
+					logrus.Error("error converting string to integer")
+					logrus.Error(errors.ErrKeyIncorrect)
+					return nil
+				}
 				//*if the type of the interface is slice
-				if et == reflect.Interface {
+				if len(in.([]interface{})) > indexInt {
 					return in.([]interface{})[indexInt]
 				}
-				return in.([]string)[indexInt]
-			case reflect.Map:
+				return nil
 
-				return in.(map[string]interface{})[listTraverse[index]]
+			case reflect.Map:
+				if val, ok := in.(map[string]interface{})[listTraverse[index]]; ok {
+					return val
+				}
 			default:
 				// return the whole interface
-				return in
+				return nil
 			}
 		}
 
@@ -233,7 +243,11 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 				}
 
 				if realValue != nil {
-					path = strings.Replace(path, val, realValue.(string), -1)
+					vt := reflect.TypeOf(realValue).Kind()
+					if reflect.String == vt {
+						path = strings.Replace(path, val, realValue.(string), -1)
+					}
+
 				} else {
 					logrus.Info("real value for path is nil, returning path...")
 				}
