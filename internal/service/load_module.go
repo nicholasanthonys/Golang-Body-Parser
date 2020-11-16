@@ -6,13 +6,15 @@ import (
 	"plugin"
 )
 
-func LoadFunctionFromModule(functionReference string) func(map[string]interface{}) ([]byte, error) {
-	plug, err := plugin.Open("./plugin/transform.so")
+func LoadFunctionFromModule(pluginPath string, functionReference string) func(map[string]interface{}) ([]byte, error) {
+	plug, err := plugin.Open(pluginPath)
 	if err != nil {
 		logrus.Warn("Unable to load plugin module")
 		logrus.Warn(err.Error())
 		os.Exit(1)
 
+	} else {
+		logrus.Info("success read plugin")
 	}
 
 	// lookup for an exported function

@@ -2,8 +2,6 @@ package service
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/clbanning/mxj/x2j"
 	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -41,7 +39,7 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 	var err error
 
 	//Both Request Transform ToJson or ToXml will be parsed here
-	transformFunction := LoadFunctionFromModule(transformRequest)
+	transformFunction := LoadFunctionFromModule("./plugin/transform.so", transformRequest)
 	//transform from map to Json or XML
 	resultByte, err = transformFunction(requestFromUser)
 
@@ -57,42 +55,4 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 func TransformToFormUrl(myMap map[string]interface{}) url.Values {
 	myForm := MapToFormUrl(myMap)
 	return myForm
-}
-
-func TransformMapToByte(configure model.Configure, resMap map[string]interface{}) ([]byte, error) {
-	//*return response
-
-	var err error
-	transformFunction := LoadFunctionFromModule(configure.Response.Transform)
-	transformResultByte, err := transformFunction(resMap)
-
-	if err != nil {
-		logrus.Warn("error after transform function in receiver ")
-		logrus.Fatal(err.Error())
-		return nil, err
-	}
-	return transformResultByte, err
-}
-
-func TransformMapToArrByte(resMap map[string]interface{}) [][]byte {
-	myslice := make([]interface{}, 0)
-	for _, val := range resMap {
-		myslice = append(myslice, val)
-	}
-
-	output := make([][]byte, 2)
-	for i, v := range myslice {
-		output[i] = PassInterface(v)
-	}
-
-	return output
-}
-
-func PassInterface(v interface{}) []byte {
-	b, ok := x2j.MapToXml(v.(map[string]interface{}))
-
-	fmt.Println(ok)
-	fmt.Println(b)
-
-	return b
 }

@@ -2,12 +2,10 @@ package service
 
 import (
 	"fmt"
-	"net/url"
-
 	"github.com/clbanning/mxj"
-	"github.com/clbanning/mxj/j2x"
 	"github.com/labstack/echo"
 	"github.com/sirupsen/logrus"
+	"net/url"
 )
 
 // FromFormUrl is a function that transform formUrl into map string interface
@@ -54,11 +52,4 @@ func MapToFormUrl(myMap map[string]interface{}) url.Values {
 	logrus.Info("form now is")
 	logrus.Info(form)
 	return form
-}
-
-func MapToJson(myMap map[string]interface{}) []byte {
-
-	jsonBody, _ := j2x.MapToJson(myMap)
-	//jsonBody, _ := json.MarshalIndent(myMap, "", "\t")
-	return jsonBody
 }

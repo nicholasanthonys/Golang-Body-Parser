@@ -215,8 +215,7 @@ func doSerial(c echo.Context) error {
 				return ErrorWriter(c, configure, err, status)
 			}
 
-			//*store to temporary map
-			//*append to arr map string model wrapper
+			//*save to map
 			mapWrapper[file.Name()] = requestFromUser
 
 		}

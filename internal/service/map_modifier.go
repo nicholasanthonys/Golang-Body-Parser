@@ -218,10 +218,7 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 	splittedPath := strings.Split(path, "/")
 	for _, val := range splittedPath {
 		if strings.Contains(val, "{{") && strings.Contains(val, "}}") {
-			logrus.Info(val)
 			removedBracket := RemoveCharacters(val, "{{}}")
-			logrus.Info("removed bracket is")
-			logrus.Info(removedBracket)
 
 			//*split value : $configure1.json-$request-$body[user][name]
 			var realValue interface{}
