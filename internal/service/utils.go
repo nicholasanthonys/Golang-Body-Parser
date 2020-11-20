@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -40,7 +40,8 @@ func ReadConfigure(path string) []byte {
 	jsonFile, err := os.Open(path)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		fmt.Println(err)
+		logrus.Error(err.Error())
+
 	}
 
 	// defer the closing of our jsonFile so that we can parse it later on

@@ -1,19 +1,27 @@
 package test
 
 import (
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/service"
+	"github.com/joho/godotenv"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 )
 
 var URL = ""
+var log = logrus.New()
 
 func init() {
-	URL = "http://localhost:8888"
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	URL = "http://" + os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT")
 	logrus.Info("init triggered")
 }
 

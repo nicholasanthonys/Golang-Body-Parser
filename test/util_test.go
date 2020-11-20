@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/service"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"

@@ -1,0 +1,28 @@
+{
+  "configureBased": "",
+  "response": {
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.name" : "$configure1.json--$response--$body[user][name]",
+        "user.id" : "$configure0.json--$response--$body[user][id]",
+        "user.favorite_cars" : "$configure1.json--$request--$body[user][cars][0]",
+        "user.transaction_id" : "$configure1.json--$request--$path[transaction]",
+        "user.configure0_query" : "$configure0.json--$request--$query[address]"
+
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    },
+    "modifies": {
+      "body": {
+      }
+    }
+  }
+}

@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/service"
+	"github.com/joho/godotenv"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/sirupsen/logrus"
+	"os"
 )
 
 var log = logrus.New()
@@ -17,9 +19,14 @@ func init() {
 }
 
 func main() {
+	//*load env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	//*start Server
-	err := service.SetRouteHandler().Start("localhost:8888")
+	err = service.SetRouteHandler().Start(os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT"))
 	if err != nil {
 		panic(err)
 	}

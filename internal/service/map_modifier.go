@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/openpgp/errors"
 	"reflect"

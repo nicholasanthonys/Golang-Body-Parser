@@ -1,14 +1,17 @@
 package test
 
 import (
-	"plugin"
+	"errors"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
+//* Test to load function from plugin
 func TestLoadFunction(t *testing.T) {
-	_, err := plugin.Open("../plugin/transform.so")
-	if err != nil {
-		t.Error(t, err.Error())
-
+	transformFunction := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	if transformFunction == nil {
+		assert.Error(t, errors.New("Transform function is nil"), "error opening transform function")
 	}
+
 }

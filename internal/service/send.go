@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
@@ -35,7 +35,7 @@ func Send(configure model.Configure, requestFromUser *model.Wrapper, method stri
 	req, _ = http.NewRequest(method, url, body)
 
 	//*set Header
-	setHeader(*requestFromUser, &req.Header)
+	SetHeader(*requestFromUser, &req.Header)
 
 	q := req.URL.Query()
 
@@ -76,7 +76,7 @@ func setContentTypeHeader(transformRequest string, header *http.Header) {
 
 }
 
-func setHeader(requestFromUser model.Wrapper, header *http.Header) {
+func SetHeader(requestFromUser model.Wrapper, header *http.Header) {
 	//actually set the header based on map header
 	for key, value := range requestFromUser.Request.Header {
 		if key != "Content-Type" {

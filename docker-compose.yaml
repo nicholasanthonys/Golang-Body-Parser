@@ -1,0 +1,8 @@
+version: '3.4'
+services:
+  body-parser:
+    build: .
+    image: tes2:latest
+    container_name : container-body-parser
+    ports:
+      - 80:8080

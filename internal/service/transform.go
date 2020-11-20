@@ -2,7 +2,7 @@ package service
 
 import (
 	"bytes"
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/url"

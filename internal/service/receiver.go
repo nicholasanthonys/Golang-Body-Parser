@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/nicholasantnhonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
