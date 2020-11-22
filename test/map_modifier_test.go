@@ -2,14 +2,14 @@ package test
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"io"
+
 	"os"
-	"reflect"
+
 	"strings"
 	"testing"
 )
@@ -18,14 +18,14 @@ var mapWrapper map[string]model.Wrapper
 var requestFromUser model.Wrapper
 
 func init() {
-	parallelConfigByte := service.ReadConfigure("./mock/response.json")
+	parallelConfigByte := util.ReadConfigure("./mock/response.json")
 	err := json.Unmarshal(parallelConfigByte, &requestFromUser.Configure)
 	if err != nil {
 		logrus.Error("error reading ./mock/response.json")
 		os.Exit(1)
 	}
 	mapWrapper = make(map[string]model.Wrapper)
-	files, err := service.GetListFolder("./mock")
+	files, err := util.GetListFolder("./mock")
 	if err != nil {
 		logrus.Error("Error reading ./mock folder")
 		os.Exit(1)
@@ -49,7 +49,7 @@ func init() {
 					Query:  make(map[string]interface{}),
 				},
 			}
-			configByte := service.ReadConfigure("./mock/" + file.Name())
+			configByte := util.ReadConfigure("./mock/" + file.Name())
 			//* assign configure byte to configure
 			err = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
@@ -67,9 +67,9 @@ func TestMapModifierBody(t *testing.T) {
 	//take configure index
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
 
-	transformFunction := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
-	if transformFunction == nil {
-		assert.Error(t, errors.New("Transform function is nil"), "error opening transform function")
+	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	if err != nil {
+		assert.Error(t, err, "error opening transform function")
 	}
 	resultByte, err := transformFunction(requestFromUser.Request.Body)
 	if err != nil {
@@ -77,7 +77,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 	expected := `{"user":{"id":"0","last_name":"peter"}}`
 
-	equal, err := JSONBytesEqual([]byte(expected), resultByte)
+	equal, err := util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -92,7 +92,7 @@ func TestMapModifierBody(t *testing.T) {
 		assert.Error(t, err, "error performing convertion to JSON")
 	}
 	expected = `{"user":{"id":"99","last_name":"parker"}}`
-	equal, err = JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -104,7 +104,7 @@ func TestMapModifierBody(t *testing.T) {
 	service.DeletionBody(wrapperConfigure0.Configure.Request.Deletes, requestFromUser.Request)
 	resultByte, err = transformFunction(requestFromUser.Request.Body)
 	expected = `{"user":{"last_name":"parker"}}`
-	equal, err = JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -119,9 +119,9 @@ func TestMapModifierHeader(t *testing.T) {
 	wrapperConfigure0 := mapWrapper["configure0.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper)
 
-	transformFunction := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
-	if transformFunction == nil {
-		assert.Error(t, errors.New("Transform function is nil"), "error opening transform function")
+	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	if err != nil {
+		assert.Error(t, err, "error opening transform function")
 	}
 
 	resultByte, err := transformFunction(requestFromUser.Request.Header)
@@ -130,7 +130,7 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 
 	expected := `{"odd_number":"1357", "fav_character":"naruto"}`
-	equal, err := JSONBytesEqual([]byte(expected), resultByte)
+	equal, err := util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -145,7 +145,7 @@ func TestMapModifierHeader(t *testing.T) {
 		assert.Error(t, err, "error performing convertion to JSON")
 	}
 	expected = `{"odd_number":"2468", "fav_character":"kakashi"}`
-	equal, err = JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -160,7 +160,7 @@ func TestMapModifierHeader(t *testing.T) {
 		assert.Error(t, err, "error performing convertion to JSON")
 	}
 	expected = `{"fav_character":"kakashi"}`
-	equal, err = JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -174,9 +174,9 @@ func TestMapModifierQuery(t *testing.T) {
 	wrapperConfigure0 := mapWrapper["configure0.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper)
 
-	transformFunction := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
-	if transformFunction == nil {
-		assert.Error(t, errors.New("Transform function is nil"), "error opening transform function")
+	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	if err != nil {
+		assert.Error(t, err, "error opening transform function")
 	}
 
 	resultByte, err := transformFunction(requestFromUser.Request.Query)
@@ -185,7 +185,7 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 
 	expected := `{"address":"kopo", "key":"123-456"}`
-	equal, err := JSONBytesEqual([]byte(expected), resultByte)
+	equal, err := util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -201,7 +201,7 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 
 	expected = `{"address":"cibaduyut", "key":"456-789"}`
-	equal, err = JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -216,7 +216,7 @@ func TestMapModifierQuery(t *testing.T) {
 		assert.Error(t, err, "error performing convertion to JSON")
 	}
 	expected = `{"key":"456-789"}`
-	equal, err = JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
@@ -224,31 +224,4 @@ func TestMapModifierQuery(t *testing.T) {
 		assert.Equal(t, expected, string(resultByte), "should be equal")
 	}
 
-}
-
-// JSONEqual compares the JSON from two Readers.
-func JSONEqual(a, b io.Reader) (bool, error) {
-	var j, j2 interface{}
-	d := json.NewDecoder(a)
-	if err := d.Decode(&j); err != nil {
-		return false, err
-	}
-	d = json.NewDecoder(b)
-	if err := d.Decode(&j2); err != nil {
-		return false, err
-	}
-	return reflect.DeepEqual(j2, j), nil
-}
-
-// JSONBytesEqual compares the JSON in two byte slices.
-func JSONBytesEqual(a, b []byte) (bool, error) {
-	var j, j2 interface{}
-	if err := json.Unmarshal(a, &j); err != nil {
-		logrus.Error("Error unmarhsaling a")
-	}
-	if err := json.Unmarshal(b, &j2); err != nil {
-		logrus.Error("Error unmarhsaling b ")
-	}
-
-	return reflect.DeepEqual(j2, j), nil
 }

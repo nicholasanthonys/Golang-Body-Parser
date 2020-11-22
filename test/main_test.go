@@ -2,7 +2,7 @@ package test
 
 import (
 	"github.com/joho/godotenv"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
+
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -47,7 +47,8 @@ func TestWithoutBody(t *testing.T) {
 			"favorite_cars": "<nil>",
 			"id": "0",
 			"name": "<nil>",
-			"transaction_id": "20"
+			"transaction_id": "20",
+			"tes" : "tes"
 		}
 	}`
 
@@ -62,6 +63,7 @@ func TestWithoutBody(t *testing.T) {
 	if !equal {
 		assert.Equal(t, expected, string(responseByte), "should be equal")
 	}
+
 }
 
 func TestWithBody(t *testing.T) { //*SERIAL
@@ -76,24 +78,30 @@ func TestWithBody(t *testing.T) { //*SERIAL
 	res, err := client.Do(req)
 
 	if assert.NoError(t, err) {
-		expected :=
-			`{
+		expected := `{
 				"user": {
 					"favorite_cars": "honda",
 					"id": "0",
-					"name": "Peter Parker",
+					"name": "nicholas",
  					"transaction_id": "20",
-					"configure0_query": "kopo"
+					"configure0_query": "kopo",
+					"tes" : "tes"
 				}
 			}`
 
-		expectedJson, err := service.FromJson([]byte(expected))
 		responseByte, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			assert.Fail(t, "error read response", err.Error())
 		}
-		actualResponse, _ := service.FromJson(responseByte)
-		assert.Exactlyf(t, expectedJson, actualResponse, "actual-expected")
+
+		equal, err := util.JSONBytesEqual([]byte(expected), responseByte)
+		if err != nil {
+			assert.Error(t, err, "error compare json byte")
+		}
+		if !equal {
+			assert.Equal(t, expected, string(responseByte), "should be equal")
+		}
+
 	}
 
 	if res.StatusCode != http.StatusOK {
@@ -116,19 +124,25 @@ func TestWithBody(t *testing.T) { //*SERIAL
 				"user": {
 					"favorite_cars": "honda",
 					"id": "0",
-					"name": "Peter Parker",
+					"name": "nicholas",
 					"transaction_id": "20",
-					"configure0_query": "kopo"
+					"configure0_query": "kopo",
+					"tes" : "tes"
 				}
 			}`
 
-		expectedJson, err := service.FromJson([]byte(expected))
 		responseByte, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			assert.Fail(t, "error read response", err.Error())
 		}
-		actualResponse, _ := service.FromJson(responseByte)
-		assert.Exactlyf(t, expectedJson, actualResponse, "actual-expected")
+		equal, err := util.JSONBytesEqual([]byte(expected), responseByte)
+		if err != nil {
+			assert.Error(t, err, "error compare json byte")
+		}
+		if !equal {
+			assert.Equal(t, expected, string(responseByte), "should be equal")
+		}
+
 	}
 
 	if res.StatusCode != http.StatusOK {
