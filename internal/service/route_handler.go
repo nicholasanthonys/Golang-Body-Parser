@@ -55,7 +55,7 @@ func SetRouteHandler() *echo.Echo {
 
 func worker(wg *sync.WaitGroup, fileName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
 	defer wg.Done()
-	_, status, err := process(fileName, configure, c, &requestFromUser, mapWrapper, requestBody)
+	_, status, err := processingRequest(fileName, configure, c, &requestFromUser, mapWrapper, requestBody)
 	if err != nil {
 		logrus.Error("Go Worker - Error Process")
 		logrus.Error(err.Error())
@@ -209,7 +209,7 @@ func doSerial(c echo.Context) error {
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
 
-			_, status, err := process(file.Name(), configure, c, &requestFromUser, mapWrapper, reqByte)
+			_, status, err := processingRequest(file.Name(), configure, c, &requestFromUser, mapWrapper, reqByte)
 
 			if err != nil {
 				return ErrorWriter(c, configure, err, status)
@@ -228,51 +228,23 @@ func doSerial(c echo.Context) error {
 	return ResponseWriter(resultWrapper, c)
 }
 
-func process(fileName string, configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
-
-	//*this variable accept request from user
+func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
 
 	//*check the content type user request
 	var contentType string
+	var err error
+	var status int
+
 	if c.Request().Header["Content-Type"] != nil {
 		contentType = c.Request().Header["Content-Type"][0]
 	} else {
 		contentType = "application/json"
 	}
 
-	var err error
-	switch contentType {
-	case "application/json":
-		logrus.Info("content type is json")
-		//*transform JSON request user to map request from user
-		wrapperUser.Request.Body, err = FromJson(reqByte)
-		if err != nil {
-			logrus.Warn("error service from Json")
-			wrapperUser.Response.Body["message"] = err.Error()
-			return nil, http.StatusInternalServerError, err
-		}
-
-	case "application/x-www-form-urlencoded":
-		//*transform x www form url encoded request user to map request from user
-		wrapperUser.Request.Body = FromFormUrl(c)
-	case "application/xml":
-
-		//*transform xml request user to map request from user
-		wrapperUser.Request.Body, err = FromXmL(reqByte)
-		if err != nil {
-			logrus.Warn("error service from xml")
-			wrapperUser.Response.Body["message"] = err.Error()
-			return nil, http.StatusInternalServerError, err
-		} else {
-			logrus.Warn("service from xml success, request from user is")
-			logrus.Warn(wrapperUser.Request)
-		}
-
-	default:
-		logrus.Warn("Content type not supported")
-		resMap := make(map[string]interface{})
-		resMap["message"] = "Content type not supported"
-		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
+	//*convert request to map string interface based on the content type
+	wrapperUser.Request.Body, status, err = parseRequestBody(c, contentType, reqByte)
+	if err != nil {
+		return nil, status, err
 	}
 
 	//*set header value
@@ -320,4 +292,38 @@ func process(fileName string, configure model.Configure, c echo.Context, wrapper
 
 	return wrapperUser, http.StatusOK, nil
 
+}
+
+func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[string]interface{}, int, error) {
+	var err error
+	var result = make(map[string]interface{})
+	switch contentType {
+	case "application/json":
+		logrus.Info("content type is json")
+		//*transform JSON request user to map request from user
+		result, err = FromJson(reqByte)
+		if err != nil {
+			logrus.Warn("error service from Json")
+			result["message"] = err.Error()
+			return nil, http.StatusInternalServerError, err
+		}
+
+	case "application/x-www-form-urlencoded":
+		//*transform x www form url encoded request user to map request from user
+		result = FromFormUrl(c)
+	case "application/xml":
+
+		//*transform xml request user to map request from user
+		result, err = FromXmL(reqByte)
+		if err != nil {
+			logrus.Warn("error service from xml")
+			result["message"] = err.Error()
+			return nil, http.StatusInternalServerError, err
+		}
+
+	default:
+		logrus.Warn("Content type not supported")
+		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
+	}
+	return result, http.StatusOK, nil
 }
