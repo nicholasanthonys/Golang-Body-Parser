@@ -1,13 +1,16 @@
-package service
+package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
+	"io"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 )
 
@@ -144,4 +147,31 @@ func RemoveCharacters(input string, characters string) string {
 
 	return strings.Map(filter, input)
 
+}
+
+// JSONEqual compares the JSON from two Readers.
+func JSONEqual(a, b io.Reader) (bool, error) {
+	var j, j2 interface{}
+	d := json.NewDecoder(a)
+	if err := d.Decode(&j); err != nil {
+		return false, err
+	}
+	d = json.NewDecoder(b)
+	if err := d.Decode(&j2); err != nil {
+		return false, err
+	}
+	return reflect.DeepEqual(j2, j), nil
+}
+
+// JSONBytesEqual compares the JSON in two byte slices.
+func JSONBytesEqual(a, b []byte) (bool, error) {
+	var j, j2 interface{}
+	if err := json.Unmarshal(a, &j); err != nil {
+		logrus.Error("Error unmarhsaling a")
+	}
+	if err := json.Unmarshal(b, &j2); err != nil {
+		logrus.Error("Error unmarhsaling b ")
+	}
+
+	return reflect.DeepEqual(j2, j), nil
 }
