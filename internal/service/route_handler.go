@@ -228,7 +228,7 @@ func doSerial(c echo.Context) error {
 	return ResponseWriter(resultWrapper, c)
 }
 
-func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapperUser *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
+func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
 
 	//*check the content type user request
 	var contentType string
@@ -242,7 +242,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	}
 
 	//*convert request to map string interface based on the content type
-	wrapperUser.Request.Body, status, err = parseRequestBody(c, contentType, reqByte)
+	wrapper.Request.Body, status, err = parseRequestBody(c, contentType, reqByte)
 	if err != nil {
 		return nil, status, err
 	}
@@ -250,37 +250,37 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	//*set header value
 	for key := range c.Request().Header {
 
-		wrapperUser.Request.Header[key] = c.Request().Header.Get(key)
+		wrapper.Request.Header[key] = c.Request().Header.Get(key)
 	}
 
 	//*set query value
 	for key := range c.QueryParams() {
-		wrapperUser.Request.Query[key] = c.QueryParam(key)
+		wrapper.Request.Query[key] = c.QueryParam(key)
 	}
 
 	//*set param value
 	for _, value := range c.ParamNames() {
-		wrapperUser.Request.Param[value] = c.Param(value)
+		wrapper.Request.Param[value] = c.Param(value)
 	}
 
 	_, find := Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
 		//*assign first before do any add,modification,delete in case value want reference each other
-		mapWrapper[fileName] = *wrapperUser
+		mapWrapper[fileName] = *wrapper
 		//* Do the Map Modification if method is find/available
-		DoCommand(configure.Request, wrapperUser.Request, mapWrapper)
+		DoCommand(configure.Request, wrapper.Request, mapWrapper)
 	}
 
 	//*get the desinationPath value before sending request
 	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
 
 	//*send to destination url
-	response, err := Send(configure, wrapperUser, configure.Request.MethodUsed)
+	response, err := Send(configure, wrapper, configure.Request.MethodUsed)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
-	_, err = Receiver(configure, response, &wrapperUser.Response)
+	_, err = Receiver(configure, response, &wrapper.Response)
 	//*close http
 	defer response.Body.Close()
 	if err != nil {
@@ -288,9 +288,9 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	}
 
 	//* Do Command Add, Modify, Deletion again
-	DoCommand(configure.Response, wrapperUser.Response, mapWrapper)
+	DoCommand(configure.Response, wrapper.Response, mapWrapper)
 
-	return wrapperUser, http.StatusOK, nil
+	return wrapper, http.StatusOK, nil
 
 }
 
