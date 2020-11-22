@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/openpgp/errors"
 	"reflect"
@@ -91,7 +92,7 @@ func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 
 	if reflect.String == vt {
 		//* We Call Sanitizevalue to clear the value from the square bracket and the Dollar Sign
-		listTraverseVal, destination := SanitizeValue(fmt.Sprintf("%v", value))
+		listTraverseVal, destination := util.SanitizeValue(fmt.Sprintf("%v", value))
 		if listTraverseVal != nil {
 			if destination == "body" {
 				realValue = GetValue(listTraverseVal, takeFrom.Body, 0)
@@ -126,7 +127,7 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 			rt := reflect.TypeOf(in)
 			switch rt.Kind() {
 			case reflect.Slice:
-				logrus.Info("type is slice")
+
 				//*check type slice element
 				//* example :  $body[user][name][0]. Now we have the 0 as index type string. we need to
 				//* convert the 0 to become integer
@@ -138,6 +139,7 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 				}
 				//*if the type of the interface is slice
 				if len(in.([]interface{})) > indexInt {
+
 					return in.([]interface{})[indexInt]
 				}
 				return nil
@@ -156,7 +158,7 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 			//*if the map is nil, return interface
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
-				return in
+				return nil
 			}
 			//* recursively traverse the map again
 			return GetValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
@@ -218,7 +220,7 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 	splittedPath := strings.Split(path, "/")
 	for _, val := range splittedPath {
 		if strings.Contains(val, "{{") && strings.Contains(val, "}}") {
-			removedBracket := RemoveCharacters(val, "{{}}")
+			removedBracket := util.RemoveCharacters(val, "{{}}")
 
 			//*split value : $configure1.json-$request-$body[user][name]
 			var realValue interface{}
@@ -227,7 +229,7 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 				splittedValue := strings.Split(fmt.Sprintf("%v", removedBracket), separator) //$configure1.json, $request, $body[user][name]
 
 				//remove dollar sign
-				splittedValue[0] = RemoveCharacters(splittedValue[0], "$")
+				splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 				if splittedValue[1] == "$request" {
 					//* get the request from fields
 
@@ -269,7 +271,7 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
 			//remove dollar sign
-			splittedValue[0] = RemoveCharacters(splittedValue[0], "$")
+			splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
 
@@ -300,7 +302,7 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			//* into $configure1.json, $request, $body[user]
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
 			//remove dollar sign from $configure
-			splittedValue[0] = RemoveCharacters(splittedValue[0], "$")
+			splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 
 			if splittedValue[1] == "$request" {
 				//* get the request from fields

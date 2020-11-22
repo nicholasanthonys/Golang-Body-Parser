@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"errors"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -26,8 +27,8 @@ func TransformBody(configure model.Configure, requestFromUser map[string]interfa
 		return body, nil
 	default:
 		logrus.Warn("transform request to " + transformRequest + " not supported")
-		// masih harus di handle atau return seperti apa
-		return nil, nil
+
+		return nil, errors.New("transform request to " + transformRequest + " not supported")
 	}
 
 }
@@ -39,7 +40,10 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 	var err error
 
 	//Both Request Transform ToJson or ToXml will be parsed here
-	transformFunction := LoadFunctionFromModule("./plugin/transform.so", transformRequest)
+	transformFunction, err := LoadFunctionFromModule("./plugin/transform.so", transformRequest)
+	if err != nil {
+		return nil, err
+	}
 	//transform from map to Json or XML
 	resultByte, err = transformFunction(requestFromUser)
 

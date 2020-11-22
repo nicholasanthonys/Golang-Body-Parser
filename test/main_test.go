@@ -3,6 +3,7 @@ package test
 import (
 	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -31,12 +32,35 @@ func TestWithoutBody(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{}
+
 	res, err := client.Do(req)
 	if err != nil {
 		t.Errorf("Expected nil, received %s", err.Error())
 	}
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("Expected %d, received %d", http.StatusOK, res.StatusCode)
+	}
+
+	expected := `{
+		"user": {
+			"configure0_query": "kopo",
+			"favorite_cars": "<nil>",
+			"id": "0",
+			"name": "<nil>",
+			"transaction_id": "20"
+		}
+	}`
+
+	responseByte, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		assert.Error(t, err, "should not error")
+	}
+	equal, err := util.JSONBytesEqual([]byte(expected), responseByte)
+	if err != nil {
+		assert.Error(t, err, "error compare json byte")
+	}
+	if !equal {
+		assert.Equal(t, expected, string(responseByte), "should be equal")
 	}
 }
 

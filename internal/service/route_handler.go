@@ -3,10 +3,10 @@ package service
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +24,7 @@ func SetRouteHandler() *echo.Echo {
 	e.Use(middleware.Recover())
 	//e.Use(middle)
 
-	files, err := GetListFolder("./configures")
+	files, err := util.GetListFolder("./configures")
 
 	if err != nil {
 		logrus.Error("error reading directory ./configures")
@@ -35,7 +35,7 @@ func SetRouteHandler() *echo.Echo {
 	for _, file := range files {
 		var configure model.Configure
 		if strings.Contains(file.Name(), "configure") {
-			configByte := ReadConfigure("./configures/" + file.Name())
+			configByte := util.ReadConfigure("./configures/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			// Routes serial execution
@@ -72,7 +72,7 @@ func doParallel(c echo.Context) error {
 	//*read the request that will be sent from user
 	requestBody, _ := ioutil.ReadAll(c.Request().Body)
 	//* get files and store it in slice
-	files, err := GetListFolder("./configures")
+	files, err := util.GetListFolder("./configures")
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -100,7 +100,7 @@ func doParallel(c echo.Context) error {
 					Query:  make(map[string]interface{}),
 				},
 			}
-			configByte := ReadConfigure("./configures/" + file.Name())
+			configByte := util.ReadConfigure("./configures/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
@@ -115,7 +115,7 @@ func doParallel(c echo.Context) error {
 
 	//*now we need to parse the response.json command
 	resultWrapper := parseResponse(mapWrapper)
-	return ResponseWriter(resultWrapper, c)
+	return util.ResponseWriter(resultWrapper, c)
 }
 
 func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
@@ -131,12 +131,12 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 		},
 	}
 
-	parallelConfigByte := ReadConfigure("./configures/response.json")
+	parallelConfigByte := util.ReadConfigure("./configures/response.json")
 	_ = json.Unmarshal(parallelConfigByte, &resultWrapper.Configure)
 
-	//* meants that the response is based from configurex.json
+	//* means that the response is based from configurex.json
 	if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
-		keyConfigure := RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
+		keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
 		//*check if key exist in the map
 		if _, ok := mapWrapper[keyConfigure]; ok {
 			//* get configureX.json from map wrapper
@@ -144,19 +144,13 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 		}
 	}
 
-	for key, value := range resultWrapper.Configure.Response.Adds.Body {
-		stringValue := fmt.Sprintf("%v", value)
-		if strings.HasPrefix(stringValue, "$configure") {
-			//*add
-			AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", resultWrapper.Response.Body, mapWrapper)
-			//*modify
-			ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", resultWrapper.Response.Body, mapWrapper)
-			//* delete
-			DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
-		} else {
-			resultWrapper.Response.Body[key] = value
-		}
-	}
+	//*add
+	AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", resultWrapper.Response.Body, mapWrapper)
+	//*modify
+	ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", resultWrapper.Response.Body, mapWrapper)
+	//* delete
+	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
+
 	logrus.Info("result is ")
 	logrus.Info(resultWrapper)
 	return resultWrapper
@@ -165,7 +159,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
 func doSerial(c echo.Context) error {
 
-	files, err := GetListFolder("./configures")
+	files, err := util.GetListFolder("./configures")
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -204,7 +198,7 @@ func doSerial(c echo.Context) error {
 				},
 			}
 
-			configByte := ReadConfigure("./configures/" + file.Name())
+			configByte := util.ReadConfigure("./configures/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
@@ -212,7 +206,7 @@ func doSerial(c echo.Context) error {
 			_, status, err := processingRequest(file.Name(), configure, c, &requestFromUser, mapWrapper, reqByte)
 
 			if err != nil {
-				return ErrorWriter(c, configure, err, status)
+				return util.ErrorWriter(c, configure, err, status)
 			}
 
 			//*save to map
@@ -225,7 +219,7 @@ func doSerial(c echo.Context) error {
 	//*use the latest configures and the latest response
 	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
 	resultWrapper := parseResponse(mapWrapper)
-	return ResponseWriter(resultWrapper, c)
+	return util.ResponseWriter(resultWrapper, c)
 }
 
 func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
@@ -263,7 +257,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 		wrapper.Request.Param[value] = c.Param(value)
 	}
 
-	_, find := Find(configure.Methods, configure.Request.MethodUsed)
+	_, find := util.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
 		//*assign first before do any add,modification,delete in case value want reference each other
 		mapWrapper[fileName] = *wrapper
