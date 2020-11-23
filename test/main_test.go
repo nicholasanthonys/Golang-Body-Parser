@@ -2,7 +2,6 @@ package test
 
 import (
 	"github.com/joho/godotenv"
-
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -48,7 +47,7 @@ func TestWithoutBody(t *testing.T) {
 			"id": "0",
 			"name": "<nil>",
 			"transaction_id": "20",
-			"tes" : "tes"
+			"tes" : "from mock directory"
 		}
 	}`
 
@@ -85,7 +84,7 @@ func TestWithBody(t *testing.T) { //*SERIAL
 					"name": "nicholas",
  					"transaction_id": "20",
 					"configure0_query": "kopo",
-					"tes" : "tes"
+					"tes" : "from mock directory"
 				}
 			}`
 
@@ -127,7 +126,7 @@ func TestWithBody(t *testing.T) { //*SERIAL
 					"name": "nicholas",
 					"transaction_id": "20",
 					"configure0_query": "kopo",
-					"tes" : "tes"
+					"tes" : "from mock directory"
 				}
 			}`
 

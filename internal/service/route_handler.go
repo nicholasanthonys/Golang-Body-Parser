@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
@@ -14,7 +15,14 @@ import (
 	"sync"
 )
 
+var configureDir *string
+
 func SetRouteHandler() *echo.Echo {
+
+	//*setting configures directory
+	configureDir = flag.String("configures", "./configures", "path to configures directory relative to the main.go")
+	flag.Parse()
+	logrus.Info("from route handler configure directory argument is :", *configureDir)
 
 	// Echo instance
 	e := echo.New()
@@ -24,10 +32,10 @@ func SetRouteHandler() *echo.Echo {
 	e.Use(middleware.Recover())
 	//e.Use(middle)
 
-	files, err := util.GetListFolder("./configures")
+	files, err := util.GetListFolder(*configureDir)
 
 	if err != nil {
-		logrus.Error("error reading directory ./configures")
+		logrus.Error("error reading directory " + *configureDir)
 
 	}
 
@@ -35,7 +43,7 @@ func SetRouteHandler() *echo.Echo {
 	for _, file := range files {
 		var configure model.Configure
 		if strings.Contains(file.Name(), "configure") {
-			configByte := util.ReadConfigure("./configures/" + file.Name())
+			configByte := util.ReadConfigure(*configureDir + "/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			// Routes serial execution
@@ -72,7 +80,7 @@ func doParallel(c echo.Context) error {
 	//*read the request that will be sent from user
 	requestBody, _ := ioutil.ReadAll(c.Request().Body)
 	//* get files and store it in slice
-	files, err := util.GetListFolder("./configures")
+	files, err := util.GetListFolder(*configureDir)
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -100,7 +108,7 @@ func doParallel(c echo.Context) error {
 					Query:  make(map[string]interface{}),
 				},
 			}
-			configByte := util.ReadConfigure("./configures/" + file.Name())
+			configByte := util.ReadConfigure(*configureDir + "/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
@@ -131,7 +139,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 		},
 	}
 
-	parallelConfigByte := util.ReadConfigure("./configures/response.json")
+	parallelConfigByte := util.ReadConfigure(*configureDir + "/response.json")
 	_ = json.Unmarshal(parallelConfigByte, &resultWrapper.Configure)
 
 	//* means that the response is based from configurex.json
@@ -159,7 +167,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
 func doSerial(c echo.Context) error {
 
-	files, err := util.GetListFolder("./configures")
+	files, err := util.GetListFolder(*configureDir)
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -198,7 +206,7 @@ func doSerial(c echo.Context) error {
 				},
 			}
 
-			configByte := util.ReadConfigure("./configures/" + file.Name())
+			configByte := util.ReadConfigure(*configureDir + "/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure

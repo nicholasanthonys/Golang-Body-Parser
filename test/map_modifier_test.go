@@ -18,12 +18,7 @@ var mapWrapper map[string]model.Wrapper
 var requestFromUser model.Wrapper
 
 func init() {
-	parallelConfigByte := util.ReadConfigure("./mock/response.json")
-	err := json.Unmarshal(parallelConfigByte, &requestFromUser.Configure)
-	if err != nil {
-		logrus.Error("error reading ./mock/response.json")
-		os.Exit(1)
-	}
+
 	mapWrapper = make(map[string]model.Wrapper)
 	files, err := util.GetListFolder("./mock")
 	if err != nil {
@@ -62,10 +57,10 @@ func init() {
 //* add to body
 func TestMapModifierBody(t *testing.T) {
 	//Add Body
-	wrapperConfigure0 := mapWrapper["configure0.json"]
+	wrapperConfigure3 := mapWrapper["configure3.json"]
 
 	//take configure index
-	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	service.AddToWrapper(wrapperConfigure3.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
 
 	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
 	if err != nil {
@@ -86,7 +81,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//*Modify Body
-	service.ModifyWrapper(wrapperConfigure0.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	service.ModifyWrapper(wrapperConfigure3.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
 	resultByte, err = transformFunction(requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error performing convertion to JSON")
@@ -101,7 +96,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//* Deletion Body
-	service.DeletionBody(wrapperConfigure0.Configure.Request.Deletes, requestFromUser.Request)
+	service.DeletionBody(wrapperConfigure3.Configure.Request.Deletes, requestFromUser.Request)
 	resultByte, err = transformFunction(requestFromUser.Request.Body)
 	expected = `{"user":{"last_name":"parker"}}`
 	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
@@ -116,7 +111,7 @@ func TestMapModifierBody(t *testing.T) {
 //* Test Add to Header
 func TestMapModifierHeader(t *testing.T) {
 	//* Add Header
-	wrapperConfigure0 := mapWrapper["configure0.json"]
+	wrapperConfigure0 := mapWrapper["configure3.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper)
 
 	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
@@ -171,7 +166,7 @@ func TestMapModifierHeader(t *testing.T) {
 
 func TestMapModifierQuery(t *testing.T) {
 	//* Add Query
-	wrapperConfigure0 := mapWrapper["configure0.json"]
+	wrapperConfigure0 := mapWrapper["configure3.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper)
 
 	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")

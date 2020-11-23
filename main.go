@@ -16,6 +16,7 @@ func init() {
 	log.SetFormatter(customFormatter)
 	customFormatter.FullTimestamp = true
 	log.Level = logrus.DebugLevel
+
 }
 
 func main() {
