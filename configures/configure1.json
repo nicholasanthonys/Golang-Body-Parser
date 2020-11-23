@@ -20,15 +20,6 @@
       }
 
     },
-    "deletes": {
-      "header": [
-      ],
-      "body": [
-
-      ],
-      "query": [
-      ]
-    },
     "modifies": {
       "header": {
       },
@@ -38,6 +29,15 @@
       "query": {
 
       }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+
+      ],
+      "query": [
+      ]
     }
   },
   "response": {
@@ -51,14 +51,14 @@
       "query": {
       }
     },
-    "deletes": {
-      "body": [
-      ]
-    },
     "modifies": {
       "body": {
         "user.name" : "Peter Parker"
       }
+    },
+    "deletes": {
+      "body": [
+      ]
     }
   }
 }
