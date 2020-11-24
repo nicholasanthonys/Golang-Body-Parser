@@ -5,7 +5,7 @@
   "path": "/persons/:person/transactions/:transaction",
   "request": {
     "destinationPath" : "/{{$configure1.json--$request--$body[user][name]}}",
-    "destinationUrl": "http://localhost:3001",
+    "destinationUrl": "http://mockbin.org/bin/9cae1229-d149-4f34-8202-d18a6165736b/log",
     "methodUsed": "PUT",
     "transform": "ToJson",
     "adds": {
