@@ -39,6 +39,11 @@ func SetRouteHandler() *echo.Echo {
 
 	}
 
+	//*add index route
+	e.GET("/", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Golang-Body-Parser Active")
+	})
+
 	//*set path based from configure
 	for _, file := range files {
 		var configure model.Configure
