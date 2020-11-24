@@ -2,7 +2,7 @@ version: '3.4'
 services:
   body-parser:
     build: .
-    image: tes2:latest
+    image: go-body-parser:1.0
     container_name : container-body-parser
     ports:
-      - 80:8080
+      - "80:${APP_PORT}"
