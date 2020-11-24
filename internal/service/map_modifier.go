@@ -135,14 +135,14 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 				if err != nil {
 					logrus.Error("error converting string to integer")
 					logrus.Error(errors.ErrKeyIncorrect)
-					return nil
+					return "null"
 				}
 				//*if the type of the interface is slice
 				if len(in.([]interface{})) > indexInt {
 
 					return in.([]interface{})[indexInt]
 				}
-				return nil
+				return "null"
 
 			case reflect.Map:
 				if val, ok := in.(map[string]interface{})[listTraverse[index]]; ok {
@@ -150,7 +150,7 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 				}
 			default:
 				// return the whole interface
-				return nil
+				return "null"
 			}
 		}
 
@@ -158,12 +158,12 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 			//*if the map is nil, return interface
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
-				return nil
+				return "null"
 			}
 			//* recursively traverse the map again
 			return GetValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
 		} else {
-			return nil
+			return "null"
 		}
 	}
 
