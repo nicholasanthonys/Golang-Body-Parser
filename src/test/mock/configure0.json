@@ -1,0 +1,58 @@
+{
+  "methods": [
+    "PUT"
+  ],
+  "path": "/user/:userId",
+  "request": {
+    "destinationPath": "",
+    "destinationUrl": "http://localhost:3001",
+    "methodUsed": "PUT",
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.last_name": "peter",
+        "user.id": 0
+      },
+      "query": {
+        "address" : "kopo"
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    },
+    "modifies": {
+      "body": {
+      }
+    }
+  }
+}
