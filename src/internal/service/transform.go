@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func TransformBody(configure model.Configure, requestFromUser map[string]interface{}) (io.Reader, error) {
+func Transform(configure model.Configure, requestFromUser map[string]interface{}) (io.Reader, error) {
 	var body io.Reader
 	transformRequest := configure.Request.Transform
 	switch strings.ToLower(transformRequest) {

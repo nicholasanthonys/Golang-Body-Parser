@@ -1,6 +1,7 @@
 package test
 
 import (
+	"bytes"
 	"encoding/json"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
@@ -57,166 +58,217 @@ func init() {
 //* add to body
 func TestMapModifierBody(t *testing.T) {
 	//Add Body
-	wrapperConfigure3 := mapWrapper["configure3.json"]
+	wrapperConfigure2 := mapWrapper["configure2.json"]
 
 	//take configure index
-	service.AddToWrapper(wrapperConfigure3.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	service.AddToWrapper(wrapperConfigure2.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
 
-	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	stream, err := service.Transform(wrapperConfigure2.Configure, requestFromUser.Request.Body)
 	if err != nil {
-		assert.Error(t, err, "error opening transform function")
+		assert.Error(t, err, "error transform body")
 	}
-	resultByte, err := transformFunction(requestFromUser.Request.Body)
+
+	resultByte := new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error read from stream ")
 	}
+
 	expected := `{"user":{"id":"0","last_name":"peter"}}`
 
-	equal, err := util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err := util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 	//*Modify Body
-	service.ModifyWrapper(wrapperConfigure3.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
-	resultByte, err = transformFunction(requestFromUser.Request.Body)
+	service.ModifyWrapper(wrapperConfigure2.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	stream, err = service.Transform(wrapperConfigure2.Configure, requestFromUser.Request.Body)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error transform body")
 	}
+	resultByte = new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
+	if err != nil {
+		assert.Error(t, err, "error read from stream ")
+	}
+
 	expected = `{"user":{"id":"99","last_name":"parker"}}`
-	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 	//* Deletion Body
-	service.DeletionBody(wrapperConfigure3.Configure.Request.Deletes, requestFromUser.Request)
-	resultByte, err = transformFunction(requestFromUser.Request.Body)
+	service.DeletionBody(wrapperConfigure2.Configure.Request.Deletes, requestFromUser.Request)
+	stream, err = service.Transform(wrapperConfigure2.Configure, requestFromUser.Request.Body)
+	if err != nil {
+		assert.Error(t, err, "error transform body")
+	}
+
+	resultByte = new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
+	if err != nil {
+		assert.Error(t, err, "error read from stream ")
+	}
 	expected = `{"user":{"last_name":"parker"}}`
-	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 }
 
 //* Test Add to Header
 func TestMapModifierHeader(t *testing.T) {
 	//* Add Header
-	wrapperConfigure0 := mapWrapper["configure3.json"]
+	wrapperConfigure0 := mapWrapper["configure2.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper)
 
-	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	stream, err := service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Header)
 	if err != nil {
-		assert.Error(t, err, "error opening transform function")
+		assert.Error(t, err, "error performing transform header")
 	}
 
-	resultByte, err := transformFunction(requestFromUser.Request.Header)
+	resultByte := new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error read from stream ")
 	}
 
 	expected := `{"odd_number":"1357", "fav_character":"naruto"}`
-	equal, err := util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err := util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 	//*Modify Header
 	service.ModifyWrapper(wrapperConfigure0.Configure.Request.Modifies.Header, "--", requestFromUser.Request.Header, mapWrapper)
-	resultByte, err = transformFunction(requestFromUser.Request.Header)
+
+	stream, err = service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Header)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error performing transform header")
 	}
+
+	resultByte = new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
+	if err != nil {
+		assert.Error(t, err, "error read from stream ")
+	}
+
 	expected = `{"odd_number":"2468", "fav_character":"kakashi"}`
-	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 	//*Deletion Header
 	service.DeletionHeaderOrQuery(wrapperConfigure0.Configure.Request.Deletes.Header, requestFromUser.Request.Header)
-	resultByte, err = transformFunction(requestFromUser.Request.Header)
+	stream, err = service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Header)
+	if err != nil {
+		assert.Error(t, err, "error performing transform header")
+	}
+
+	resultByte = new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
+	if err != nil {
+		assert.Error(t, err, "error read from stream ")
+	}
+
 	if err != nil {
 		assert.Error(t, err, "error performing convertion to JSON")
 	}
 	expected = `{"fav_character":"kakashi"}`
-	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 }
 
 func TestMapModifierQuery(t *testing.T) {
 	//* Add Query
-	wrapperConfigure0 := mapWrapper["configure3.json"]
+	wrapperConfigure0 := mapWrapper["configure2.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper)
 
-	transformFunction, err := service.LoadFunctionFromModule("../plugin/transform.so", "ToJson")
+	stream, err := service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Query)
 	if err != nil {
-		assert.Error(t, err, "error opening transform function")
+		assert.Error(t, err, "error performing transform query")
 	}
 
-	resultByte, err := transformFunction(requestFromUser.Request.Query)
+	resultByte := new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error read from stream ")
 	}
 
 	expected := `{"address":"kopo", "key":"123-456"}`
-	equal, err := util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err := util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 	//*Modify query
 	service.ModifyWrapper(wrapperConfigure0.Configure.Request.Modifies.Query, "--", requestFromUser.Request.Query, mapWrapper)
-	resultByte, err = transformFunction(requestFromUser.Request.Query)
+
+	stream, err = service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Query)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error performing transform query")
+	}
+
+	resultByte = new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
+	if err != nil {
+		assert.Error(t, err, "error read from stream ")
 	}
 
 	expected = `{"address":"cibaduyut", "key":"456-789"}`
-	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 	//*Deletion Query
 	service.DeletionHeaderOrQuery(wrapperConfigure0.Configure.Request.Deletes.Query, requestFromUser.Request.Query)
-	resultByte, err = transformFunction(requestFromUser.Request.Query)
+	stream, err = service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Query)
 	if err != nil {
-		assert.Error(t, err, "error performing convertion to JSON")
+		assert.Error(t, err, "error performing transform query")
+	}
+
+	resultByte = new(bytes.Buffer)
+	_, err = resultByte.ReadFrom(stream)
+	if err != nil {
+		assert.Error(t, err, "error read from stream ")
 	}
 	expected = `{"key":"456-789"}`
-	equal, err = util.JSONBytesEqual([]byte(expected), resultByte)
+	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
 	}
 	if !equal {
-		assert.Equal(t, expected, string(resultByte), "should be equal")
+		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
 }

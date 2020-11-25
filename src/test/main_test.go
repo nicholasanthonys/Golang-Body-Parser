@@ -43,9 +43,9 @@ func TestWithoutBody(t *testing.T) {
 	expected := `{
 		"user": {
 			"configure0_query": "kopo",
-			"favorite_cars": "<nil>",
+			"favorite_cars": "null",
 			"id": "0",
-			"name": "<nil>",
+			"name": "null",
 			"transaction_id": "20",
 			"tes" : "from mock directory"
 		}

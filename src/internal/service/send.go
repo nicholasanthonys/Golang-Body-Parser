@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 )
 
 func Send(configure model.Configure, requestFromUser *model.Wrapper, method string) (*http.Response, error) {
@@ -15,13 +16,12 @@ func Send(configure model.Configure, requestFromUser *model.Wrapper, method stri
 	transformRequest := configure.Request.Transform
 
 	//* constructing body to send
-	body, err := TransformBody(configure, requestFromUser.Request.Body)
+	body, err := Transform(configure, requestFromUser.Request.Body)
 
 	if err != nil {
 		logrus.Warn("error constructing body to send")
 		return nil, err
 	}
-	//*kalau body nil ? masih harus di handle
 
 	//*get url and append it with destination path
 	url := configure.Request.DestinationUrl + configure.Request.DestinationPath
@@ -64,13 +64,12 @@ func doRequest(req *http.Request) (*http.Response, error) {
 
 func setContentTypeHeader(transformRequest string, header *http.Header) {
 	//*set content type header based on transformRequest
-	switch transformRequest {
-	case "ToJson":
-
+	switch strings.ToLower(transformRequest) {
+	case strings.ToLower("ToJson"):
 		header.Add("Content-Type", "application/json")
-	case "ToXml":
+	case strings.ToLower("ToXml"):
 		header.Add("Content-Type", "application/xml")
-	case "ToForm":
+	case strings.ToLower("ToForm"):
 		header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
 
