@@ -1,4 +1,2 @@
-tmp
 .idea/
-vendor/
-.env
+configures/

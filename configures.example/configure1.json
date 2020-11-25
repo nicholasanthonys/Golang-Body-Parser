@@ -1,0 +1,64 @@
+{
+  "methods": [
+    "PUT"
+  ],
+  "path": "/persons/:person/transactions/:transaction",
+  "request": {
+    "destinationPath" : "/{{$configure1.json--$request--$body[user][name]}}",
+    "destinationUrl": "http://localhost:3001",
+    "methodUsed": "PUT",
+    "transform": "ToXml",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.last_name": "parker",
+        "user.id": 1
+      },
+      "query": {
+
+      }
+
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+
+      },
+      "query": {
+
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+      },
+      "body": {
+
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+        "user.name" : "Peter Parker"
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}
