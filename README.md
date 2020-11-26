@@ -12,7 +12,7 @@ See **configures.example directory structure** for examples.
 
 
 ## Server Route/Endpoint
-In order to make request to this server, you have to specify the path in configure-n.json. By default, the server routes are :  
+In order to make request to this server, you have to specify the **path** value in configure-n.json (your configure file.json). By default, the server routes are :  
 - **/serial** for each GET, POST, PUT, DELETE
 - **/parallel** for each GET, POST, PUT, DELETE
 
