@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 )
@@ -144,7 +145,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 	parallelConfigByte := util.ReadConfigure(configureDir + "/response.json")
 	_ = json.Unmarshal(parallelConfigByte, &resultWrapper.Configure)
 
-	//* means that the response is based from configurex.json
+	//* now we will set the response body based from configurex.json if there is $configure value in configureBased.
 	if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
 		keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
 		//*check if key exist in the map
@@ -153,6 +154,13 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 			resultWrapper.Response = mapWrapper[keyConfigure].Response
 		}
 	}
+
+	//*header
+	AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", resultWrapper.Response.Header, mapWrapper)
+	//*modify header
+	ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", resultWrapper.Response.Header, mapWrapper)
+	//*Deletion Header
+	DeletionHeaderOrQuery(resultWrapper.Configure.Response.Deletes.Header, resultWrapper.Response.Header)
 
 	//*add
 	AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", resultWrapper.Response.Body, mapWrapper)
@@ -229,7 +237,19 @@ func doSerial(c echo.Context) error {
 	//*use the latest configures and the latest response
 	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
 	resultWrapper := parseResponse(mapWrapper)
+	//* for each value in map wrapper header, set the header
+	setHeaderResponse(resultWrapper.Response.Header, c)
 	return util.ResponseWriter(resultWrapper, c)
+}
+
+func setHeaderResponse(header map[string]interface{}, c echo.Context) {
+	for key, val := range header {
+		rt := reflect.TypeOf(val)
+		//* only add if interface type is string
+		if rt.Kind() == reflect.String {
+			c.Response().Header().Set(key, val.(string))
+		}
+	}
 }
 
 func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
@@ -267,6 +287,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 		wrapper.Request.Param[value] = c.Param(value)
 	}
 
+	//*if methodUsed is in the array of configure methods, then do the map modification
 	_, find := util.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
 		//*assign first before do any add,modification,delete in case value want reference each other
@@ -291,7 +312,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 		return nil, http.StatusInternalServerError, err
 	}
 
-	//* Do Command Add, Modify, Deletion again
+	//* Do Command Add, Modify, Deletion for response again
 	DoCommand(configure.Response, wrapper.Response, mapWrapper)
 
 	return wrapper, http.StatusOK, nil
