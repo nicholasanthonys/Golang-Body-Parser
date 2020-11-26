@@ -9,4 +9,4 @@ services:
         source: ${CONFIGURES_DIRECTORY}
         target: /app/configures
     ports:
-      - "80:${APP_PORT}"
+      - "5000:${APP_PORT}"

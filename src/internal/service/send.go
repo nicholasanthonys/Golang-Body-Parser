@@ -81,12 +81,9 @@ func SetHeader(requestFromUser model.Wrapper, header *http.Header) {
 		if key != "Content-Type" {
 
 			vt := reflect.TypeOf(value).Kind()
-			if vt == reflect.Slice {
-				header.Add(key, fmt.Sprintf("%v", value.([]string)[0]))
-			} else {
+			if vt == reflect.String {
 				header.Add(key, fmt.Sprintf("%s", value))
 			}
-
 		}
 
 	}
@@ -95,7 +92,9 @@ func SetHeader(requestFromUser model.Wrapper, header *http.Header) {
 func setQuery(wrapper model.Wrapper, q *url.Values) {
 	//* Add
 	for key, value := range wrapper.Request.Query {
-		q.Set(key, fmt.Sprintf("%v", value))
-		//logrus.Info("q get is ", q.Get(key))
+		vt := reflect.TypeOf(value).Kind()
+		if vt == reflect.String {
+			q.Set(key, fmt.Sprintf("%v", value))
+		}
 	}
 }

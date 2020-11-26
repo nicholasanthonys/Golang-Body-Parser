@@ -1,5 +1,5 @@
 ## BUILD IMAGE
-FROM  golang:1.15-alpine as appbuild
+FROM  golang:1.15-alpine as builder
 
 ARG git_tag
 ARG git_commit
@@ -13,7 +13,7 @@ RUN  CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./build/Golang-Body-Parse
 ## FINAL IMAGE
 FROM alpine:latest
 WORKDIR /app/src
-COPY --from=appbuild /go/src/github.com/nicholasanthonys/Golang-Body-Parser .
+COPY --from=builder /go/src/github.com/nicholasanthonys/Golang-Body-Parser .
 
 ## Run build
 CMD ["./build/Golang-Body-Parser"]
