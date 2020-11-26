@@ -145,8 +145,11 @@ to use a certain request  as a base response, you can leave **configureBased** e
 
 Note : **key-value for response header cannot be a nested object**
 
-### 6. Picking a value between each configure
-To pick a value between each configure, you must consider from which configure you want to pick the value, whether your value located in request or response.
+### 6. Get a value between each configure
+To pick a value between each configure, you must consider from **which configure** you want to pick the value, whether your value located in :
+- **request header, body, query, or path parameter**
+- **response body or header**
+
 For example, if our configure1.json want to pick **name** from nested object **user** which located in response body in configure0.json, 
 we can write :
 ```
