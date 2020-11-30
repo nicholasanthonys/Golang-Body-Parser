@@ -3,7 +3,7 @@ A server that can transform, modify and forward requests based on pre-defined co
 you to modify your client request such as add, modify, or delete key-value, transform your request into JSON or XML 
 and send the response back to the client.
 
-##Prerequisite
+## Prerequisite
 1. You need to have a directory that contains **configure-n.json and response.json**. **configure-n.json** can be renamed to configure0.json, or configure1.json as long as your file have 'configure', **NOTE : double dash (--)** for in configure files name are prohibited since this symbol will be used. 
 2. Create src/.env file **(see src/.env.example file)**.
 3. Specify the path to the configures directory in .env **(see src/.env.example file)** .
