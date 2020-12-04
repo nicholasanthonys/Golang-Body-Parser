@@ -46,10 +46,7 @@ func FromXmL(byteVal []byte) (map[string]interface{}, error) {
 func MapToFormUrl(myMap map[string]interface{}) url.Values {
 	form := url.Values{}
 	for key, value := range myMap {
-		logrus.Info("key ", key, " value ", value)
 		form.Add(key, fmt.Sprintf("%v", value))
 	}
-	logrus.Info("form now is")
-	logrus.Info(form)
 	return form
 }

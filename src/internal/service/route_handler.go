@@ -169,8 +169,8 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 	//* delete
 	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 
-	logrus.Info("result is ")
-	logrus.Info(resultWrapper)
+	//logrus.Info("result is ")
+	//logrus.Info(resultWrapper)
 	return resultWrapper
 }
 
@@ -287,6 +287,9 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 		wrapper.Request.Param[value] = c.Param(value)
 	}
 
+	//* In case user want to log before modify/changing request
+	DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", fileName, true)
+
 	//*if methodUsed is in the array of configure methods, then do the map modification
 	_, find := util.Find(configure.Methods, configure.Request.MethodUsed)
 	if find {
@@ -296,8 +299,11 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 		DoCommand(configure.Request, wrapper.Request, mapWrapper)
 	}
 
-	//*get the desinationPath value before sending request
+	//*get the destinationPath value before sending request
 	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
+
+	//* In case user want to log after modify/changing request
+	DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", fileName, true)
 
 	//*send to destination url
 	response, err := Send(configure, wrapper, configure.Request.MethodUsed)
@@ -312,8 +318,14 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 		return nil, http.StatusInternalServerError, err
 	}
 
+	//* In case user want to log before modify/changing request
+	DoLogging(configure.Response.LogBeforeModify, wrapper.Response, "before", fileName, false)
+
 	//* Do Command Add, Modify, Deletion for response again
 	DoCommand(configure.Response, wrapper.Response, mapWrapper)
+
+	//* In case user want to log before modify/changing request
+	DoLogging(configure.Response.LogAfterModify, wrapper.Response, "after", fileName, false)
 
 	return wrapper, http.StatusOK, nil
 
@@ -324,11 +336,10 @@ func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 	var result = make(map[string]interface{})
 	switch contentType {
 	case "application/json":
-		logrus.Info("content type is json")
 		//*transform JSON request user to map request from user
 		result, err = FromJson(reqByte)
 		if err != nil {
-			logrus.Warn("error service from Json")
+			logrus.Warn("error parse request body from Json")
 			result["message"] = err.Error()
 			return nil, http.StatusInternalServerError, err
 		}
@@ -351,4 +362,24 @@ func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
 	}
 	return result, http.StatusOK, nil
+}
+
+func DoLogging(logValue string, field model.Fields, event string, fileName string, isRequest bool) {
+	if len(logValue) > 0 {
+		sentence := "logging "
+		if isRequest {
+			sentence += "response "
+		} else {
+			sentence += "response "
+		}
+
+		if event == "before" {
+			sentence += "before modify for" + fileName + " : "
+		} else {
+			sentence += "after modify for " + fileName + " : "
+		}
+
+		value := CheckValue(logValue, field)
+		logrus.Info(value)
+	}
 }
