@@ -169,8 +169,8 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 	//* delete
 	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 
-	//logrus.Info("result is ")
-	//logrus.Info(resultWrapper)
+	//*In case user want to log final response
+	DoLogging(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, "after", "final response", false)
 	return resultWrapper
 }
 
@@ -374,12 +374,13 @@ func DoLogging(logValue string, field model.Fields, event string, fileName strin
 		}
 
 		if event == "before" {
-			sentence += "before modify for" + fileName + " : "
+			sentence += "before modify for " + fileName + " : "
 		} else {
 			sentence += "after modify for " + fileName + " : "
 		}
 
 		value := CheckValue(logValue, field)
+		logrus.Info(sentence)
 		logrus.Info(value)
 	}
 }
