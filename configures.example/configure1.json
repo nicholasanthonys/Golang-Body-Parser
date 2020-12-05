@@ -8,6 +8,8 @@
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
     "transform": "ToXml",
+    "logBeforeModify" : "",
+    "logAfterModify" : "",
     "adds": {
       "header": {
       },
@@ -42,6 +44,8 @@
   },
   "response": {
     "transform": "ToJson",
+    "logBeforeModify" : "",
+    "logAfterModify" : "",
     "adds": {
       "header": {
       },
@@ -53,7 +57,7 @@
     },
     "modifies": {
       "body": {
-        "user.name" : "Peter Parker"
+
       }
     },
     "deletes": {

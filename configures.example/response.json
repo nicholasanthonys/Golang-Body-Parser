@@ -2,16 +2,12 @@
   "configureBased": "",
   "response": {
     "transform": "ToJson",
+    "logAfterModify" : "$body",
     "adds": {
       "header": {
       },
       "body": {
-        "user.name": "$configure0.json--$response--$body[user][name]",
-        "user.id": "$configure0.json--$response--$body[user][id]",
-        "user.favorite_cars": "$configure0.json--$request--$body[user][cars][0]",
-        "user.transaction_id": "$configure0.json--$request--$path[transaction]",
-        "user.configure0_query": "$configure0.json--$request--$query[address]",
-        "user.tes": "from configures directory"
+
       },
       "query": {
       }
