@@ -101,12 +101,7 @@ func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 			} else if destination == "query" {
 				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
-				//realValue = c.Param(listTraverseVal[0])
-				if len(listTraverseVal) > 0 {
-					realValue = takeFrom.Param[listTraverseVal[0]]
-
-				}
-
+				realValue = GetValue(listTraverseVal, takeFrom.Param, 0)
 			}
 		} else {
 			realValue = value
