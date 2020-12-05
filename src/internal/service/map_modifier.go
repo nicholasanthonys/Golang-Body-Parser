@@ -83,8 +83,8 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 	return nil
 }
 
-// checkValue is a function that check the value type value from configure and retrieve the value from header,body, or query
-func checkValue(value interface{}, takeFrom model.Fields) interface{} {
+// CheckValue is a function that check the value type value from configure and retrieve the value from header,body, or query
+func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 	//*declare empty result
 	var realValue interface{}
 	//* check the type of the value
@@ -101,12 +101,7 @@ func checkValue(value interface{}, takeFrom model.Fields) interface{} {
 			} else if destination == "query" {
 				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
-				//realValue = c.Param(listTraverseVal[0])
-				if len(listTraverseVal) > 0 {
-					realValue = takeFrom.Param[listTraverseVal[0]]
-
-				}
-
+				realValue = GetValue(listTraverseVal, takeFrom.Param, 0)
 			}
 		} else {
 			realValue = value
@@ -236,13 +231,12 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 				splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 				if splittedValue[1] == "$request" {
 					//* get the request from fields
-
-					realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+					realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
 
 				} else {
 
 					//* get the response from fields
-					realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+					realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
 				}
 
 				if realValue != nil {
@@ -279,12 +273,12 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
 
-				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+				realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
 
 			} else {
 
 				//* get the response from fields
-				realValue = checkValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+				realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
 			}
 		} else {
 			realValue = fmt.Sprintf("%v", value)
@@ -310,10 +304,10 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
-				realValue = checkValue(value, takeFrom[splittedValue[0]].Request)
+				realValue = CheckValue(value, takeFrom[splittedValue[0]].Request)
 			} else {
 				//* get the response from fields
-				realValue = checkValue(value, takeFrom[splittedValue[0]].Response)
+				realValue = CheckValue(value, takeFrom[splittedValue[0]].Response)
 			}
 
 		} else {

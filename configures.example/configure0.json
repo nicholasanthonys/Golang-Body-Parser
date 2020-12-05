@@ -8,6 +8,8 @@
     "destinationUrl": "http://localhost:3001",
     "methodUsed": "PUT",
     "transform": "ToJson",
+    "logBeforeModify" : "",
+    "logAfterModify" : "",
     "adds": {
       "header": {
       },
@@ -38,6 +40,8 @@
   },
   "response": {
     "transform": "ToJson",
+    "logBeforeModify" : "$body",
+    "logAfterModify" : "$body",
     "adds": {
       "header": {
       },

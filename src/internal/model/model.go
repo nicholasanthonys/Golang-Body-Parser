@@ -13,6 +13,8 @@ type Command struct {
 	DestinationUrl  string       `json:"destinationUrl"`
 	MethodUsed      string       `json:"methodUsed"`
 	Transform       string       `json:"transform"`
+	LogBeforeModify string       `json:"logBeforeModify"`
+	LogAfterModify  string       `json:"logAfterModify"`
 	Adds            Fields       `json:"adds"`
 	Deletes         DeleteFields `json:"deletes"`
 	Modifies        Fields       `json:"modifies"`

@@ -26,7 +26,7 @@ func Send(configure model.Configure, requestFromUser *model.Wrapper, method stri
 	//*get url and append it with destination path
 	url := configure.Request.DestinationUrl + configure.Request.DestinationPath
 
-	logrus.Info("url is ", url)
+	logrus.Info("sending request to url :  ", url)
 
 	//*declare request
 	var req *http.Request
