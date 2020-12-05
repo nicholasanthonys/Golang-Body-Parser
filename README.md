@@ -46,6 +46,62 @@ You can specify your request format for key **transform** in configure file. The
 - **ToJson** to transform your request to JSON format.
 - **ToXml** to transform your request to XML format
 
+If a request/response don't have any wrapper for the body and you want to convert it to xml, because this server use package [clbanning/mxj](https://github.com/clbanning/mxj),
+it automatically wrap your request with **<doc>** such that **<doc>**(body) **</doc>**. <br>
+
+For example if you send an empty request to the server, and your configuration for request like below and you want to transform it to XML : 
+``` 
+  "request": {
+    "destinationPath": "/",
+    "destinationUrl": "http://localhost:3001",
+    "methodUsed": "PUT",
+    "transform": "ToJson",
+    "logBeforeModify" : "",
+    "logAfterModify" : "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "name" : "nicholas",
+        "last_name": "anthony"
+
+
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+
+      },
+      "body": {
+
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+```
+
+The server will add **name** and **last_name** to the body, but because the request don't have any wrapper element, your request will be :
+```
+<doc>
+    <last_name>anthony</last_name>
+    <name>nicholas</name>
+</doc>
+```
+
+If you want to pick the value from this configure, for example **name**, you have to mention the **doc** like **$body[doc][name]** .
+
+
 ### 4. Request modification
 To perform addition, modification, deletion, **methodUsed** value in configure must exist in key array **methods**. 
 For example, if **methods** contain **POST** and your **methodUsed** value is **PUT**, request modification will not be performed.
@@ -175,6 +231,30 @@ execute the request simultaneously. For example, you **can't** pick a value for 
 
 3. In file **response.json**, you are safe to pick value from configure-n.json request or response. This is because the response is the last step to be sent to the client, so
 the server will wait until every request execution is finished.
+
+### 7. Logging
+You can log **header, body, query, path parameter** from each configure file by specifying
+value for keys : 
+-  **logBeforeModify** : This will log a value before change/modify request/response. 
+-  **logAfterModify** : This will log a value after change/modify request/response.
+
+Following values are available:
+- **$body**
+- **$header**
+- **$query**
+- **$path**
+
+<br> 
+Or if you want to log specific value, you can specify it like this: $body[user][name].
+
+Example :
+``` 
+"logBeforeModify" : "$body", // this will log the whole body before doing any change.
+"logAfterModify" : "$body[user][name]" // this will log name from object user after doing change.
+```
+
+
+
 
 
 
