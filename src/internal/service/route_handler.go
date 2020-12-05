@@ -247,9 +247,13 @@ func setHeaderResponse(header map[string]interface{}, c echo.Context) {
 		rt := reflect.TypeOf(val)
 		//* only add if interface type is string
 		if rt.Kind() == reflect.String {
-			c.Response().Header().Set(key, val.(string))
+			if key != "Content-Length" && key != "Content-Type" {
+				c.Response().Header().Set(key, val.(string))
+			}
+
 		}
 	}
+
 }
 
 func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
@@ -284,6 +288,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 
 	//*set param value
 	for _, value := range c.ParamNames() {
+
 		wrapper.Request.Param[value] = c.Param(value)
 	}
 
