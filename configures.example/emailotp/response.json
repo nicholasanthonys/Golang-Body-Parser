@@ -5,7 +5,7 @@
     "log_after_modify" : "",
     "adds": {
       "header": {
-        "key.tes" : "123",
+        "key" : "123",
         "userID" : "userid"
       },
       "body": {
