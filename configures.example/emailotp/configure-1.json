@@ -1,0 +1,64 @@
+{
+  "request": {
+    "destination_url": "http://mockbin.org/bin/a53d0694-9121-48d1-9936-11e1c8f06945",
+    "destination_path": "/{{$configure-1.json--$request--$query[address]}}",
+    "method": "PUT",
+    "transform": "ToJson",
+    "log_before_modify" : "$body",
+    "log_after_modify" : "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.last_name": "parker",
+        "user.id": 1,
+        "from": "configure-1.json"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+
+      },
+      "body": {
+
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify" : "",
+    "log_after_modify" : "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.name" : "Peter parker"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+        "user.name": "Peter Parker"
+      }
+    },
+    "deletes": {
+      "header": {
+      },
+      "body": [
+      ]
+    }
+  }
+}
