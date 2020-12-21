@@ -17,6 +17,7 @@ import (
 )
 
 var configureDir string
+var routes model.Routes
 
 func SetRouteHandler() *echo.Echo {
 	//* get configures Directory
@@ -30,38 +31,75 @@ func SetRouteHandler() *echo.Echo {
 	e.Use(middleware.Recover())
 	//e.Use(middle)
 
-	files, err := util.GetListFolder(configureDir)
-
+	// * Read router.json
+	routesByte := util.ReadJsonFile(configureDir + "/router.json")
+	err := json.Unmarshal(routesByte, &routes)
 	if err != nil {
-		logrus.Fatal("error reading directory " + configureDir)
+		logrus.Error(err.Error())
+	} else {
+		//*add index route
+		e.GET("/", func(c echo.Context) error {
+			return c.String(http.StatusOK, "Golang-Body-Parser Active")
+		})
 
-	}
+		//*set path based from configure
+		for _, route := range routes {
 
-	//*add index route
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Golang-Body-Parser Active")
-	})
+			if strings.ToLower(route.Method) == "post" {
+				if strings.ToLower(route.Type) == "parallel" {
+					e.POST("/parallel"+route.Path, doParallel)
+				} else {
+					e.POST("/serial"+route.Path, doSerial)
+				}
+			}
 
-	//*set path based from configure
-	for _, file := range files {
-		var configure model.Configure
-		if strings.Contains(file.Name(), "configure") {
-			configByte := util.ReadConfigure(configureDir + "/" + file.Name())
-			//* assign configure byte to configure
-			_ = json.Unmarshal(configByte, &configure)
-			// Routes serial execution
-			e.POST("/serial"+configure.Path, doSerial)
-			e.PUT("/serial"+configure.Path, doSerial)
-			e.GET("/serial"+configure.Path, doSerial)
-			// Routes parallel execution
-			e.POST("/parallel"+configure.Path, doParallel)
-			e.PUT("/parallel"+configure.Path, doParallel)
-			e.GET("/parallel"+configure.Path, doParallel)
+			if strings.ToLower(route.Method) == "get" {
+				if strings.ToLower(route.Type) == "parallel" {
+					e.GET("/parallel"+route.Path, doParallel)
+				} else {
+					e.GET("/serial"+route.Path, doSerial)
+				}
+			}
+
+			if strings.ToLower(route.Method) == "put" {
+				if strings.ToLower(route.Type) == "parallel" {
+					e.PUT("/parallel"+route.Path, doParallel)
+				} else {
+					e.PUT("/serial"+route.Path, doSerial)
+				}
+
+			}
+
+			if strings.ToLower(route.Method) == "delete" {
+				if strings.ToLower(route.Type) == "parallel" {
+					e.DELETE("/parallel"+route.Path, doParallel)
+				} else {
+					e.DELETE("/serial"+route.Path, doSerial)
+				}
+			}
+
+			////* assign configure byte to configure
+			//_ = json.Unmarshal(configByte, &configure)
+			//// Route serial execution
+			//e.POST("/serial"+configure.Path, doSerial)
+			//e.PUT("/serial"+configure.Path, doSerial)
+			//e.GET("/serial"+configure.Path, doSerial)
+			//// Route parallel execution
+			//e.POST("/parallel"+configure.Path, doParallel)
+			//e.PUT("/parallel"+configure.Path, doParallel)
+			//e.GET("/parallel"+configure.Path, doParallel)
+
 		}
 	}
 
-	return e
+	//files, err := util.GetListFolder(configureDir)
+	//
+	//if err != nil {
+	//	logrus.Fatal("error reading directory " + configureDir)
+	//
+	//}
 
+	return e
 }
 
 func worker(wg *sync.WaitGroup, fileName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
@@ -76,6 +114,12 @@ func worker(wg *sync.WaitGroup, fileName string, configure model.Configure, c ec
 }
 
 func doParallel(c echo.Context) error {
+	index := util.FindRouteIndex(routes, c.Path())
+	if index < 0 {
+		return c.JSON(404, "Cannot Find Route "+c.Path())
+	}
+	route := routes[index]
+	fullProjectDirectory := configureDir + "/" + route.ProjectDirectory
 
 	//* declare a WaitGroup
 	var wg sync.WaitGroup
@@ -83,7 +127,7 @@ func doParallel(c echo.Context) error {
 	//*read the request that will be sent from user
 	requestBody, _ := ioutil.ReadAll(c.Request().Body)
 	//* get files and store it in slice
-	files, err := util.GetListFolder(configureDir)
+	files, err := util.GetListFolder(fullProjectDirectory)
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -111,7 +155,7 @@ func doParallel(c echo.Context) error {
 					Query:  make(map[string]interface{}),
 				},
 			}
-			configByte := util.ReadConfigure(configureDir + "/" + file.Name())
+			configByte := util.ReadJsonFile(fullProjectDirectory + "/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
@@ -125,11 +169,11 @@ func doParallel(c echo.Context) error {
 	wg.Wait()
 
 	//*now we need to parse the response.json command
-	resultWrapper := parseResponse(mapWrapper)
+	resultWrapper := parseResponse(mapWrapper, fullProjectDirectory+"/response.json")
 	return util.ResponseWriter(resultWrapper, c)
 }
 
-func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
+func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) model.Wrapper {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{},
@@ -142,7 +186,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 		},
 	}
 
-	parallelConfigByte := util.ReadConfigure(configureDir + "/response.json")
+	parallelConfigByte := util.ReadJsonFile(responsePath)
 	_ = json.Unmarshal(parallelConfigByte, &resultWrapper.Configure)
 
 	//* now we will set the response body based from configurex.json if there is $configure value in configureBased.
@@ -176,8 +220,15 @@ func parseResponse(mapWrapper map[string]model.Wrapper) model.Wrapper {
 
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
 func doSerial(c echo.Context) error {
+	index := util.FindRouteIndex(routes, c.Path())
+	if index < 0 {
+		return c.JSON(404, "Cannot Find Route "+c.Path())
+	}
 
-	files, err := util.GetListFolder(configureDir)
+	route := routes[index]
+	fullProjectDirectory := configureDir + "/" + route.ProjectDirectory
+	files, err := util.GetListFolder(fullProjectDirectory)
+
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
@@ -196,6 +247,7 @@ func doSerial(c echo.Context) error {
 	var mapWrapper = make(map[string]model.Wrapper) ///*slice that contains wrapper
 
 	for _, file := range files {
+
 		var configure model.Configure
 		if strings.Contains(file.Name(), "configure") {
 
@@ -216,7 +268,7 @@ func doSerial(c echo.Context) error {
 				},
 			}
 
-			configByte := util.ReadConfigure(configureDir + "/" + file.Name())
+			configByte := util.ReadJsonFile(fullProjectDirectory + "/" + file.Name())
 			//* assign configure byte to configure
 			_ = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
@@ -236,7 +288,7 @@ func doSerial(c echo.Context) error {
 
 	//*use the latest configures and the latest response
 	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
-	resultWrapper := parseResponse(mapWrapper)
+	resultWrapper := parseResponse(mapWrapper, fullProjectDirectory+"/response.json")
 	//* for each value in map wrapper header, set the header
 	setHeaderResponse(resultWrapper.Response.Header, c)
 	return util.ResponseWriter(resultWrapper, c)
@@ -296,13 +348,15 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", fileName, true)
 
 	//*if methodUsed is in the array of configure methods, then do the map modification
-	_, find := util.Find(configure.Methods, configure.Request.MethodUsed)
-	if find {
-		//*assign first before do any add,modification,delete in case value want reference each other
-		mapWrapper[fileName] = *wrapper
-		//* Do the Map Modification if method is find/available
-		DoCommand(configure.Request, wrapper.Request, mapWrapper)
-	}
+	//_, find := util.Find(configure.Methods, configure.Request.Method)
+	//if find {
+	//
+	//}
+
+	//*assign first before do any add,modification,delete in case value want reference each other
+	mapWrapper[fileName] = *wrapper
+	//* Do the Map Modification if method is find/available
+	DoCommand(configure.Request, wrapper.Request, mapWrapper)
 
 	//*get the destinationPath value before sending request
 	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
@@ -311,7 +365,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", fileName, true)
 
 	//*send to destination url
-	response, err := Send(configure, wrapper, configure.Request.MethodUsed)
+	response, err := Send(configure, wrapper, configure.Request.Method)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
