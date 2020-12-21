@@ -43,7 +43,7 @@ func TestWithoutBody(t *testing.T) {
 	expected := `{
 		"user": {
 			"configure0_query": "kopo",
-			"id": "0",
+			"id": 0,
 			"name": "Peter Parker",
 			"transaction_id": "3",
 			"tes" : "from configure.example directory",
@@ -79,7 +79,7 @@ func TestWithBody(t *testing.T) { //*SERIAL
 	if assert.NoError(t, err) {
 		expected := `{
 				"user": {
-					"id": "0",
+					"id": 0,
 					"name": "Peter Parker",
 					"favorite_cars":"honda",
  					"transaction_id": "3",
