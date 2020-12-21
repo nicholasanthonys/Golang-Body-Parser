@@ -15,8 +15,10 @@ func TestFind(t *testing.T) {
 }
 
 func TestGetListFolder(t *testing.T) {
-	expected := []string{"configure0.json", "configure1.json", "configure2.json", "response.json"}
-	files, err := util.GetListFolder("mock")
+	expected := []string{"configure-0.json", "configure-1.json", "response.json"}
+	configureDir := "../../configures.example"
+	fullProjectDir := configureDir + "/" + "emailotp"
+	files, err := util.GetListFolder(fullProjectDir)
 	results := make([]string, 0)
 	if err != nil {
 		assert.Error(t, err, "Cannot get list folder")

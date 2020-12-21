@@ -1,6 +1,6 @@
 {
   "request": {
-    "destination_url": "http://mockbin.org/bin/c5488153-998f-4acd-835b-e9be47796195",
+    "destination_url": "http://mockbin.org/bin/49d8dbd5-32d3-47ba-ae4e-2ea77fa2dfc8",
     "destination_path": "/user",
     "method" : "POST",
     "transform": "ToJson",
@@ -11,21 +11,18 @@
 
       },
       "body": {
-        "user.name" : "Peter"
-
+        "cars" : ["honda", "toyota", "avanza"]
       },
       "query": {
-        "address" : "kopo"
+        "address" : "mutiara cibaduyut c20"
       }
     },
     "modifies": {
       "header": {
       },
       "body": {
-        "user.name" : "Peter Parker"
       },
       "query": {
-        "address" : "kopo"
       }
     },
     "deletes": {
@@ -46,7 +43,6 @@
       "header": {
       },
       "body": {
-        "user.id" : 0
       },
       "query": {
       }

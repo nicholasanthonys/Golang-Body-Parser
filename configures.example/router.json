@@ -1,8 +1,8 @@
 [
   {
-    "path" : "/smsotp/generate",
+    "path" : "/smsotp/generate/:smsId",
     "project_directory" : "smsotp",
-    "type" : "parallel",
+    "type" : "serial",
     "method" : "POST"
   },
   {

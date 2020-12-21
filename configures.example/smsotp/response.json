@@ -1,7 +1,7 @@
 {
   "configure_based": "configure-1.json",
   "response": {
-    "transform": "ToXml",
+    "transform": "ToJson",
     "log_after_modify" : "",
     "adds": {
       "header": {
@@ -12,9 +12,9 @@
         "user.name": "$configure-1.json--$response--$body[user][name]",
         "user.id": "$configure-0.json--$response--$body[user][id]",
         "user.favorite_cars": "$configure-0.json--$request--$body[user][cars][0]",
-        "user.transaction_id": "$configure-0.json--$request--$path[transaction]",
+        "user.transaction_id": "$configure-0.json--$request--$path[smsId]",
         "user.configure0_query": "$configure-0.json--$request--$query[address]",
-        "user.tes": "from configures directory"
+        "user.tes": "from configure.example directory"
       }
     },
     "modifies": {

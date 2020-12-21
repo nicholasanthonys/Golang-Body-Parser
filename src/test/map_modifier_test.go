@@ -17,13 +17,21 @@ import (
 
 var mapWrapper map[string]model.Wrapper
 var requestFromUser model.Wrapper
+var routes model.Routes
 
 func init() {
+	configureDir := "../../configures.example"
+	// * Read router.json
+	routesByte := util.ReadJsonFile(configureDir + "/router.json")
+	err := json.Unmarshal(routesByte, &routes)
+
+	//* let's use email otp project for testing
+	fullProjectDir := configureDir + "/" + "emailotp"
 
 	mapWrapper = make(map[string]model.Wrapper)
-	files, err := util.GetListFolder("./mock")
+	files, err := util.GetListFolder(fullProjectDir)
 	if err != nil {
-		logrus.Error("Error reading ./mock folder")
+		logrus.Error("Error reading testing directory : " + fullProjectDir)
 		os.Exit(1)
 	}
 
@@ -45,25 +53,27 @@ func init() {
 					Query:  make(map[string]interface{}),
 				},
 			}
-			configByte := util.ReadConfigure("./mock/" + file.Name())
+			configByte := util.ReadJsonFile(fullProjectDir + "/" + file.Name())
 			//* assign configure byte to configure
 			err = json.Unmarshal(configByte, &configure)
 			requestFromUser.Configure = configure
+
 			//*save to map
 			mapWrapper[file.Name()] = requestFromUser
 		}
 	}
+
 }
 
 //* add to body
 func TestMapModifierBody(t *testing.T) {
 	//Add Body
-	wrapperConfigure2 := mapWrapper["configure2.json"]
+	wrapperConfigure1 := mapWrapper["configure-1.json"]
 
 	//take configure index
-	service.AddToWrapper(wrapperConfigure2.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
 
-	stream, err := service.Transform(wrapperConfigure2.Configure, requestFromUser.Request.Body)
+	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -74,8 +84,8 @@ func TestMapModifierBody(t *testing.T) {
 		assert.Error(t, err, "error read from stream ")
 	}
 
-	expected := `{"user":{"id":"0","last_name":"peter"}}`
-
+	expected := `{"user":{"id":"1","last_name":"peter"},"from": "configure-1.json"}`
+	//
 	equal, err := util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -85,8 +95,8 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//*Modify Body
-	service.ModifyWrapper(wrapperConfigure2.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
-	stream, err = service.Transform(wrapperConfigure2.Configure, requestFromUser.Request.Body)
+	service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -96,7 +106,7 @@ func TestMapModifierBody(t *testing.T) {
 		assert.Error(t, err, "error read from stream ")
 	}
 
-	expected = `{"user":{"id":"99","last_name":"parker"}}`
+	expected = `{"user":{"id":"99","last_name":"parker"},"from": "configure-1.json"}`
 	equal, err = util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -106,8 +116,8 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//* Deletion Body
-	service.DeletionBody(wrapperConfigure2.Configure.Request.Deletes, requestFromUser.Request)
-	stream, err = service.Transform(wrapperConfigure2.Configure, requestFromUser.Request.Body)
+	service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, requestFromUser.Request)
+	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -130,7 +140,7 @@ func TestMapModifierBody(t *testing.T) {
 //* Test Add to Header
 func TestMapModifierHeader(t *testing.T) {
 	//* Add Header
-	wrapperConfigure0 := mapWrapper["configure2.json"]
+	wrapperConfigure0 := mapWrapper["configure-1.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper)
 
 	stream, err := service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Header)
@@ -204,7 +214,7 @@ func TestMapModifierHeader(t *testing.T) {
 
 func TestMapModifierQuery(t *testing.T) {
 	//* Add Query
-	wrapperConfigure0 := mapWrapper["configure2.json"]
+	wrapperConfigure0 := mapWrapper["configure-1.json"]
 	service.AddToWrapper(wrapperConfigure0.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper)
 
 	stream, err := service.Transform(wrapperConfigure0.Configure, requestFromUser.Request.Query)
