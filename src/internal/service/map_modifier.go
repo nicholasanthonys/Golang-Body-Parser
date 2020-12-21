@@ -52,10 +52,6 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 			in.(map[string]interface{})[listTraverse[index]] = value
 		}
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "[]interface {}" {
-			logrus.Info("type is slice of interface, list traverse is")
-			logrus.Info(listTraverse[index])
-			logrus.Info("value is")
-			logrus.Info(value)
 			realIndex, err := strconv.Atoi(listTraverse[index])
 			if err == nil {
 				in.([]interface{})[realIndex] = value
