@@ -8,6 +8,12 @@
   {
     "path" : "/emailotp/generate",
     "project_directory" : "emailotp",
+    "type" : "serial",
+    "method" : "POST"
+  },
+  {
+    "path" : "/another-project",
+    "project_directory" : "another_project",
     "type" : "parallel",
     "method" : "POST"
   }
