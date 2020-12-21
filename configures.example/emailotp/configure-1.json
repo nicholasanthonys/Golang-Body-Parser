@@ -1,13 +1,11 @@
 {
-  "methods": [
-    "PUT"
-  ],
-  "path": "/user/:userId",
   "request": {
-    "destinationPath": "",
-    "destinationUrl": "http://localhost:3001",
-    "methodUsed": "PUT",
+    "destination_url": "http://mockbin.org/bin/a53d0694-9121-48d1-9936-11e1c8f06945",
+    "destination_path": "/{{$configure-1.json--$request--$query[address]}}",
+    "method": "PUT",
     "transform": "ToJson",
+    "log_before_modify": "$body",
+    "log_after_modify": "",
     "adds": {
       "header": {
         "odd_number": "1357",
@@ -15,7 +13,8 @@
       },
       "body": {
         "user.last_name": "peter",
-        "user.id": 0
+        "user.id": 1,
+        "from": "configure-1.json"
       },
       "query": {
         "address": "kopo",
@@ -28,8 +27,8 @@
         "fav_character": "kakashi"
       },
       "body": {
-        "user.id": 99,
-        "user.last_name": "parker"
+        "user.last_name": "parker",
+        "user.id": 99
       },
       "query": {
         "address": "cibaduyut",
@@ -41,7 +40,8 @@
         "odd_number"
       ],
       "body": [
-        "user.id"
+        "user.id",
+        "from"
       ],
       "query": [
         "address"
@@ -50,21 +50,25 @@
   },
   "response": {
     "transform": "ToJson",
+    "log_before_modify": "",
+    "log_after_modify": "",
     "adds": {
       "header": {
       },
       "body": {
+        "user.name": "Peter parker"
+      }
+    },
+    "modifies": {
+      "header": {
       },
-      "query": {
+      "body": {
+        "user.name": "Peter Parker"
       }
     },
     "deletes": {
       "body": [
       ]
-    },
-    "modifies": {
-      "body": {
-      }
     }
   }
 }

@@ -1,42 +1,35 @@
 {
-  "methods": [
-    "PUT"
-  ],
-  "path": "/persons/:person/transactions/:transaction",
   "request": {
-    "destinationPath" : "/{{$configure1.json--$request--$body[user][name]}}",
-    "destinationUrl": "http://localhost:3001",
-    "methodUsed": "PUT",
-    "transform": "ToXml",
-    "logBeforeModify" : "",
-    "logAfterModify" : "",
+    "destination_url": "http://mockbin.org/bin/49d8dbd5-32d3-47ba-ae4e-2ea77fa2dfc8",
+    "destination_path": "/user",
+    "method" : "POST",
+    "transform": "ToJson",
+    "log_before_modify" : "",
+    "log_after_modify" : "",
     "adds": {
       "header": {
+
       },
       "body": {
-        "user.last_name": "parker",
-        "user.id": 1
+        "cars" : ["honda", "toyota", "avanza"]
       },
       "query": {
-
+        "address" : "mutiara cibaduyut c20"
       }
-
     },
     "modifies": {
       "header": {
       },
       "body": {
-
       },
       "query": {
-
       }
     },
     "deletes": {
       "header": [
       ],
       "body": [
-
+        "user.tes"
       ],
       "query": [
       ]
@@ -44,20 +37,18 @@
   },
   "response": {
     "transform": "ToJson",
-    "logBeforeModify" : "",
-    "logAfterModify" : "",
+    "log_before_modify" : "",
+    "log_after_modify" : "",
     "adds": {
       "header": {
       },
       "body": {
-
       },
       "query": {
       }
     },
     "modifies": {
       "body": {
-
       }
     },
     "deletes": {

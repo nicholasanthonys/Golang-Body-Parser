@@ -12,9 +12,10 @@ import (
 )
 
 // AddRecursive is a function that do the add key-value based on the listTraverse
-func AddRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
+func AddRecursive(listTraverse []string, value interface{}, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
+
 			//*only add when the value of the key is null
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
 				in.(map[string]interface{})[listTraverse[index]] = value
@@ -39,7 +40,7 @@ func AddRecursive(listTraverse []string, value string, in interface{}, index int
 }
 
 // ModifyRecursive is a function that do modify key-value based on listTraverse
-func ModifyRecursive(listTraverse []string, value string, in interface{}, index int) interface{} {
+func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
 
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
@@ -112,7 +113,8 @@ func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 		realValue = value
 	}
 	if realValue == nil {
-		return "null"
+		//* if value is not found, return empty string
+		return ""
 	}
 	return realValue
 }
@@ -120,6 +122,7 @@ func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 //* GetValue is a function that will recursively traverse the whole map
 //* get the value based on the listTraverse
 func GetValue(listTraverse []string, in interface{}, index int) interface{} {
+
 	if len(listTraverse) > 0 {
 		if index == len(listTraverse)-1 {
 			//*check the type of the target
@@ -240,13 +243,15 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 				}
 
 				if realValue != nil {
+
 					vt := reflect.TypeOf(realValue).Kind()
 					if reflect.String == vt {
+
 						path = strings.Replace(path, val, realValue.(string), -1)
 					}
 
 				} else {
-					logrus.Info("real value for path is nil, returning path...")
+					logrus.Info("real value for path is nil, returning empty string")
 				}
 
 			}
@@ -262,6 +267,7 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper) {
 	//* Add key
 	for key, value := range commands {
+
 		//*get the value
 		//*split value : $configure1.json-$request-$body[user][name]
 		var realValue interface{}
@@ -281,11 +287,13 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 				realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
 			}
 		} else {
-			realValue = fmt.Sprintf("%v", value)
+			//realValue = fmt.Sprintf("%v", value)
+			realValue = value
 		}
 
 		listTraverseKey := strings.Split(key, ".")
-		AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeAdded, 0)
+		//AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeAdded, 0)
+		AddRecursive(listTraverseKey, realValue, mapToBeAdded, 0)
 	}
 }
 
@@ -311,10 +319,10 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			}
 
 		} else {
-			realValue = fmt.Sprintf("%v", value)
+			realValue = value
 		}
 
 		listTraverseKey := strings.Split(key, ".")
-		ModifyRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeModified, 0)
+		ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
 	}
 }

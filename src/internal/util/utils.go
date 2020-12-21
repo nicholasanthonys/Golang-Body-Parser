@@ -2,7 +2,6 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
@@ -24,27 +23,38 @@ func Find(slice []string, val string) (int, bool) {
 	return -1, false
 }
 
+//* FindRouteIndex is a function that return index of a certain route given a path example : /serial/smsotp/generate
+func FindRouteIndex(routes []model.Route, path string) int {
+	for index, route := range routes {
+		if strings.Contains(path, route.Path) {
+			return index
+		}
+	}
+	return -1
+}
+
 func GetListFolder(dirname string) ([]os.FileInfo, error) {
 	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
 		return nil, err
 	}
 
+	logrus.Info("reading directory" + dirname + " : ")
 	for _, file := range files {
-		fmt.Println(file.Name())
+		logrus.Info(file.Name())
 	}
 	return files, nil
 
 }
 
-//* ReadConfigure is a function that will read configure.json File.
-func ReadConfigure(path string) []byte {
+//* ReadJsonFile is a function that will read configure.json File.
+func ReadJsonFile(path string) []byte {
 	// Open our jsonFile
 	jsonFile, err := os.Open(path)
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		logrus.Error(err.Error())
-
+		logrus.Error("Failed to read : " + path)
 	}
 
 	// defer the closing of our jsonFile so that we can parse it later on
