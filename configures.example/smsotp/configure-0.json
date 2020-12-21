@@ -1,42 +1,35 @@
 {
-  "methods": [
-    "PUT"
-  ],
-  "path": "/persons/:person/transactions/:transaction",
   "request": {
-    "destinationPath" : "/{{$configure1.json--$request--$body[user][name]}}",
-    "destinationUrl": "http://localhost:3001",
-    "methodUsed": "PUT",
-    "transform": "ToXml",
-    "logBeforeModify" : "",
-    "logAfterModify" : "",
+    "destination_url": "http://mockbin.org/bin/c5488153-998f-4acd-835b-e9be47796195",
+    "destination_path": "/user",
+    "method" : "POST",
+    "transform": "ToJson",
+    "log_before_modify" : "",
+    "log_after_modify" : "",
     "adds": {
       "header": {
+
       },
       "body": {
-        "user.last_name": "parker",
-        "user.id": 1
+
       },
       "query": {
-
+        "address" : "mutiara cibaduyut c20"
       }
-
     },
     "modifies": {
       "header": {
       },
       "body": {
-
       },
       "query": {
-
       }
     },
     "deletes": {
       "header": [
       ],
       "body": [
-
+        "user.tes"
       ],
       "query": [
       ]
@@ -44,20 +37,18 @@
   },
   "response": {
     "transform": "ToJson",
-    "logBeforeModify" : "",
-    "logAfterModify" : "",
+    "log_before_modify" : "",
+    "log_after_modify" : "",
     "adds": {
       "header": {
       },
       "body": {
-
       },
       "query": {
       }
     },
     "modifies": {
       "body": {
-
       }
     },
     "deletes": {
