@@ -1,0 +1,79 @@
+{
+  "request": {
+    "destination_url": "http://mockbin.org/bin/49d8dbd5-32d3-47ba-ae4e-2ea77fa2dfc8",
+    "destination_path": "/user",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": "$path",
+    "log_after_modify": "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.favorite_cars": [
+          "honda",
+          "fiat",
+          "toyota",
+          "ferrari"
+        ],
+        "tes": {
+          "some_key": "some value"
+        },
+        "array_object": [
+          {
+            "obj1": "val_obj1"
+          }
+        ]
+      },
+      "query": {
+        "address": "mutiara cibaduyut c20"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+        "tes": {
+          "some_key": "some value"
+        },
+        "array_object": [
+          {
+            "obj1": "val_obj1"
+          }
+        ]
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+        "user.tes"
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify": "",
+    "log_after_modify": "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}
