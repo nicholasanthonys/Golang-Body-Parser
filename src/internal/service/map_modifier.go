@@ -112,7 +112,8 @@ func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 		realValue = value
 	}
 	if realValue == nil {
-		return "null"
+		//* if value is not found, return empty string
+		return ""
 	}
 	return realValue
 }
@@ -240,13 +241,15 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 				}
 
 				if realValue != nil {
+
 					vt := reflect.TypeOf(realValue).Kind()
 					if reflect.String == vt {
+
 						path = strings.Replace(path, val, realValue.(string), -1)
 					}
 
 				} else {
-					logrus.Info("real value for path is nil, returning path...")
+					logrus.Info("real value for path is nil, returning empty string")
 				}
 
 			}
