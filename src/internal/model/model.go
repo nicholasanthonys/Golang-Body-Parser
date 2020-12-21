@@ -1,20 +1,27 @@
 package model
 
+type Route struct {
+	Path             string `json:"path"`
+	ProjectDirectory string `json:"project_directory"`
+	Type             string `json:"type"`
+	Method           string `json:"method"`
+}
+
+type Routes []Route
+
 type Configure struct {
-	ConfigureBased string   `json:"configureBased"`
-	Methods        []string `json:"methods"`
-	Path           string   `json:"path"`
-	Request        Command  `json:"request"`
-	Response       Command  `json:"response"`
+	ConfigureBased string  `json:"configure_based"`
+	Request        Command `json:"request"`
+	Response       Command `json:"response"`
 }
 
 type Command struct {
-	DestinationPath string       `json:"destinationPath"`
-	DestinationUrl  string       `json:"destinationUrl"`
-	MethodUsed      string       `json:"methodUsed"`
+	DestinationPath string       `json:"destination_path"`
+	DestinationUrl  string       `json:"destination_url"`
+	Method          string       `json:"method"`
 	Transform       string       `json:"transform"`
-	LogBeforeModify string       `json:"logBeforeModify"`
-	LogAfterModify  string       `json:"logAfterModify"`
+	LogBeforeModify string       `json:"log_before_modify"`
+	LogAfterModify  string       `json:"log_after_modify"`
 	Adds            Fields       `json:"adds"`
 	Deletes         DeleteFields `json:"deletes"`
 	Modifies        Fields       `json:"modifies"`
