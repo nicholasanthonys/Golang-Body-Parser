@@ -15,14 +15,6 @@
           "fiat",
           "toyota",
           "ferrari"
-        ],
-        "tes": {
-          "some_key": "some value"
-        },
-        "array_object": [
-          {
-            "obj1": "val_obj1"
-          }
         ]
       },
       "query": {
@@ -33,14 +25,7 @@
       "header": {
       },
       "body": {
-        "tes": {
-          "some_key": "some value"
-        },
-        "array_object": [
-          {
-            "obj1": "val_obj1"
-          }
-        ]
+        "user.favorite_cars.0": "mazda"
       },
       "query": {
       }
