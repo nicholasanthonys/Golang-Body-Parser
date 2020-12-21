@@ -1,0 +1,14 @@
+[
+  {
+    "path" : "/smsotp/generate",
+    "project_directory" : "smsotp",
+    "type" : "parallel",
+    "method" : "POST"
+  },
+  {
+    "path" : "/emailotp/generate",
+    "project_directory" : "emailotp",
+    "type" : "parallel",
+    "method" : "POST"
+  }
+]
