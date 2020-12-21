@@ -41,10 +41,9 @@ func AddRecursive(listTraverse []string, value interface{}, in interface{}, inde
 
 // ModifyRecursive is a function that do modify key-value based on listTraverse
 func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, index int) interface{} {
-	logrus.Info("type for value ", in, "is ")
-	logrus.Info(reflect.TypeOf(in))
+
 	if index == len(listTraverse)-1 {
-		logrus.Info("len is -1")
+
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
 				return nil
@@ -336,8 +335,6 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 		}
 
 		listTraverseKey := strings.Split(key, ".")
-		logrus.Info("list traverse key is")
-		logrus.Info(listTraverseKey)
 		ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
 	}
 }
