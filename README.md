@@ -4,7 +4,7 @@ you to modify your client request such as add, modify, or delete key-value, tran
 and send the response back to the client.
 
 
-##Prerequisite
+## Prerequisite
 1. Create a project folder inside configures folder. Take a look inside **configures.example**.
 2. Inside a project folder  create file **configure-n.json and response.json**. **configure-n.json** can be renamed to configure0.json, or configure1.json as long as your file have 'configure', **NOTE : double dash (--)** for in configure files name are prohibited since this symbol will be used. 
 3. Create src/.env file **(see src/.env.example file)**.
@@ -44,7 +44,7 @@ from middleware to destination as a serial request :
 
 
 ### Middleware to destination endpoint
-##Request
+## Request
  **For each configure file in your project directory, it represents a request**.
 #### 1. Specify the target URL for request
 In order to forward your request, the middleware need to know the destination url and destination path.
