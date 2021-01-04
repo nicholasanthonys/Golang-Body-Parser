@@ -47,34 +47,34 @@ func SetRouteHandler() *echo.Echo {
 
 			if strings.ToLower(route.Method) == "post" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.POST("/parallel"+route.Path, doParallel)
+					e.POST(route.Path, doParallel)
 				} else {
-					e.POST("/serial"+route.Path, doSerial)
+					e.POST(route.Path, doSerial)
 				}
 			}
 
 			if strings.ToLower(route.Method) == "get" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.GET("/parallel"+route.Path, doParallel)
+					e.GET(route.Path, doParallel)
 				} else {
-					e.GET("/serial"+route.Path, doSerial)
+					e.GET(route.Path, doSerial)
 				}
 			}
 
 			if strings.ToLower(route.Method) == "put" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.PUT("/parallel"+route.Path, doParallel)
+					e.PUT(route.Path, doParallel)
 				} else {
-					e.PUT("/serial"+route.Path, doSerial)
+					e.PUT(route.Path, doSerial)
 				}
 
 			}
 
 			if strings.ToLower(route.Method) == "delete" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.DELETE("/parallel"+route.Path, doParallel)
+					e.DELETE(route.Path, doParallel)
 				} else {
-					e.DELETE("/serial"+route.Path, doSerial)
+					e.DELETE(route.Path, doSerial)
 				}
 			}
 
