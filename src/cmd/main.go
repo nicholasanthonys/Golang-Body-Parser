@@ -1,10 +1,11 @@
 package main
 
 import (
+	"os"
+
 	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/sirupsen/logrus"
-	"os"
 )
 
 var log = logrus.New()
@@ -23,7 +24,7 @@ func main() {
 	//*load env
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Error("Error loading .env file")
 	}
 
 	//*start Server
