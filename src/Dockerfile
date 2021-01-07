@@ -4,6 +4,8 @@ FROM  golang:1.15-alpine as builder
 ARG git_tag
 ARG git_commit
 
+
+
 WORKDIR /go/src/github.com/nicholasanthonys/Golang-Body-Parser
 COPY . .
 
@@ -15,5 +17,10 @@ FROM alpine:latest
 WORKDIR /app/src
 COPY --from=builder /go/src/github.com/nicholasanthonys/Golang-Body-Parser .
 
+# This environment variable for current image. It must be the same with APP_PORT in .env file (where the application port is running)
+ENV APP_PORT=3001
+
+# Expose application port
+EXPOSE $APP_PORT/tcp
 ## Run build
 CMD ["./build/Golang-Body-Parser"]
