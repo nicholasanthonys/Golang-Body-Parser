@@ -2,15 +2,16 @@ package util
 
 import (
 	"encoding/json"
-	"github.com/clbanning/mxj/x2j"
-	"github.com/labstack/echo"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/clbanning/mxj/x2j"
+	"github.com/labstack/echo"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	"github.com/sirupsen/logrus"
 )
 
 //* Find is a function that will chek if  item exist in slice of string
@@ -76,8 +77,8 @@ func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
 		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
 		return c.XMLBlob(200, resByte)
 	default:
-		logrus.Info("type not supported")
-		return c.JSON(404, "Type Not Supported")
+		logrus.Info("type not supported. only support ToJson and ToXml")
+		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
 	}
 }
 
