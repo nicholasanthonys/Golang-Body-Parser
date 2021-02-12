@@ -18,7 +18,7 @@ WORKDIR /app/src
 COPY --from=builder /go/src/github.com/nicholasanthonys/Golang-Body-Parser .
 
 # This environment variable for current image. It must be the same with APP_PORT in .env file (where the application port is running)
-ENV APP_PORT=3001
+ENV APP_PORT=80
 
 # Expose application port
 EXPOSE $APP_PORT/tcp
