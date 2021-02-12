@@ -8,5 +8,12 @@ services:
       - type: bind
         source: ${CONFIGURES_DIRECTORY}
         target: /app/configures
-    ports:
-      - "5000:${APP_PORT}"
+    # ports:
+    #   - "5000:${APP_PORT}"
+    expose  :
+      - "80"
+    
+networks: 
+  site1 : 
+    external: 
+      name : prody_middleware_net
