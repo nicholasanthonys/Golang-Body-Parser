@@ -70,10 +70,10 @@ func ReadJsonFile(path string) []byte {
 //*ResponseWriter is a function that will return response
 func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
 
-	switch wrapper.Configure.Response.Transform {
-	case "ToJson":
+	switch strings.ToLower(wrapper.Configure.Response.Transform) {
+	case strings.ToLower("ToJson"):
 		return c.JSON(200, wrapper.Response.Body)
-	case "ToXml":
+	case strings.ToLower("ToXml"):
 		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
 		return c.XMLBlob(200, resByte)
 	default:
