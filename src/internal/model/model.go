@@ -15,6 +15,15 @@ type Configure struct {
 	Response       Command `json:"response"`
 }
 
+type ConfigureItem struct {
+	FileName string `json:"file_name"`
+	Alias    string `json:"alias"`
+}
+
+type Project struct {
+	Configures []ConfigureItem `json:"configures"`
+}
+
 type Command struct {
 	DestinationPath string       `json:"destination_path"`
 	DestinationUrl  string       `json:"destination_url"`
