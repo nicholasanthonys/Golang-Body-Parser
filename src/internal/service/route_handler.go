@@ -120,7 +120,8 @@ func doParallel(c echo.Context) error {
 	}
 	route := routes[index]
 	fullProjectDirectory := configureDir + "/" + route.ProjectDirectory
-
+	logrus.Info("full project directory is")
+	logrus.Info(fullProjectDirectory)
 	//* declare a WaitGroup
 	var wg sync.WaitGroup
 
@@ -228,7 +229,8 @@ func doSerial(c echo.Context) error {
 	route := routes[index]
 	fullProjectDirectory := configureDir + "/" + route.ProjectDirectory
 	files, err := util.GetListFolder(fullProjectDirectory)
-
+	logrus.Info("full project directory is")
+	logrus.Info(fullProjectDirectory)
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading File. " + err.Error()
