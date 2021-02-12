@@ -78,26 +78,8 @@ func SetRouteHandler() *echo.Echo {
 				}
 			}
 
-			////* assign configure byte to configure
-			//_ = json.Unmarshal(configByte, &configure)
-			//// Route serial execution
-			//e.POST("/serial"+configure.Path, doSerial)
-			//e.PUT("/serial"+configure.Path, doSerial)
-			//e.GET("/serial"+configure.Path, doSerial)
-			//// Route parallel execution
-			//e.POST("/parallel"+configure.Path, doParallel)
-			//e.PUT("/parallel"+configure.Path, doParallel)
-			//e.GET("/parallel"+configure.Path, doParallel)
-
 		}
 	}
-
-	//files, err := util.GetListFolder(configureDir)
-	//
-	//if err != nil {
-	//	logrus.Fatal("error reading directory " + configureDir)
-	//
-	//}
 
 	return e
 }
@@ -215,7 +197,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) mod
 	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 
 	//*In case user want to log final response
-	DoLogging(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, "after", "final response", false)
+	util.DoLogging(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, "after", "final response", false)
 	return resultWrapper
 }
 
@@ -347,7 +329,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	}
 
 	//* In case user want to log before modify/changing request
-	DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", fileName, true)
+	util.DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", fileName, true)
 
 	//*if methodUsed is in the array of configure methods, then do the map modification
 	//_, find := util.Find(configure.Methods, configure.Request.Method)
@@ -364,7 +346,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", fileName, true)
+	util.DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", fileName, true)
 
 	//*send to destination url
 	response, err := Send(configure, wrapper, configure.Request.Method)
@@ -380,13 +362,13 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	}
 
 	//* In case user want to log before modify/changing request
-	DoLogging(configure.Response.LogBeforeModify, wrapper.Response, "before", fileName, false)
+	util.DoLogging(configure.Response.LogBeforeModify, wrapper.Response, "before", fileName, false)
 
 	//* Do Command Add, Modify, Deletion for response again
 	DoCommand(configure.Response, wrapper.Response, mapWrapper)
 
-	//* In case user want to log before modify/changing request
-	DoLogging(configure.Response.LogAfterModify, wrapper.Response, "after", fileName, false)
+	//* In case user want to log after modify/changing request
+	util.DoLogging(configure.Response.LogAfterModify, wrapper.Response, "after", fileName, false)
 
 	return wrapper, http.StatusOK, nil
 
@@ -423,25 +405,4 @@ func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
 	}
 	return result, http.StatusOK, nil
-}
-
-func DoLogging(logValue string, field model.Fields, event string, fileName string, isRequest bool) {
-	if len(logValue) > 0 {
-		sentence := "logging "
-		if isRequest {
-			sentence += "response "
-		} else {
-			sentence += "response "
-		}
-
-		if event == "before" {
-			sentence += "before modify for " + fileName + " : "
-		} else {
-			sentence += "after modify for " + fileName + " : "
-		}
-
-		value := CheckValue(logValue, field)
-		logrus.Info(sentence)
-		logrus.Info(value)
-	}
 }

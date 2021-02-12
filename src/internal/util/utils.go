@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/json"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"io"
 	"io/ioutil"
 	"os"
@@ -178,11 +179,32 @@ func JSONEqual(a, b io.Reader) (bool, error) {
 func JSONBytesEqual(a, b []byte) (bool, error) {
 	var j, j2 interface{}
 	if err := json.Unmarshal(a, &j); err != nil {
-		logrus.Error("Error unmarhsaling a")
+		logrus.Error("Error unmarshaling a")
 	}
 	if err := json.Unmarshal(b, &j2); err != nil {
-		logrus.Error("Error unmarhsaling b ")
+		logrus.Error("Error unmarshaling b ")
 	}
 
 	return reflect.DeepEqual(j2, j), nil
+}
+
+func DoLogging(logValue string, field model.Fields, event string, fileName string, isRequest bool) {
+	if len(logValue) > 0 {
+		sentence := "logging "
+		if isRequest {
+			sentence += "response "
+		} else {
+			sentence += "response "
+		}
+
+		if event == "before" {
+			sentence += "before modify for " + fileName + " : "
+		} else {
+			sentence += "after modify for " + fileName + " : "
+		}
+
+		value := service.CheckValue(logValue, field)
+		logrus.Info(sentence)
+		logrus.Info(value)
+	}
 }
