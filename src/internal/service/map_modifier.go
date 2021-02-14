@@ -95,8 +95,8 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 	return nil
 }
 
-// CheckValue is a function that check the value type value from configure and retrieve the value from header,body, or query
-func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
+// RetrieveValue is a function that check the value type value from configure and retrieve the value from header,body, or query
+func RetrieveValue(value interface{}, takeFrom model.Fields) interface{} {
 	//*declare empty result
 	var realValue interface{}
 	//* check the type of the value
@@ -107,13 +107,13 @@ func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 		listTraverseVal, destination := util.SanitizeValue(fmt.Sprintf("%v", value))
 		if listTraverseVal != nil {
 			if destination == "body" {
-				realValue = GetValue(listTraverseVal, takeFrom.Body, 0)
+				realValue = recursiveGetValue(listTraverseVal, takeFrom.Body, 0)
 			} else if destination == "header" {
-				realValue = GetValue(listTraverseVal, takeFrom.Header, 0)
+				realValue = recursiveGetValue(listTraverseVal, takeFrom.Header, 0)
 			} else if destination == "query" {
-				realValue = GetValue(listTraverseVal, takeFrom.Query, 0)
+				realValue = recursiveGetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
-				realValue = GetValue(listTraverseVal, takeFrom.Param, 0)
+				realValue = recursiveGetValue(listTraverseVal, takeFrom.Param, 0)
 			}
 		} else {
 			realValue = value
@@ -130,9 +130,9 @@ func CheckValue(value interface{}, takeFrom model.Fields) interface{} {
 	return realValue
 }
 
-//* GetValue is a function that will recursively traverse the whole map
+//* recursiveGetValue is a function that will recursively traverse the whole map
 //* get the value based on the listTraverse
-func GetValue(listTraverse []string, in interface{}, index int) interface{} {
+func recursiveGetValue(listTraverse []string, in interface{}, index int) interface{} {
 
 	if len(listTraverse) > 0 {
 		if index == len(listTraverse)-1 {
@@ -174,7 +174,7 @@ func GetValue(listTraverse []string, in interface{}, index int) interface{} {
 				return nil
 			}
 			//* recursively traverse the map again
-			return GetValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
+			return recursiveGetValue(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
 		} else {
 			return nil
 		}
@@ -245,12 +245,12 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 				splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 				if splittedValue[1] == "$request" {
 					//* get the request from fields
-					realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+					realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
 
 				} else {
 
 					//* get the response from fields
-					realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+					realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
 				}
 
 				if realValue != nil {
@@ -278,7 +278,6 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper) {
 	//* Add key
 	for key, value := range commands {
-
 		//*get the value
 		//*split value : $configure1.json-$request-$body[user][name]
 		var realValue interface{}
@@ -286,22 +285,20 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
 			//remove dollar sign
-			splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
+			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
-
-				realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
+				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Request)
 
 			} else {
 
 				//* get the response from fields
-				realValue = CheckValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
+				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Response)
 			}
 		} else {
 			//realValue = fmt.Sprintf("%v", value)
 			realValue = value
 		}
-
 		listTraverseKey := strings.Split(key, ".")
 
 		//AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeAdded, 0)
@@ -319,15 +316,14 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			//* split : $configure1.json-$request-$body[user]
 			//* into $configure1.json, $request, $body[user]
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
-			//remove dollar sign from $configure
-			splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
+
+			////remove dollar sign from $configure
+			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 
 			if splittedValue[1] == "$request" {
-				//* get the request from fields
-				realValue = CheckValue(value, takeFrom[splittedValue[0]].Request)
 			} else {
 				//* get the response from fields
-				realValue = CheckValue(value, takeFrom[splittedValue[0]].Response)
+				realValue = RetrieveValue(value, takeFrom[splittedValue[0]].Response)
 			}
 
 		} else {
