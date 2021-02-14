@@ -18,6 +18,9 @@ import (
 
 var configureDir string
 var routes model.Routes
+var projectByte []byte
+var project model.Project
+var fullProjectDirectory string
 
 func SetRouteHandler() *echo.Echo {
 	//* get configures Directory
@@ -47,34 +50,34 @@ func SetRouteHandler() *echo.Echo {
 
 			if strings.ToLower(route.Method) == "post" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.POST(route.Path, doParallel)
+					e.POST(route.Path, doParallel, prepareRouteProject)
 				} else {
-					e.POST(route.Path, doSerial)
+					e.POST(route.Path, doSerial, prepareRouteProject)
 				}
 			}
 
 			if strings.ToLower(route.Method) == "get" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.GET(route.Path, doParallel)
+					e.GET(route.Path, doParallel, prepareRouteProject)
 				} else {
-					e.GET(route.Path, doSerial)
+					e.GET(route.Path, doSerial, prepareRouteProject)
 				}
 			}
 
 			if strings.ToLower(route.Method) == "put" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.PUT(route.Path, doParallel)
+					e.PUT(route.Path, doParallel, prepareRouteProject)
 				} else {
-					e.PUT(route.Path, doSerial)
+					e.PUT(route.Path, doSerial, prepareRouteProject)
 				}
 
 			}
 
 			if strings.ToLower(route.Method) == "delete" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.DELETE(route.Path, doParallel)
+					e.DELETE(route.Path, doParallel, prepareRouteProject)
 				} else {
-					e.DELETE(route.Path, doSerial)
+					e.DELETE(route.Path, doSerial, prepareRouteProject)
 				}
 			}
 
@@ -84,69 +87,83 @@ func SetRouteHandler() *echo.Echo {
 	return e
 }
 
-func worker(wg *sync.WaitGroup, fileName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
+func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
 	defer wg.Done()
-	_, status, err := processingRequest(fileName, configure, c, &requestFromUser, mapWrapper, requestBody)
+	_, status, err := processingRequest(mapKeyName, configure, c, &requestFromUser, mapWrapper, requestBody)
 	if err != nil {
 		logrus.Error("Go Worker - Error Process")
 		logrus.Error(err.Error())
 		logrus.Error("status : ", status)
 	}
-	mapWrapper[fileName] = requestFromUser
+	mapWrapper[mapKeyName] = requestFromUser
+}
+
+// PrepareRouteProject middleware that find defined route in route.json and read project.json
+func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		index := util.FindRouteIndex(routes, c.Path())
+		if index < 0 {
+			return c.JSON(404, "Cannot Find Route "+c.Path())
+		}
+		route := routes[index]
+		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
+		logrus.Info("full project directory is")
+		logrus.Info(fullProjectDirectory)
+		// Read project .json
+
+		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "project.json")
+		err := json.Unmarshal(projectByte, &project)
+
+		if err != nil {
+			resMap := make(map[string]string)
+			resMap["message"] = "Problem In Reading File project.json "
+			return c.JSON(http.StatusInternalServerError, resMap)
+		}
+
+		return next(c)
+	}
+
 }
 
 func doParallel(c echo.Context) error {
-	index := util.FindRouteIndex(routes, c.Path())
-	if index < 0 {
-		return c.JSON(404, "Cannot Find Route "+c.Path())
-	}
-	route := routes[index]
-	fullProjectDirectory := configureDir + "/" + route.ProjectDirectory
-	logrus.Info("full project directory is")
-	logrus.Info(fullProjectDirectory)
-	//* declare a WaitGroup
-	var wg sync.WaitGroup
 
 	//*read the request that will be sent from user
-	requestBody, _ := ioutil.ReadAll(c.Request().Body)
-	//* get files and store it in slice
-	files, err := util.GetListFolder(fullProjectDirectory)
+	reqByte, err := ioutil.ReadAll(c.Request().Body)
+
 	if err != nil {
 		resMap := make(map[string]string)
-		resMap["message"] = "Problem In Reading File. " + err.Error()
+		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
 		return c.JSON(http.StatusInternalServerError, resMap)
 	}
 
+	//* declare a WaitGroup
+	var wg sync.WaitGroup
 	mapWrapper := make(map[string]model.Wrapper)
 
-	for _, file := range files {
+	for _, configureItem := range project.Configures {
 		var configure model.Configure
-		if strings.Contains(file.Name(), "configure") {
-
-			requestFromUser := model.Wrapper{
-				Configure: configure,
-				Request: model.Fields{
-					Param:  make(map[string]interface{}),
-					Header: make(map[string]interface{}),
-					Body:   make(map[string]interface{}),
-					Query:  make(map[string]interface{}),
-				},
-				Response: model.Fields{
-					Param:  make(map[string]interface{}),
-					Header: make(map[string]interface{}),
-					Body:   make(map[string]interface{}),
-					Query:  make(map[string]interface{}),
-				},
-			}
-			configByte := util.ReadJsonFile(fullProjectDirectory + "/" + file.Name())
-			//* assign configure byte to configure
-			_ = json.Unmarshal(configByte, &configure)
-			requestFromUser.Configure = configure
-
-			wg.Add(1)
-			go worker(&wg, file.Name(), configure, c, mapWrapper, requestFromUser, requestBody)
-
+		requestFromUser := model.Wrapper{
+			Configure: configure,
+			Request: model.Fields{
+				Param:  make(map[string]interface{}),
+				Header: make(map[string]interface{}),
+				Body:   make(map[string]interface{}),
+				Query:  make(map[string]interface{}),
+			},
+			Response: model.Fields{
+				Param:  make(map[string]interface{}),
+				Header: make(map[string]interface{}),
+				Body:   make(map[string]interface{}),
+				Query:  make(map[string]interface{}),
+			},
 		}
+		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
+		//* assign configure byte to configure
+		_ = json.Unmarshal(configByte, &configure)
+		requestFromUser.Configure = configure
+
+		wg.Add(1)
+		go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte)
 
 	}
 	wg.Wait()
@@ -197,27 +214,12 @@ func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) mod
 	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 
 	//*In case user want to log final response
-	util.DoLogging(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, "after", "final response", false)
+	DoLogging(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, "after", "final response", false)
 	return resultWrapper
 }
 
 //* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
 func doSerial(c echo.Context) error {
-	index := util.FindRouteIndex(routes, c.Path())
-	if index < 0 {
-		return c.JSON(404, "Cannot Find Route "+c.Path())
-	}
-
-	route := routes[index]
-	fullProjectDirectory := configureDir + "/" + route.ProjectDirectory
-	files, err := util.GetListFolder(fullProjectDirectory)
-	logrus.Info("full project directory is")
-	logrus.Info(fullProjectDirectory)
-	if err != nil {
-		resMap := make(map[string]string)
-		resMap["message"] = "Problem In Reading File. " + err.Error()
-		return c.JSON(http.StatusInternalServerError, resMap)
-	}
 
 	reqByte, err := ioutil.ReadAll(c.Request().Body)
 	if err != nil {
@@ -227,46 +229,43 @@ func doSerial(c echo.Context) error {
 	}
 
 	//*Read file ConfigureBased
-	//var configures []model.Configure                //* slice for configures file (JSON)
 	var mapWrapper = make(map[string]model.Wrapper) ///*slice that contains wrapper
 
-	for _, file := range files {
-
-		var configure model.Configure
-		if strings.Contains(file.Name(), "configure") {
-
-			//* Make a wrapper for each configuration
-			requestFromUser := model.Wrapper{
-				Configure: configure,
-				Request: model.Fields{
-					Param:  make(map[string]interface{}),
-					Header: make(map[string]interface{}),
-					Body:   make(map[string]interface{}),
-					Query:  make(map[string]interface{}),
-				},
-				Response: model.Fields{
-					Param:  make(map[string]interface{}),
-					Header: make(map[string]interface{}),
-					Body:   make(map[string]interface{}),
-					Query:  make(map[string]interface{}),
-				},
-			}
-
-			configByte := util.ReadJsonFile(fullProjectDirectory + "/" + file.Name())
-			//* assign configure byte to configure
-			_ = json.Unmarshal(configByte, &configure)
-			requestFromUser.Configure = configure
-
-			_, status, err := processingRequest(file.Name(), configure, c, &requestFromUser, mapWrapper, reqByte)
-
-			if err != nil {
-				return util.ErrorWriter(c, configure, err, status)
-			}
-
-			//*save to map
-			mapWrapper[file.Name()] = requestFromUser
-
+	for _, configureItem := range project.Configures {
+		//read actual configure based on configureItem.file_name
+		// Initialization configure object
+		var configure = model.Configure{}
+		requestFromUser := model.Wrapper{
+			Configure: configure,
+			Request: model.Fields{
+				Param:  make(map[string]interface{}),
+				Header: make(map[string]interface{}),
+				Body:   make(map[string]interface{}),
+				Query:  make(map[string]interface{}),
+			},
+			Response: model.Fields{
+				Param:  make(map[string]interface{}),
+				Header: make(map[string]interface{}),
+				Body:   make(map[string]interface{}),
+				Query:  make(map[string]interface{}),
+			},
 		}
+		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
+		//* assign configure byte to configure
+		_ = json.Unmarshal(configByte, &configure)
+		requestFromUser.Configure = configure
+
+		// Processing request
+		_, status, err := processingRequest(configureItem.Alias, configure, c, &requestFromUser, mapWrapper, reqByte)
+
+		if err != nil {
+			return util.ErrorWriter(c, configure, err, status)
+		}
+
+		//*save to map with alias configureItem
+		mapWrapper[configureItem.Alias] = requestFromUser
+		logrus.Info("map wrapper for alias " + configureItem.Alias + "is")
+		logrus.Info(mapWrapper[configureItem.Alias].Request)
 
 	}
 
@@ -292,7 +291,7 @@ func setHeaderResponse(header map[string]interface{}, c echo.Context) {
 
 }
 
-func processingRequest(fileName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
+func processingRequest(aliastName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
 
 	//*check the content type user request
 	var contentType string
@@ -329,7 +328,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	}
 
 	//* In case user want to log before modify/changing request
-	util.DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", fileName, true)
+	DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", aliastName, true)
 
 	//*if methodUsed is in the array of configure methods, then do the map modification
 	//_, find := util.Find(configure.Methods, configure.Request.Method)
@@ -338,7 +337,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	//}
 
 	//*assign first before do any add,modification,delete in case value want reference each other
-	mapWrapper[fileName] = *wrapper
+	mapWrapper[aliastName] = *wrapper
 	//* Do the Map Modification if method is find/available
 	DoCommand(configure.Request, wrapper.Request, mapWrapper)
 
@@ -346,7 +345,7 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	util.DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", fileName, true)
+	DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", aliastName, true)
 
 	//*send to destination url
 	response, err := Send(configure, wrapper, configure.Request.Method)
@@ -362,13 +361,13 @@ func processingRequest(fileName string, configure model.Configure, c echo.Contex
 	}
 
 	//* In case user want to log before modify/changing request
-	util.DoLogging(configure.Response.LogBeforeModify, wrapper.Response, "before", fileName, false)
+	DoLogging(configure.Response.LogBeforeModify, wrapper.Response, "before", aliastName, false)
 
 	//* Do Command Add, Modify, Deletion for response again
 	DoCommand(configure.Response, wrapper.Response, mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	util.DoLogging(configure.Response.LogAfterModify, wrapper.Response, "after", fileName, false)
+	DoLogging(configure.Response.LogAfterModify, wrapper.Response, "after", aliastName, false)
 
 	return wrapper, http.StatusOK, nil
 
@@ -405,4 +404,25 @@ func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
 	}
 	return result, http.StatusOK, nil
+}
+
+func DoLogging(logValue string, field model.Fields, event string, fileName string, isRequest bool) {
+	if len(logValue) > 0 {
+		sentence := "logging "
+		if isRequest {
+			sentence += "response "
+		} else {
+			sentence += "response "
+		}
+
+		if event == "before" {
+			sentence += "before modify for " + fileName + " : "
+		} else {
+			sentence += "after modify for " + fileName + " : "
+		}
+
+		value := RetrieveValue(logValue, field)
+		logrus.Info(sentence)
+		logrus.Info(value)
+	}
 }
