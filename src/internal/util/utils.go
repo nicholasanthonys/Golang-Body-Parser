@@ -2,17 +2,15 @@ package util
 
 import (
 	"encoding/json"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
+	"github.com/clbanning/mxj/x2j"
+	"github.com/labstack/echo"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
-
-	"github.com/clbanning/mxj/x2j"
-	"github.com/labstack/echo"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 )
 
 //* Find is a function that will chek if  item exist in slice of string
@@ -188,23 +186,20 @@ func JSONBytesEqual(a, b []byte) (bool, error) {
 	return reflect.DeepEqual(j2, j), nil
 }
 
-func DoLogging(logValue string, field model.Fields, event string, fileName string, isRequest bool) {
-	if len(logValue) > 0 {
-		sentence := "logging "
-		if isRequest {
-			sentence += "response "
-		} else {
-			sentence += "response "
-		}
-
-		if event == "before" {
-			sentence += "before modify for " + fileName + " : "
-		} else {
-			sentence += "after modify for " + fileName + " : "
-		}
-
-		value := service.CheckValue(logValue, field)
-		logrus.Info(sentence)
-		logrus.Info(value)
+// DoLogging will print logValue in a formatted log.
+func DoLogging(logValue interface{}, event string, identifier string, isRequest bool) {
+	sentence := "logging "
+	if isRequest {
+		sentence += "response "
+	} else {
+		sentence += "response "
 	}
+
+	if event == "before" {
+		sentence += "before modify for " + identifier + " : "
+	} else {
+		sentence += "after modify for " + identifier + " : "
+	}
+	logrus.Info(sentence)
+	logrus.Info(logValue)
 }

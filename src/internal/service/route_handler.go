@@ -21,7 +21,9 @@ var routes model.Routes
 var projectByte []byte
 var project model.Project
 var fullProjectDirectory string
+var logValue interface{} // value to be logged
 
+//SetRouteHandler called by main.go. This function set route based on router.json
 func SetRouteHandler() *echo.Echo {
 	//* get configures Directory
 	configureDir = os.Getenv("CONFIGURES_DIRECTORY")
@@ -87,6 +89,7 @@ func SetRouteHandler() *echo.Echo {
 	return e
 }
 
+// worker will called processingRequest. This function is called by doParallel function.
 func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
 	defer wg.Done()
 	_, status, err := processingRequest(mapKeyName, configure, c, &requestFromUser, mapWrapper, requestBody)
@@ -98,7 +101,7 @@ func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c 
 	mapWrapper[mapKeyName] = requestFromUser
 }
 
-// PrepareRouteProject middleware that find defined route in route.json and read project.json
+// prepareRouteProject middleware that find defined route in route.json and read project.json
 func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		index := util.FindRouteIndex(routes, c.Path())
@@ -125,6 +128,7 @@ func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
 
 }
 
+// doParallel execute every configure in parallel-way.
 func doParallel(c echo.Context) error {
 
 	//*read the request that will be sent from user
@@ -173,6 +177,7 @@ func doParallel(c echo.Context) error {
 	return util.ResponseWriter(resultWrapper, c)
 }
 
+// parseResponse process response (add,modify,delete) and return map to be sent to the client
 func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) model.Wrapper {
 
 	resultWrapper := model.Wrapper{
@@ -214,11 +219,15 @@ func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) mod
 	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 
 	//*In case user want to log final response
-	DoLogging(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, "after", "final response", false)
+	if len(resultWrapper.Configure.Response.LogAfterModify) > 0 {
+		logValue = RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response)
+		util.DoLogging(logValue, "after", "final response", false)
+	}
+
 	return resultWrapper
 }
 
-//* Function that transform request to mpa[string] interface{}, Read configure JSON and return value
+// doSerial process configure in serial-way.
 func doSerial(c echo.Context) error {
 
 	reqByte, err := ioutil.ReadAll(c.Request().Body)
@@ -251,6 +260,7 @@ func doSerial(c echo.Context) error {
 			},
 		}
 		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
+
 		//* assign configure byte to configure
 		_ = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
@@ -264,8 +274,6 @@ func doSerial(c echo.Context) error {
 
 		//*save to map with alias configureItem
 		mapWrapper[configureItem.Alias] = requestFromUser
-		logrus.Info("map wrapper for alias " + configureItem.Alias + "is")
-		logrus.Info(mapWrapper[configureItem.Alias].Request)
 
 	}
 
@@ -277,6 +285,7 @@ func doSerial(c echo.Context) error {
 	return util.ResponseWriter(resultWrapper, c)
 }
 
+// setHeaderResponse set custom key-value pair for header, except Content-Length and Content-type
 func setHeaderResponse(header map[string]interface{}, c echo.Context) {
 	for key, val := range header {
 		rt := reflect.TypeOf(val)
@@ -291,7 +300,8 @@ func setHeaderResponse(header map[string]interface{}, c echo.Context) {
 
 }
 
-func processingRequest(aliastName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
+// processingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
+func processingRequest(aliasName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
 
 	//*check the content type user request
 	var contentType string
@@ -328,16 +338,14 @@ func processingRequest(aliastName string, configure model.Configure, c echo.Cont
 	}
 
 	//* In case user want to log before modify/changing request
-	DoLogging(configure.Request.LogBeforeModify, wrapper.Request, "before", aliastName, true)
-
-	//*if methodUsed is in the array of configure methods, then do the map modification
-	//_, find := util.Find(configure.Methods, configure.Request.Method)
-	//if find {
-	//
-	//}
+	if len(configure.Request.LogBeforeModify) > 0 {
+		logValue = RetrieveValue(configure.Request.LogBeforeModify, wrapper.Request)
+		util.DoLogging(logValue, "before", aliasName, true)
+	}
 
 	//*assign first before do any add,modification,delete in case value want reference each other
-	mapWrapper[aliastName] = *wrapper
+	mapWrapper[aliasName] = *wrapper
+
 	//* Do the Map Modification if method is find/available
 	DoCommand(configure.Request, wrapper.Request, mapWrapper)
 
@@ -345,7 +353,10 @@ func processingRequest(aliastName string, configure model.Configure, c echo.Cont
 	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	DoLogging(configure.Request.LogAfterModify, wrapper.Request, "after", aliastName, true)
+	if len(configure.Request.LogAfterModify) > 0 {
+		logValue = RetrieveValue(configure.Request.LogAfterModify, wrapper.Request)
+		util.DoLogging(logValue, "after", aliasName, true)
+	}
 
 	//*send to destination url
 	response, err := Send(configure, wrapper, configure.Request.Method)
@@ -361,16 +372,20 @@ func processingRequest(aliastName string, configure model.Configure, c echo.Cont
 	}
 
 	//* In case user want to log before modify/changing request
-	DoLogging(configure.Response.LogBeforeModify, wrapper.Response, "before", aliastName, false)
+	if len(configure.Response.LogBeforeModify) > 0 {
+		logValue = RetrieveValue(configure.Response.LogBeforeModify, wrapper.Response)
+		util.DoLogging(configure.Response.LogBeforeModify, "before", aliasName, false)
+	}
 
 	//* Do Command Add, Modify, Deletion for response again
 	DoCommand(configure.Response, wrapper.Response, mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	DoLogging(configure.Response.LogAfterModify, wrapper.Response, "after", aliastName, false)
-
+	if len(configure.Response.LogAfterModify) > 0 {
+		logValue = RetrieveValue(configure.Response.LogAfterModify, wrapper.Response)
+		util.DoLogging(logValue, "after", aliasName, false)
+	}
 	return wrapper, http.StatusOK, nil
-
 }
 
 func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[string]interface{}, int, error) {
@@ -404,25 +419,4 @@ func parseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
 	}
 	return result, http.StatusOK, nil
-}
-
-func DoLogging(logValue string, field model.Fields, event string, fileName string, isRequest bool) {
-	if len(logValue) > 0 {
-		sentence := "logging "
-		if isRequest {
-			sentence += "response "
-		} else {
-			sentence += "response "
-		}
-
-		if event == "before" {
-			sentence += "before modify for " + fileName + " : "
-		} else {
-			sentence += "after modify for " + fileName + " : "
-		}
-
-		value := RetrieveValue(logValue, field)
-		logrus.Info(sentence)
-		logrus.Info(value)
-	}
 }
