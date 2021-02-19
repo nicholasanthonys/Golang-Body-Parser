@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
+	github.com/diegoholiveira/jsonlogic v2.3.1+incompatible
 	github.com/diegoholiveira/jsonlogic/v3 v3.0.1 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/labstack/echo v3.3.10+incompatible
