@@ -92,7 +92,7 @@ func SetRouteHandler() *echo.Echo {
 // worker will called processingRequest. This function is called by doParallel function.
 func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
 	defer wg.Done()
-	_, status, err := processingRequest(mapKeyName, configure, c, &requestFromUser, mapWrapper, requestBody)
+	_, status, err := processingRequest(mapKeyName, c, &requestFromUser, mapWrapper, requestBody)
 	if err != nil {
 		logrus.Error("Go Worker - Error Process")
 		logrus.Error(err.Error())
@@ -266,7 +266,7 @@ func doSerial(c echo.Context) error {
 		requestFromUser.Configure = configure
 
 		// Processing request
-		_, status, err := processingRequest(configureItem.Alias, configure, c, &requestFromUser, mapWrapper, reqByte)
+		_, status, err := processingRequest(configureItem.Alias, c, &requestFromUser, mapWrapper, reqByte)
 
 		if err != nil {
 			return util.ErrorWriter(c, configure, err, status)
@@ -276,6 +276,19 @@ func doSerial(c echo.Context) error {
 		mapWrapper[configureItem.Alias] = requestFromUser
 
 	}
+	////try to read project.json
+	////convert struct to map string interface
+	//tempMap := make(map[string]interface{})
+	//inrec, _ := json.Marshal(project.CLogic)
+	//logrus.Info("inrech is")
+	//err = json.Unmarshal(inrec, &tempMap)
+	//if err != nil {
+	//	logrus.Fatal("Error unmarshaling inrec tempmap")
+	//}
+	//cLogicModified := InterfaceDirectModifier(tempMap, mapWrapper, "--")
+	//logrus.Info("clogic is")
+	//
+	//logrus.Info(cLogicModified)
 
 	//*use the latest configures and the latest response
 	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
@@ -301,7 +314,7 @@ func setHeaderResponse(header map[string]interface{}, c echo.Context) {
 }
 
 // processingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func processingRequest(aliasName string, configure model.Configure, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
+func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
 
 	//*check the content type user request
 	var contentType string
@@ -338,33 +351,33 @@ func processingRequest(aliasName string, configure model.Configure, c echo.Conte
 	}
 
 	//* In case user want to log before modify/changing request
-	if len(configure.Request.LogBeforeModify) > 0 {
-		logValue = RetrieveValue(configure.Request.LogBeforeModify, wrapper.Request)
+	if len(wrapper.Configure.Request.LogBeforeModify) > 0 {
+		logValue = RetrieveValue(wrapper.Configure.Request.LogBeforeModify, wrapper.Request)
 		util.DoLogging(logValue, "before", aliasName, true)
 	}
 
 	//*assign first before do any add,modification,delete in case value want reference each other
 	mapWrapper[aliasName] = *wrapper
 
-	//* Do the Map Modification if method is find/available
-	DoCommand(configure.Request, wrapper.Request, mapWrapper)
+	//* Do the Map Modification
+	DoCommand(wrapper.Configure.Request, wrapper.Request, mapWrapper)
 
 	//*get the destinationPath value before sending request
-	configure.Request.DestinationPath = ModifyPath(configure.Request.DestinationPath, "--", mapWrapper)
+	wrapper.Configure.Request.DestinationPath = ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	if len(configure.Request.LogAfterModify) > 0 {
-		logValue = RetrieveValue(configure.Request.LogAfterModify, wrapper.Request)
+	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
+		logValue = RetrieveValue(wrapper.Configure.Request.LogAfterModify, wrapper.Request)
 		util.DoLogging(logValue, "after", aliasName, true)
 	}
 
 	//*send to destination url
-	response, err := Send(configure, wrapper, configure.Request.Method)
+	response, err := Send(wrapper)
 	if err != nil {
 		return nil, http.StatusInternalServerError, err
 	}
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
-	_, err = Receiver(configure, response, &wrapper.Response)
+	_, err = Receiver(wrapper.Configure, response, &wrapper.Response)
 	//*close http
 	defer response.Body.Close()
 	if err != nil {
@@ -372,17 +385,17 @@ func processingRequest(aliasName string, configure model.Configure, c echo.Conte
 	}
 
 	//* In case user want to log before modify/changing request
-	if len(configure.Response.LogBeforeModify) > 0 {
-		logValue = RetrieveValue(configure.Response.LogBeforeModify, wrapper.Response)
-		util.DoLogging(configure.Response.LogBeforeModify, "before", aliasName, false)
+	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
+		logValue = RetrieveValue(wrapper.Configure.Response.LogBeforeModify, wrapper.Response)
+		util.DoLogging(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
-	DoCommand(configure.Response, wrapper.Response, mapWrapper)
+	DoCommand(wrapper.Configure.Response, wrapper.Response, mapWrapper)
 
 	//* In case user want to log after modify/changing request
-	if len(configure.Response.LogAfterModify) > 0 {
-		logValue = RetrieveValue(configure.Response.LogAfterModify, wrapper.Response)
+	if len(wrapper.Configure.Response.LogAfterModify) > 0 {
+		logValue = RetrieveValue(wrapper.Configure.Response.LogAfterModify, wrapper.Response)
 		util.DoLogging(logValue, "after", aliasName, false)
 	}
 	return wrapper, http.StatusOK, nil
