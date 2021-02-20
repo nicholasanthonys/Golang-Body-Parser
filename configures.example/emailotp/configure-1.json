@@ -1,7 +1,7 @@
 {
   "request": {
     "destination_url": "http://mockbin.org/bin/a53d0694-9121-48d1-9936-11e1c8f06945",
-    "destination_path": "/{{$configure-1.json--$request--$query[address]}}",
+    "destination_path": "/{{$configure_second_configure.json--$request--$query[address]}}",
     "method": "PUT",
     "transform": "ToJson",
     "log_before_modify": "$body",
@@ -12,6 +12,7 @@
         "fav_character": "naruto"
       },
       "body": {
+        "user.name" : "bokir",
         "user.last_name": "peter",
         "user.id": 1,
         "from": "configure-1.json"
@@ -56,14 +57,12 @@
       "header": {
       },
       "body": {
-        "user.name": "Peter parker"
       }
     },
     "modifies": {
       "header": {
       },
       "body": {
-        "user.name": "Peter Parker"
       }
     },
     "deletes": {

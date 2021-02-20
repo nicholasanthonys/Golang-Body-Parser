@@ -1,0 +1,18 @@
+{
+  "configures"  : [
+    {
+      "file_name" : "configure-0.json" ,
+      "alias"  : "$configure_first_configure"
+    },
+    {
+      "file_name": "configure-1.json",
+      "alias" : "$configure_second_configure"
+    }
+  ],
+  "c_logic" : {
+    "rule" :	{"==" : ["$configure_second_configure--$request--$body[user][name]", "bokir"]},
+    "data" : null,
+    "next_success" :  "",
+    "next_failure" : ""
+  }
+}

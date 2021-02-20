@@ -27,7 +27,7 @@ func init() {
 
 func TestWithoutBody(t *testing.T) {
 
-	req, _ := http.NewRequest("POST", URL+"/serial/smsotp/generate/3?tesquery=abcd", nil)
+	req, _ := http.NewRequest("POST", URL+"/smsotp/generate/3?tesquery=abcd", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{}
@@ -67,7 +67,7 @@ func TestWithoutBody(t *testing.T) {
 
 func TestWithBody(t *testing.T) { //*SERIAL
 	json := `{"user" : { "name" : "nicholas", "cars" : ["honda", "fiat", "daihatsu", "toyota"]}}`
-	req, err := http.NewRequest("POST", URL+"/serial/smsotp/generate/3", strings.NewReader(json))
+	req, err := http.NewRequest("POST", URL+"/smsotp/generate/3", strings.NewReader(json))
 	if err != nil {
 		t.Errorf("Error constructing Request %s", err.Error())
 	}
@@ -111,7 +111,7 @@ func TestWithBody(t *testing.T) { //*SERIAL
 
 func TestWrongMethod(t *testing.T) {
 	//* SERIAL
-	req, _ := http.NewRequest("PUT", URL+"/serial/smsotp/generate/3?tesquery=abcd", nil)
+	req, _ := http.NewRequest("PUT", URL+"/smsotp/generate/3?tesquery=abcd", nil)
 	client := http.Client{}
 	res, err := client.Do(req)
 	if res.StatusCode != http.StatusMethodNotAllowed {

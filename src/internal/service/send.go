@@ -10,13 +10,13 @@ import (
 	"strings"
 )
 
-func Send(configure model.Configure, requestFromUser *model.Wrapper, method string) (*http.Response, error) {
+func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 
 	//*get transform command
-	transformRequest := configure.Request.Transform
+	transformRequest := requestFromUser.Configure.Request.Transform
 
 	//* constructing body to send
-	body, err := Transform(configure, requestFromUser.Request.Body)
+	body, err := Transform(requestFromUser.Configure, requestFromUser.Request.Body)
 
 	if err != nil {
 		logrus.Warn("error constructing body to send")
@@ -24,7 +24,7 @@ func Send(configure model.Configure, requestFromUser *model.Wrapper, method stri
 	}
 
 	//*get url and append it with destination path
-	url := configure.Request.DestinationUrl + configure.Request.DestinationPath
+	url := requestFromUser.Configure.Request.DestinationUrl + requestFromUser.Configure.Request.DestinationPath
 
 	logrus.Info("sending request to url :  ", url)
 
@@ -32,7 +32,7 @@ func Send(configure model.Configure, requestFromUser *model.Wrapper, method stri
 	var req *http.Request
 
 	//*constructing request
-	req, _ = http.NewRequest(method, url, body)
+	req, _ = http.NewRequest(requestFromUser.Configure.Request.Method, url, body)
 
 	//*set Header
 	SetHeader(*requestFromUser, &req.Header)

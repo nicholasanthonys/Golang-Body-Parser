@@ -1,5 +1,5 @@
 {
-  "configure_based": "configure-1.json",
+  "configure_based": "configure_second_configure",
   "response": {
     "transform": "ToJson",
     "log_after_modify" : "",
@@ -9,11 +9,11 @@
         "userID" : "userid"
       },
       "body": {
-        "user.name": "$configure-1.json--$response--$body[user][name]",
-        "user.id": "$configure-0.json--$response--$body[user][id]",
-        "user.favorite_cars": "$configure-0.json--$request--$body[user][cars][0]",
-        "user.transaction_id": "$configure-0.json--$request--$path[smsId]",
-        "user.configure0_query": "$configure-0.json--$request--$query[address]",
+        "user.name": "$configure_second_configure--$response--$body[user][name]",
+        "user.id": "$configure_first_configure--$response--$body[user][id]",
+        "user.favorite_cars": "$configure_first_configure--$request--$body[user][cars][0]",
+        "user.transaction_id": "$configure_first_configure--$request--$path[smsId]",
+        "user.configure0_query": "$configure_first_configure--$request--$query[address]",
         "user.tes": "from configure.example directory"
       }
     },

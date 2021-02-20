@@ -2,16 +2,15 @@ package util
 
 import (
 	"encoding/json"
+	"github.com/clbanning/mxj/x2j"
+	"github.com/labstack/echo"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
-
-	"github.com/clbanning/mxj/x2j"
-	"github.com/labstack/echo"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 )
 
 //* Find is a function that will chek if  item exist in slice of string
@@ -70,10 +69,10 @@ func ReadJsonFile(path string) []byte {
 //*ResponseWriter is a function that will return response
 func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
 
-	switch wrapper.Configure.Response.Transform {
-	case "ToJson":
+	switch strings.ToLower(wrapper.Configure.Response.Transform) {
+	case strings.ToLower("ToJson"):
 		return c.JSON(200, wrapper.Response.Body)
-	case "ToXml":
+	case strings.ToLower("ToXml"):
 		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
 		return c.XMLBlob(200, resByte)
 	default:
@@ -178,11 +177,29 @@ func JSONEqual(a, b io.Reader) (bool, error) {
 func JSONBytesEqual(a, b []byte) (bool, error) {
 	var j, j2 interface{}
 	if err := json.Unmarshal(a, &j); err != nil {
-		logrus.Error("Error unmarhsaling a")
+		logrus.Error("Error unmarshaling a")
 	}
 	if err := json.Unmarshal(b, &j2); err != nil {
-		logrus.Error("Error unmarhsaling b ")
+		logrus.Error("Error unmarshaling b ")
 	}
 
 	return reflect.DeepEqual(j2, j), nil
+}
+
+// DoLogging will print logValue in a formatted log.
+func DoLogging(logValue interface{}, event string, identifier string, isRequest bool) {
+	sentence := "logging "
+	if isRequest {
+		sentence += "response "
+	} else {
+		sentence += "response "
+	}
+
+	if event == "before" {
+		sentence += "before modify for " + identifier + " : "
+	} else {
+		sentence += "after modify for " + identifier + " : "
+	}
+	logrus.Info(sentence)
+	logrus.Info(logValue)
 }
