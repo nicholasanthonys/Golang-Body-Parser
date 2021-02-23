@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"github.com/diegoholiveira/jsonlogic"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
@@ -112,14 +113,15 @@ func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
 		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
 		logrus.Info("full project directory is")
 		logrus.Info(fullProjectDirectory)
-		// Read project .json
 
+		// Read project .json
 		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "project.json")
 		err := json.Unmarshal(projectByte, &project)
 
 		if err != nil {
 			resMap := make(map[string]string)
-			resMap["message"] = "Problem In Reading File project.json "
+			resMap["message"] = "Problem In unmarshaling File project.json. "
+			resMap["error"] = err.Error()
 			return c.JSON(http.StatusInternalServerError, resMap)
 		}
 
@@ -130,59 +132,62 @@ func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
 
 // doParallel execute every configure in parallel-way.
 func doParallel(c echo.Context) error {
-
-	//*read the request that will be sent from user
-	reqByte, err := ioutil.ReadAll(c.Request().Body)
-
-	if err != nil {
-		resMap := make(map[string]string)
-		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
-		return c.JSON(http.StatusInternalServerError, resMap)
-	}
-
-	//* declare a WaitGroup
-	var wg sync.WaitGroup
-	mapWrapper := make(map[string]model.Wrapper)
-
-	for _, configureItem := range project.Configures {
-		var configure model.Configure
-		requestFromUser := model.Wrapper{
-			Configure: configure,
-			Request: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
-			Response: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
-		}
-		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
-		//* assign configure byte to configure
-		_ = json.Unmarshal(configByte, &configure)
-		requestFromUser.Configure = configure
-
-		wg.Add(1)
-		go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte)
-
-	}
-	wg.Wait()
-
-	//*now we need to parse the response.json command
-	resultWrapper := parseResponse(mapWrapper, fullProjectDirectory+"/response.json")
-	return util.ResponseWriter(resultWrapper, c)
+	// disable parallel for a while...
+	return nil
+	////*read the request that will be sent from user
+	//reqByte, err := ioutil.ReadAll(c.Request().Body)
+	//
+	//if err != nil {
+	//	resMap := make(map[string]string)
+	//	resMap["message"] = "Problem In Reading Request Body. " + err.Error()
+	//	return c.JSON(http.StatusInternalServerError, resMap)
+	//}
+	//
+	////* declare a WaitGroup
+	//var wg sync.WaitGroup
+	//mapWrapper := make(map[string]model.Wrapper)
+	//
+	//for _, configureItem := range project.Configures {
+	//	var configure model.Configure
+	//	requestFromUser := model.Wrapper{
+	//		Configure: configure,
+	//		Request: model.Fields{
+	//			Param:  make(map[string]interface{}),
+	//			Header: make(map[string]interface{}),
+	//			Body:   make(map[string]interface{}),
+	//			Query:  make(map[string]interface{}),
+	//		},
+	//		Response: model.Fields{
+	//			Param:  make(map[string]interface{}),
+	//			Header: make(map[string]interface{}),
+	//			Body:   make(map[string]interface{}),
+	//			Query:  make(map[string]interface{}),
+	//		},
+	//	}
+	//	configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
+	//	//* assign configure byte to configure
+	//	_ = json.Unmarshal(configByte, &configure)
+	//	requestFromUser.Configure = configure
+	//
+	//	wg.Add(1)
+	//	go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte)
+	//
+	//}
+	//wg.Wait()
+	//
+	////*now we need to parse the response.json command
+	//resultWrapper := parseResponse(mapWrapper, fullProjectDirectory+"/response.json")
+	//return util.ResponseWriter(resultWrapper, c)
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
-func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) model.Wrapper {
+func parseResponse(mapWrapper map[string]model.Wrapper, command model.Command) model.Wrapper {
 
 	resultWrapper := model.Wrapper{
-		Configure: model.Configure{},
-		Request:   model.Fields{},
+		Configure: model.Configure{
+			Response: command,
+		},
+		Request: model.Fields{},
 		Response: model.Fields{
 			Param:  make(map[string]interface{}),
 			Header: make(map[string]interface{}),
@@ -191,12 +196,10 @@ func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) mod
 		},
 	}
 
-	parallelConfigByte := util.ReadJsonFile(responsePath)
-	_ = json.Unmarshal(parallelConfigByte, &resultWrapper.Configure)
-
 	//* now we will set the response body based from configurex.json if there is $configure value in configureBased.
+	keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
 	if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
-		keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
+
 		//*check if key exist in the map
 		if _, ok := mapWrapper[keyConfigure]; ok {
 			//* get configureX.json from map wrapper
@@ -224,6 +227,16 @@ func parseResponse(mapWrapper map[string]model.Wrapper, responsePath string) mod
 		util.DoLogging(logValue, "after", "final response", false)
 	}
 
+	var statusCode int
+	if resultWrapper.Configure.Response.StatusCode == 0 {
+		// default
+		statusCode = 400
+	} else {
+		statusCode = resultWrapper.Configure.Response.StatusCode
+	}
+
+	resultWrapper.Response.StatusCode = statusCode
+
 	return resultWrapper
 }
 
@@ -239,7 +252,7 @@ func doSerial(c echo.Context) error {
 
 	//*Read file ConfigureBased
 	var mapWrapper = make(map[string]model.Wrapper) ///*slice that contains wrapper
-
+	var mapConfigures = make(map[string]model.ConfigureItem)
 	for _, configureItem := range project.Configures {
 		//read actual configure based on configureItem.file_name
 		// Initialization configure object
@@ -265,37 +278,72 @@ func doSerial(c echo.Context) error {
 		_ = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
 
-		// Processing request
-		_, status, err := processingRequest(configureItem.Alias, c, &requestFromUser, mapWrapper, reqByte)
+		// store map alias - configure so it is easier to refer
+		mapConfigures[configureItem.Alias] = configureItem
 
-		if err != nil {
-			return util.ErrorWriter(c, configure, err, status)
-		}
-
-		//*save to map with alias configureItem
+		// store map wrapper
 		mapWrapper[configureItem.Alias] = requestFromUser
 
 	}
-	////try to read project.json
-	////convert struct to map string interface
-	//tempMap := make(map[string]interface{})
-	//inrec, _ := json.Marshal(project.CLogic)
-	//logrus.Info("inrech is")
-	//err = json.Unmarshal(inrec, &tempMap)
-	//if err != nil {
-	//	logrus.Fatal("Error unmarshaling inrec tempmap")
-	//}
-	//cLogicModified := InterfaceDirectModifier(tempMap, mapWrapper, "--")
-	//logrus.Info("clogic is")
-	//
-	//logrus.Info(cLogicModified)
 
-	//*use the latest configures and the latest response
-	//return c.JSON(200, mapWrapper["configure1.json"].Response.Body)
-	resultWrapper := parseResponse(mapWrapper, fullProjectDirectory+"/response.json")
-	//* for each value in map wrapper header, set the header
+	nextSuccess := project.Configures[0].CLogics[0].NextSuccess
+	alias := project.Configures[0].Alias
+	finalResponseConfigure := model.Command{}
+	for len(strings.Trim(nextSuccess, " ")) > 0 {
+
+		// Processing request
+		requestFromUser := mapWrapper[alias]
+		_, status, err := processingRequest(alias, c, &requestFromUser, mapWrapper, reqByte)
+		if err != nil {
+			return util.ErrorWriter(c, requestFromUser.Configure, err, status)
+		}
+		mapWrapper[alias] = requestFromUser
+
+		var isAllLogicFail bool
+		indexCLogic := 0
+		for index, cLogicItem := range mapConfigures[alias].CLogics {
+			indexCLogic = index
+			InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
+			InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
+
+			result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
+
+			if err != nil {
+				// break from loop to execute next failure
+				break
+			}
+
+			if result.(bool) {
+				// update next_sucess
+				nextSuccess = cLogicItem.NextSuccess
+				// update alias
+				if len(strings.Trim(nextSuccess, " ")) > 0 {
+					alias = nextSuccess
+				}
+				isAllLogicFail = false
+				break
+			} else {
+				isAllLogicFail = true
+			}
+
+		}
+
+		if isAllLogicFail {
+			resultWrapper := parseResponse(mapWrapper, mapConfigures[alias].CLogics[indexCLogic].NextFailure)
+			setHeaderResponse(resultWrapper.Response.Header, c)
+			return util.ResponseWriter(resultWrapper, c)
+		}
+
+		if len(strings.Trim(nextSuccess, " ")) == 0 {
+			finalResponseConfigure = mapConfigures[alias].CLogics[indexCLogic].Response
+		}
+
+	}
+
+	resultWrapper := parseResponse(mapWrapper, finalResponseConfigure)
 	setHeaderResponse(resultWrapper.Response.Header, c)
 	return util.ResponseWriter(resultWrapper, c)
+
 }
 
 // setHeaderResponse set custom key-value pair for header, except Content-Length and Content-type
@@ -378,6 +426,7 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
 	_, err = Receiver(wrapper.Configure, response, &wrapper.Response)
+
 	//*close http
 	defer response.Body.Close()
 	if err != nil {
