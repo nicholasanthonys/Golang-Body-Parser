@@ -18,6 +18,9 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 		return nil, err
 	}
 
+	// status code
+	requestFromUserResponse.StatusCode = res.StatusCode
+
 	//*get response content type
 	contentType := res.Header.Get("Content-Type")
 	//* get transform command
