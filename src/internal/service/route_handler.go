@@ -55,7 +55,8 @@ func SetRouteHandler() *echo.Echo {
 				if strings.ToLower(route.Type) == "parallel" {
 					e.POST(route.Path, doParallel, prepareRouteProject)
 				} else {
-					e.POST(route.Path, doSerial, prepareRouteProject)
+					e.POST(route.Path,
+						doSerial, prepareRouteProject)
 				}
 			}
 
@@ -107,7 +108,7 @@ func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		index := util.FindRouteIndex(routes, c.Path())
 		if index < 0 {
-			return c.JSON(404, "Cannot Find Route "+c.Path())
+			return c.JSON(404, "Cannot FindInSliceOfString Route "+c.Path())
 		}
 		route := routes[index]
 		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
@@ -253,6 +254,7 @@ func doSerial(c echo.Context) error {
 	//*Read file ConfigureBased
 	var mapWrapper = make(map[string]model.Wrapper) ///*slice that contains wrapper
 	var mapConfigures = make(map[string]model.ConfigureItem)
+
 	for _, configureItem := range project.Configures {
 		//read actual configure based on configureItem.file_name
 		// Initialization configure object
@@ -286,16 +288,26 @@ func doSerial(c echo.Context) error {
 
 	}
 
+	// assumption :  the first configure to be processed is configures at index 0 from project.configures
 	nextSuccess := project.Configures[0].CLogics[0].NextSuccess
 	alias := project.Configures[0].Alias
 	finalResponseConfigure := model.Command{}
+
 	for len(strings.Trim(nextSuccess, " ")) > 0 {
 
 		// Processing request
 		requestFromUser := mapWrapper[alias]
 		_, status, err := processingRequest(alias, c, &requestFromUser, mapWrapper, reqByte)
+		logrus.Info("status is")
+		logrus.Info(status)
+
 		if err != nil {
-			return util.ErrorWriter(c, requestFromUser.Configure, err, status)
+			// next failure
+			resultWrapper := parseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			setHeaderResponse(resultWrapper.Response.Header, c)
+			return util.ResponseWriter(resultWrapper, c)
+			//return util.ErrorWriter(c, requestFromUser.Configure, err, status)
+
 		}
 		mapWrapper[alias] = requestFromUser
 
@@ -329,7 +341,7 @@ func doSerial(c echo.Context) error {
 		}
 
 		if isAllLogicFail {
-			resultWrapper := parseResponse(mapWrapper, mapConfigures[alias].CLogics[indexCLogic].NextFailure)
+			resultWrapper := parseResponse(mapWrapper, mapConfigures[alias].NextFailure)
 			setHeaderResponse(resultWrapper.Response.Header, c)
 			return util.ResponseWriter(resultWrapper, c)
 		}
@@ -421,9 +433,25 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 
 	//*send to destination url
 	response, err := Send(wrapper)
+
 	if err != nil {
+		logrus.Error("Error send : ", err.Error())
 		return nil, http.StatusInternalServerError, err
 	}
+	// check if status code in the list of successful status code
+	_, statusCodeFound := util.FindInSliceOfInt(wrapper.Configure.ListStatusCodeSuccess, response.StatusCode)
+	logrus.Info("status code found is : ")
+	logrus.Info(statusCodeFound)
+	if !statusCodeFound {
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return nil, http.StatusInternalServerError, errors.New("Status code not found. Error Read response body")
+		}
+		_ = json.Unmarshal(body, &wrapper.Response.Body)
+		wrapper.Response.Body["status_code"] = response.Status
+		return nil, response.StatusCode, errors.New("Status code not found in list successfull status code")
+	}
+
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
 	_, err = Receiver(wrapper.Configure, response, &wrapper.Response)
 

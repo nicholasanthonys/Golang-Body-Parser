@@ -5,7 +5,6 @@ type (
 		Rule        interface{}            `json:"rule"`
 		Data        map[string]interface{} `json:"data"`
 		NextSuccess string                 `json:"next_success"`
-		NextFailure Command                `json:"next_failure"`
 		Response    Command                `json:"response"`
 	}
 
@@ -19,9 +18,10 @@ type (
 	Routes []Route
 
 	Configure struct {
-		ConfigureBased string  `json:"configure_based"`
-		Request        Command `json:"request"`
-		Response       Command `json:"response"`
+		ConfigureBased        string  `json:"configure_based"`
+		ListStatusCodeSuccess []int   `json:"list_status_code_success"`
+		Request               Command `json:"request"`
+		Response              Command `json:"response"`
 	}
 
 	ConfigureItem struct {
