@@ -13,8 +13,17 @@ import (
 	"strings"
 )
 
-//* Find is a function that will chek if  item exist in slice of string
-func Find(slice []string, val string) (int, bool) {
+//* FindInSliceOfString is a function that will chek if  item exist in slice of string
+func FindInSliceOfString(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+func FindInSliceOfInt(slice []int, val int) (int, bool) {
 	for i, item := range slice {
 		if item == val {
 			return i, true

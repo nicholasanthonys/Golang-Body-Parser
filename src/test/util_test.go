@@ -10,7 +10,7 @@ import (
 func TestFind(t *testing.T) {
 	letters := []string{"a", "b", "c", "d"}
 	expected := true
-	_, exist := util.Find(letters, "a")
+	_, exist := util.FindInSliceOfString(letters, "a")
 	assert.Equal(t, expected, exist)
 }
 
