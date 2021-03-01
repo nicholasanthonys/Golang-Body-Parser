@@ -7,8 +7,8 @@
         {
           "rule": {
             "==": [
-              400,
-              400
+              "bokir",
+             "bokir"
             ]
           },
           "data": null,
@@ -18,7 +18,7 @@
             "transform" : "ToJson",
             "adds" : {
               "body" : {
-                "error_message" : "Failure happen at first_configure, logic index 0",
+                "error_message" : "Failure happen at first_configure, logic index 0. There is an error",
                 "message"  : "$configure_first_configure--$response--$body"
               }
             }
@@ -39,7 +39,7 @@
             "transform" : "ToJson",
             "adds" : {
               "body" : {
-                "error_message" : "Failure happen at first_configure, logic index 1",
+                "error_message" : "from request $configure_first_configure, logic index 1. There is an error",
                 "message"  : "$configure_first_configure--$response--$body"
               }
             }
@@ -55,7 +55,7 @@
         {
           "rule": {
             "==": [
-              "statuscode",
+              "$configure_second_configure--$response-$status_code",
               400
             ]
           },
@@ -66,7 +66,7 @@
             "transform" : "ToJson",
             "adds" : {
               "body" : {
-                "error_message" : "Failure happen at second_configure, logic index 0",
+                "error_message" : "from request $configure_second_configure, logic index 0. There is an error",
                 "message"  : "$configure_second_configure--$response--$body"
               }
             }
@@ -76,7 +76,7 @@
         {
           "rule": {
             "==": [
-              "statuscode",
+              "$configure--$response--$status_code",
               200
             ]
           },
@@ -87,7 +87,7 @@
             "transform" : "ToJson",
             "adds" : {
               "body" : {
-                "error_message" : "Failure happen at second_configure, logic index 1",
+                "error_message" : "from request $configure_second_configure, logic index 1. There is an error.",
                 "message"  : "$configure_second_configure--$response--$body"
               }
             }
