@@ -15,7 +15,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestGetListFolder(t *testing.T) {
-	expected := []string{"configure-0.json", "configure-1.json", "response.json"}
+	expected := []string{"configure-0.json", "configure-1.json", "project.json", "response.json"}
 	configureDir := "../../configures.example"
 	fullProjectDir := configureDir + "/" + "emailotp"
 	files, err := util.GetListFolder(fullProjectDir)
