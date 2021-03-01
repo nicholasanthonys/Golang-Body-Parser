@@ -1,14 +1,21 @@
 {
-  "configures"  : [
+  "configures": [
     {
-      "file_name" : "configure-0.json" ,
-      "alias"  : "$configure_first_configure"
+      "file_name": "configure-0.json",
+      "alias": "$configure_first_configure",
+      "c_logics": [
+        {
+          "rule": {
+            "==": [
+              "$configure_first_configure--$request--$body[query][address]",
+              "mutiara cibaduyut c20"
+            ]
+          },
+          "data": null,
+          "next_success": "$configure_first_configure--$request--$body[query][address]",
+          "next_failure": ""
+        }
+      ]
     }
-  ],
-  "c_logic" : {
-    "rule" :	{"==" : ["$configure_first_configure--$request--$body[query][address]", "mutiara cibaduyut c20"]},
-    "data" : null,
-    "next_success" :  "$configure_first_configure--$request--$body[query][address]",
-    "next_failure" : ""
-  }
+  ]
 }
