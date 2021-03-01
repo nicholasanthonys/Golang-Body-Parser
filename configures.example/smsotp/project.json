@@ -2,20 +2,82 @@
   "configures"  : [
     {
       "file_name" : "configure-0.json" ,
-      "alias"  : "$configure_first_configure"
+      "alias"  : "$configure_first_configure",
+      "next_failure" : {
+        "status_code" : 500,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "error_message" : "Failure happen at first_configure",
+            "message"  : "$configure_first_configure--$response--$body"
+          }
+        }
+      },
+      "c_logics" :  [
+        {
+          "rule" :	{"map":[
+            {"var":"integers"},
+            {"*":[{"var":""},2]}
+          ]},
+          "data" : {"integers":[1,2,3,4,5]},
+          "next_success" :  "$configure_second_configure"
+        }
+      ]
     },
     {
       "file_name": "configure-1.json",
-      "alias" : "$configure_second_configure"
+      "alias" : "$configure_second_configure",
+      "next_failure" : {
+        "status_code" : 500,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "error_message" : "Failure happen at second_configure",
+            "message"  : "$configure_second_configure--$response--$body"
+          }
+        }
+      },
+      "c_logics" : [
+        {
+          "rule": {
+            "==": [
+              "bokir",
+             "bokir"
+            ]
+          },
+          "data" : null,
+          "next_success" : null,
+          "response" : {
+            "status_code" : 200,
+            "transform": "ToJson",
+            "log_after_modify" : "",
+            "adds": {
+              "header": {
+                "key" : "123",
+                "userID" : "userid"
+              },
+              "body": {
+                "user.name": "$configure_second_configure--$response--$body[user][name]",
+                "user.id": "$configure_first_configure--$response--$body[user][id]",
+                "user.favorite_cars": "$configure_first_configure--$request--$body[user][cars][0]",
+                "user.transaction_id": "$configure_first_configure--$request--$path[smsId]",
+                "user.configure0_query": "$configure_first_configure--$request--$query[address]",
+                "user.tes": "from configure.example directory"
+              }
+            },
+            "modifies": {
+              "header" : {},
+              "body": {
+              }
+            },
+            "deletes": {
+              "header" : [],
+              "body": [
+              ]
+            }
+          }
+        }
+      ]
     }
-  ],
-  "c_logic" : {
-    "rule" :	{"map":[
-      {"var":"integers"},
-      {"*":[{"var":""},2]}
-    ]},
-    "data" : {"integers":[1,2,3,4,5]},
-    "next_success" :  "",
-    "next_failure" : ""
-  }
+  ]
 }
