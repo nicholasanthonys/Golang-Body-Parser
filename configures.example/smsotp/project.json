@@ -41,8 +41,8 @@
         {
           "rule": {
             "==": [
-              "bokir",
-             "bokir"
+              "$configure_second_configure--$response--$status_code",
+              200
             ]
           },
           "data" : null,
