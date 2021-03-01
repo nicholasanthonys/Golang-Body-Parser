@@ -93,29 +93,27 @@ func TestReadWithConfigure(t *testing.T) {
 
 	var tempMap map[string]interface{}
 
-	logrus.Info("project configures 0 i s : ")
-	logrus.Info(project.Configures[0].CLogics)
 	cLogicBeforeByte, _ := json.Marshal(project.Configures[0].CLogics[0])
 	err = json.Unmarshal(cLogicBeforeByte, &tempMap)
 
 	if err != nil {
 		assert.Error(t, err, "Error unmarshalling CLogicBefore to tempMap ")
 	}
+
 	logrus.Info("temp map is ")
-	logrus.Info(tempMap["rule"])
+	logrus.Info(tempMap)
 
-	cLogicModified := service.InterfaceDirectModifier(tempMap["rule"], mapWrapper, "--")
-	cLogicModified = service.InterfaceDirectModifier(tempMap["data"], mapWrapper, "--")
+	clogicModified := model.CLogicItem{
+		Rule:        service.InterfaceDirectModifier(tempMap["rule"], mapWrapper, "--"),
+		Data:        service.InterfaceDirectModifier(tempMap["data"], mapWrapper, "--"),
+		NextSuccess: "",
+		Response:    model.Command{},
+	}
 
-	logrus.Info("CLogic modified")
-	logrus.Info(cLogicModified)
-
-	var cLogicResultModifiedStruct model.CLogicItem
-	byteCLogicResult, err := json.Marshal(cLogicModified)
 	if err != nil {
 		assert.Error(t, err, "Error marshaling cLogicModified to byte")
 	}
-	err = json.Unmarshal(byteCLogicResult, &cLogicResultModifiedStruct)
+
 	if err != nil {
 		assert.Error(t, err, "Error unmarshaling cLogicModified byte to struct CLogicItem")
 	}
@@ -128,11 +126,11 @@ func TestReadWithConfigure(t *testing.T) {
 		NextSuccess: "",
 	}
 
-	assert.Equal(t, expected, cLogicResultModifiedStruct)
+	assert.Equal(t, expected, clogicModified)
 
 	// Apply json logic
 	expectedLogic := true
-	result, err := jsonlogic.ApplyInterface(cLogicResultModifiedStruct.Rule, cLogicResultModifiedStruct.Data)
+	result, err := jsonlogic.ApplyInterface(clogicModified.Rule, clogicModified.Data)
 	boolResult := result.(bool)
 	assert.Equal(t, expectedLogic, boolResult)
 

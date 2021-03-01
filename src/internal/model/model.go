@@ -2,10 +2,10 @@ package model
 
 type (
 	CLogicItem struct {
-		Rule        interface{}            `json:"rule"`
-		Data        map[string]interface{} `json:"data"`
-		NextSuccess string                 `json:"next_success"`
-		Response    Command                `json:"response"`
+		Rule        interface{} `json:"rule"`
+		Data        interface{} `json:"data"`
+		NextSuccess string      `json:"next_success"`
+		Response    Command     `json:"response"`
 	}
 
 	Route struct {
