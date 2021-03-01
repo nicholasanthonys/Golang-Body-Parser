@@ -28,7 +28,7 @@
         {
           "rule": {
             "==": [
-              "statuscode",
+              "$configure_first_configure--$response--$status_code",
               200
             ]
           },
