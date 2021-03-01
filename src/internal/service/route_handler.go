@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -236,7 +237,7 @@ func parseResponse(mapWrapper map[string]model.Wrapper, command model.Command) m
 		statusCode = resultWrapper.Configure.Response.StatusCode
 	}
 
-	resultWrapper.Response.StatusCode = statusCode
+	resultWrapper.Response.StatusCode = strconv.Itoa(statusCode)
 
 	return resultWrapper
 }
@@ -318,8 +319,14 @@ func doSerial(c echo.Context) error {
 			InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
 			InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 
+			logrus.Info("clogic item rule is ")
+			logrus.Info(cLogicItem.Rule)
 			result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
+			logrus.Info("result is ")
+			logrus.Info(result)
 			if err != nil {
+				logrus.Error("error is ")
+				logrus.Error(err.Error())
 				// break from loop to execute next failure
 				break
 			}

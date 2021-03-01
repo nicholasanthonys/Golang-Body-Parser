@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -77,13 +78,14 @@ func ReadJsonFile(path string) []byte {
 
 //*ResponseWriter is a function that will return response
 func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
-
+	statusCode, _ := strconv.Atoi(wrapper.Response.StatusCode)
 	switch strings.ToLower(wrapper.Configure.Response.Transform) {
 	case strings.ToLower("ToJson"):
-		return c.JSON(wrapper.Response.StatusCode, wrapper.Response.Body)
+
+		return c.JSON(statusCode, wrapper.Response.Body)
 	case strings.ToLower("ToXml"):
 		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
-		return c.XMLBlob(wrapper.Response.StatusCode, resByte)
+		return c.XMLBlob(statusCode, resByte)
 	default:
 		logrus.Info("type not supported. only support ToJson and ToXml")
 		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")

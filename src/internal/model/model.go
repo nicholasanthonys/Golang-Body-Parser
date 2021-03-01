@@ -55,7 +55,7 @@ type (
 	}
 
 	Fields struct {
-		StatusCode int
+		StatusCode string
 		Param      map[string]interface{}
 		Header     map[string]interface{} `json:"header"`
 		Body       map[string]interface{} `json:"body"`
