@@ -319,23 +319,33 @@ func doSerial(c echo.Context) error {
 			InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 
 			result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
-
 			if err != nil {
 				// break from loop to execute next failure
 				break
 			}
 
-			if result.(bool) {
-				// update next_sucess
-				nextSuccess = cLogicItem.NextSuccess
-				// update alias
-				if len(strings.Trim(nextSuccess, " ")) > 0 {
-					alias = nextSuccess
+			// get type of json logic result
+			vt := reflect.TypeOf(result)
+			if vt.Kind() == reflect.Bool {
+				if result.(bool) {
+					isAllLogicFail = false
+					nextSuccess = cLogicItem.NextSuccess
+					// update alias
+					if len(strings.Trim(nextSuccess, " ")) > 0 {
+						alias = nextSuccess
+					}
+					break
+				} else {
+					isAllLogicFail = true
+					break
 				}
-				isAllLogicFail = false
-				break
-			} else {
-				isAllLogicFail = true
+			}
+
+			// update next_sucess
+			nextSuccess = cLogicItem.NextSuccess
+			// update alias
+			if len(strings.Trim(nextSuccess, " ")) > 0 {
+				alias = nextSuccess
 			}
 
 		}
