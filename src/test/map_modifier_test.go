@@ -31,6 +31,7 @@ func init() {
 	err = json.Unmarshal(projectByte, &project)
 
 	if err != nil {
+		logrus.Error(err.Error())
 		logrus.Fatal("Error read project.json")
 	}
 
