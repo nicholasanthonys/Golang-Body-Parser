@@ -114,6 +114,8 @@ func RetrieveValue(value interface{}, takeFrom model.Fields) interface{} {
 				realValue = recursiveGetValue(listTraverseVal, takeFrom.Query, 0)
 			} else if destination == "path" {
 				realValue = recursiveGetValue(listTraverseVal, takeFrom.Param, 0)
+			} else if destination == "status_code" {
+				realValue = takeFrom.StatusCode
 			}
 		} else {
 			realValue = value

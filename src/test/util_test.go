@@ -10,12 +10,12 @@ import (
 func TestFind(t *testing.T) {
 	letters := []string{"a", "b", "c", "d"}
 	expected := true
-	_, exist := util.Find(letters, "a")
+	_, exist := util.FindInSliceOfString(letters, "a")
 	assert.Equal(t, expected, exist)
 }
 
 func TestGetListFolder(t *testing.T) {
-	expected := []string{"configure-0.json", "configure-1.json", "response.json"}
+	expected := []string{"configure-0.json", "configure-1.json", "project.json", "response.json"}
 	configureDir := "../../configures.example"
 	fullProjectDir := configureDir + "/" + "emailotp"
 	files, err := util.GetListFolder(fullProjectDir)

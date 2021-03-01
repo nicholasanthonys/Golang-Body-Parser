@@ -1,4 +1,9 @@
 {
+  "list_status_code_success": [
+    200,
+    201,
+    205
+  ],
   "request": {
     "destination_url": "http://mockbin.org/bin/49d8dbd5-32d3-47ba-ae4e-2ea77fa2dfc8",
     "destination_path": "/user",

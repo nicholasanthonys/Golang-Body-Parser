@@ -24,14 +24,13 @@ func TestReadWithoutConfigure(t *testing.T) {
 	// read our opened jsonFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	err = json.Unmarshal(byteValue, &project)
-	logrus.Info("CLogic is")
-	logrus.Info(project.CLogic)
+
 	if err != nil {
 		logrus.Error(err.Error())
 	}
-	cLogicModified := service.InterfaceDirectModifier(project.CLogic, map[string]model.Wrapper{}, "--").(model.CLogic)
+	cLogicModified := service.InterfaceDirectModifier(project.Configures[0].CLogics[0], map[string]model.Wrapper{}, "--").(model.CLogicItem)
 
-	expected := project.CLogic
+	expected := project.Configures[0].CLogics[0]
 	assert.Equal(t, expected, cLogicModified)
 
 	expectedLogic := []int{2, 4, 6, 8, 10}
@@ -92,38 +91,46 @@ func TestReadWithConfigure(t *testing.T) {
 		service.DoCommand(requestFromUser.Configure.Request, requestFromUser.Request, mapWrapper)
 	}
 
-	tempMap := make(map[string]interface{})
-	cLogicBeforeByte, _ := json.Marshal(project.CLogic)
+	var tempMap map[string]interface{}
+
+	cLogicBeforeByte, _ := json.Marshal(project.Configures[0].CLogics[0])
 	err = json.Unmarshal(cLogicBeforeByte, &tempMap)
+
 	if err != nil {
 		assert.Error(t, err, "Error unmarshalling CLogicBefore to tempMap ")
 	}
 
-	cLogicModified := service.InterfaceDirectModifier(tempMap, mapWrapper, "--")
-	var cLogicResultModifiedStruct model.CLogic
-	byteCLogicResult, err := json.Marshal(cLogicModified)
+	logrus.Info("temp map is ")
+	logrus.Info(tempMap)
+
+	clogicModified := model.CLogicItem{
+		Rule:        service.InterfaceDirectModifier(tempMap["rule"], mapWrapper, "--"),
+		Data:        service.InterfaceDirectModifier(tempMap["data"], mapWrapper, "--"),
+		NextSuccess: "",
+		Response:    model.Command{},
+	}
+
 	if err != nil {
 		assert.Error(t, err, "Error marshaling cLogicModified to byte")
 	}
-	err = json.Unmarshal(byteCLogicResult, &cLogicResultModifiedStruct)
+
 	if err != nil {
-		assert.Error(t, err, "Error unmarshaling cLogicModified byte to struct CLogic")
+		assert.Error(t, err, "Error unmarshaling cLogicModified byte to struct CLogicItem")
 	}
 
-	expected := model.CLogic{
+	expected := model.CLogicItem{
 		Rule: map[string]interface{}{
 			"==": []interface{}{"bokir", "bokir"},
 		},
 		Data:        nil,
 		NextSuccess: "",
-		NextFailure: "",
 	}
 
-	assert.Equal(t, expected, cLogicResultModifiedStruct)
+	assert.Equal(t, expected, clogicModified)
 
 	// Apply json logic
 	expectedLogic := true
-	result, err := jsonlogic.ApplyInterface(cLogicResultModifiedStruct.Rule, cLogicResultModifiedStruct.Data)
+	result, err := jsonlogic.ApplyInterface(clogicModified.Rule, clogicModified.Data)
 	boolResult := result.(bool)
 	assert.Equal(t, expectedLogic, boolResult)
 

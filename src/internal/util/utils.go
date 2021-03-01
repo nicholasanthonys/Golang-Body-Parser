@@ -10,11 +10,21 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
-//* Find is a function that will chek if  item exist in slice of string
-func Find(slice []string, val string) (int, bool) {
+//* FindInSliceOfString is a function that will chek if  item exist in slice of string
+func FindInSliceOfString(slice []string, val string) (int, bool) {
+	for i, item := range slice {
+		if item == val {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+func FindInSliceOfInt(slice []int, val int) (int, bool) {
 	for i, item := range slice {
 		if item == val {
 			return i, true
@@ -68,13 +78,14 @@ func ReadJsonFile(path string) []byte {
 
 //*ResponseWriter is a function that will return response
 func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
-
+	statusCode, _ := strconv.Atoi(wrapper.Response.StatusCode)
 	switch strings.ToLower(wrapper.Configure.Response.Transform) {
 	case strings.ToLower("ToJson"):
-		return c.JSON(200, wrapper.Response.Body)
+
+		return c.JSON(statusCode, wrapper.Response.Body)
 	case strings.ToLower("ToXml"):
 		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
-		return c.XMLBlob(200, resByte)
+		return c.XMLBlob(statusCode, resByte)
 	default:
 		logrus.Info("type not supported. only support ToJson and ToXml")
 		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
@@ -126,22 +137,19 @@ func SanitizeValue(value string) ([]string, string) {
 	var sanitized string
 	if strings.HasPrefix(value, "$body") {
 		destination = "body"
-		sanitized = value[5:]
 	} else if strings.HasPrefix(value, "$header") {
 		destination = "header"
-		sanitized = value[7:]
 	} else if strings.HasPrefix(value, "$query") {
 		destination = "query"
-		sanitized = value[6:]
 	} else if strings.HasPrefix(value, "$response") {
 		destination = "response"
-		sanitized = value[9:]
 	} else if strings.HasPrefix(value, "$path") {
 		destination = "path"
-		sanitized = value[5:]
-	} else {
-		return nil, value
+	} else if strings.HasPrefix(value, "$status_code") {
+		destination = "status_code"
 	}
+
+	sanitized = value[len(destination)+1:]
 
 	//* We call this function to remove square bracket. ex : $body[user] will become :  body user (as a slice)
 	return RemoveSquareBracketAndConvertToSlice(sanitized, ""), destination

@@ -5,6 +5,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -17,6 +18,9 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 		logrus.Info(err.Error())
 		return nil, err
 	}
+
+	// status code
+	requestFromUserResponse.StatusCode = strconv.Itoa(res.StatusCode)
 
 	//*get response content type
 	contentType := res.Header.Get("Content-Type")

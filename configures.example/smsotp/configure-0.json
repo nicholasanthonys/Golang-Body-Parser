@@ -1,6 +1,11 @@
 {
+  "list_status_code_success": [
+    200,
+    201,
+    205
+  ],
   "request": {
-    "destination_url": "http://mockbin.org/bin/c5488153-998f-4acd-835b-e9be47796195",
+    "destination_url": "http://mockbin.org/bin/58df59fc-4f12-4b39-a0ef-2dead5c72aac",
     "destination_path": "/user",
     "method" : "POST",
     "transform": "ToJson",
