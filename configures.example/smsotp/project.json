@@ -8,7 +8,7 @@
         "transform" : "ToJson",
         "adds" : {
           "body" : {
-            "error_message" : "Failure happen at first_configure",
+            "error_message" : "Failure happen at request $configure_first_configure",
             "message"  : "$configure_first_configure--$response--$body"
           }
         }
@@ -32,7 +32,7 @@
         "transform" : "ToJson",
         "adds" : {
           "body" : {
-            "error_message" : "Failure happen at second_configure",
+            "error_message" : "Failure happen at $configure_second_configure",
             "message"  : "$configure_second_configure--$response--$body"
           }
         }
