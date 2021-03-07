@@ -1,0 +1,61 @@
+{
+  "request": {
+    "destination_url": "http://mockbin.org/bin/3d92ca87-b18b-45d4-ae42-09f5d98885db?foo=bar&foo=baz",
+    "destination_path": "/user",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": "$path",
+    "log_after_modify": "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "user.favorite_anime": [
+          "naruto",
+          "one piece",
+          "dragon ball"
+        ]
+      },
+      "query": {
+        "foo" : "tes"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify": "",
+    "log_after_modify": "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}
