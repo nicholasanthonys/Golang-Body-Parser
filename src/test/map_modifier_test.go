@@ -26,13 +26,13 @@ func init() {
 
 	mapWrapper = make(map[string]model.Wrapper)
 
-	var project model.Project
-	projectByte := util.ReadJsonFile(fullProjectDir + "/" + "project.json")
+	var project model.Serial
+	projectByte := util.ReadJsonFile(fullProjectDir + "/" + "serial.json")
 	err = json.Unmarshal(projectByte, &project)
 
 	if err != nil {
 		logrus.Error(err.Error())
-		logrus.Fatal("Error read project.json")
+		logrus.Fatal("Error read serial.json")
 	}
 
 	for _, configureItem := range project.Configures {

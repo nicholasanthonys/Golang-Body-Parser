@@ -14,12 +14,12 @@ import (
 )
 
 func TestReadWithoutConfigure(t *testing.T) {
-	var project model.Project
-	jsonFile, err := os.Open("../../configures.example/smsotp/project.json")
+	var project model.Serial
+	jsonFile, err := os.Open("../../configures.example/smsotp/serial.json")
 	if err != nil {
-		logrus.Error("error when open project.json")
+		logrus.Error("error when open serial.json")
 		logrus.Error(err)
-		assert.Error(t, err, "Error reading project.json")
+		assert.Error(t, err, "Error reading serial.json")
 	}
 	// read our opened jsonFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -46,13 +46,13 @@ func TestReadWithoutConfigure(t *testing.T) {
 }
 
 func TestReadWithConfigure(t *testing.T) {
-	var project model.Project
+	var project model.Serial
 	configureDir := os.Getenv("CONFIGURES_DIRECTORY")
 	fullProjectDirectory := "../" + configureDir + "/" + "emailotp"
 
-	jsonFile, err := os.Open(fullProjectDirectory + "/project.json")
+	jsonFile, err := os.Open(fullProjectDirectory + "/serial.json")
 	if err != nil {
-		assert.Error(t, err, "Error reading project.json")
+		assert.Error(t, err, "Error reading serial.json")
 	}
 
 	// read our opened jsonFile as a byte array.
