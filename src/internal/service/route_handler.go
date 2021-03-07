@@ -20,7 +20,8 @@ import (
 
 var configureDir string
 var routes model.Routes
-var projectByte []byte
+var serialByte []byte
+var parallelByte []byte
 var SerialProject model.Serial
 var ParallelProject model.Parallel
 var fullProjectDirectory string
@@ -37,7 +38,6 @@ func SetRouteHandler() *echo.Echo {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	//e.Use(middle)
 
 	// * Read router.json
 	routesByte := util.ReadJsonFile(configureDir + "/router.json")
@@ -117,9 +117,10 @@ func prepareSerialRoute(next echo.HandlerFunc) echo.HandlerFunc {
 		logrus.Info("full SerialProject directory is")
 		logrus.Info(fullProjectDirectory)
 
+		SerialProject = model.Serial{}
 		// Read SerialProject .json
-		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "serial.json")
-		err := json.Unmarshal(projectByte, &SerialProject)
+		serialByte = util.ReadJsonFile(fullProjectDirectory + "/" + "serial.json")
+		err := json.Unmarshal(serialByte, &SerialProject)
 
 		if err != nil {
 			resMap := make(map[string]string)
@@ -143,9 +144,10 @@ func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {
 		logrus.Info("full SerialProject directory is")
 		logrus.Info(fullProjectDirectory)
 
-		// Read SerialProject .json
-		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "parallel.json")
-		err := json.Unmarshal(projectByte, &ParallelProject)
+		// Read parallel.json
+		ParallelProject = model.Parallel{}
+		parallelByte = util.ReadJsonFile(fullProjectDirectory + "/" + "parallel.json")
+		err := json.Unmarshal(parallelByte, &ParallelProject)
 
 		if err != nil {
 			resMap := make(map[string]string)
@@ -258,15 +260,15 @@ func parseResponse(mapWrapper map[string]model.Wrapper, command model.Command) m
 	}
 
 	//* now we will set the response body based from configurex.json if there is $configure value in configureBased.
-	keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
-	if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
-
-		//*check if key exist in the map
-		if _, ok := mapWrapper[keyConfigure]; ok {
-			//* get configureX.json from map wrapper
-			resultWrapper.Response = mapWrapper[keyConfigure].Response
-		}
-	}
+	//keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
+	//if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
+	//
+	//	//*check if key exist in the map
+	//	if _, ok := mapWrapper[keyConfigure]; ok {
+	//		//* get configureX.json from map wrapper
+	//		resultWrapper.Response = mapWrapper[keyConfigure].Response
+	//	}
+	//}
 
 	//*header
 	AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", resultWrapper.Response.Header, mapWrapper)
@@ -320,7 +322,7 @@ func doSerial(c echo.Context) error {
 		// Initialization configure object
 		var configure = model.Configure{}
 		requestFromUser := model.Wrapper{
-			Configure: configure,
+			Configure: model.Configure{},
 			Request: model.Fields{
 				Param:  make(map[string]interface{}),
 				Header: make(map[string]interface{}),
@@ -357,9 +359,7 @@ func doSerial(c echo.Context) error {
 
 		// Processing request
 		requestFromUser := mapWrapper[alias]
-		_, status, err := processingRequest(alias, c, &requestFromUser, mapWrapper, reqByte)
-		logrus.Info("status is")
-		logrus.Info(status)
+		_, _, err := processingRequest(alias, c, &requestFromUser, mapWrapper, reqByte)
 
 		if err != nil {
 			// next failure
@@ -378,11 +378,7 @@ func doSerial(c echo.Context) error {
 			InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
 			InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 
-			logrus.Info("clogic item rule is ")
-			logrus.Info(cLogicItem.Rule)
 			result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
-			logrus.Info("result is ")
-			logrus.Info(result)
 			if err != nil {
 				logrus.Error("error is ")
 				logrus.Error(err.Error())
