@@ -455,19 +455,6 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 		logrus.Error("Error send : ", err.Error())
 		return nil, http.StatusInternalServerError, err
 	}
-	// check if status code in the list of successful status code
-	_, statusCodeFound := util.FindInSliceOfInt(wrapper.Configure.ListStatusCodeSuccess, response.StatusCode)
-	logrus.Info("status code found is : ")
-	logrus.Info(statusCodeFound)
-	if !statusCodeFound {
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return nil, http.StatusInternalServerError, errors.New("Status code not found. Error Read response body")
-		}
-		_ = json.Unmarshal(body, &wrapper.Response.Body)
-		wrapper.Response.Body["status_code"] = response.Status
-		return nil, response.StatusCode, errors.New("Status code not found in list successfull status code")
-	}
 
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
 	_, err = Receiver(wrapper.Configure, response, &wrapper.Response)
