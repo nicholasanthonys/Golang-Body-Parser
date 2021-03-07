@@ -31,8 +31,14 @@ type (
 		NextFailure Command      `json:"next_failure"`
 	}
 
-	Project struct {
+	Serial struct {
 		Configures []ConfigureItem `json:"configures"`
+	}
+
+	Parallel struct {
+		Configures  []ConfigureItem `json:"configures"`
+		NextFailure Command         `json:"next_failure"`
+		CLogics     []CLogicItem    `json:"c_logics"`
 	}
 
 	Command struct {
