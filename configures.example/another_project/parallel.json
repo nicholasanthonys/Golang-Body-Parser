@@ -1,0 +1,77 @@
+{
+  "configures": [
+    {
+      "file_name": "configure-0.json",
+      "alias": "$configure_first_configure"
+    },
+    {
+      "file_name": "configure-1.json",
+      "alias": "$configure_second_configure"
+    }
+  ],
+  "next_failure" : {
+    "status_code" : 500,
+    "transform" : "ToJson",
+    "adds" : {
+      "body" : {
+        "error_message" : "all logics is fail"
+      }
+    }
+  },
+  "c_logics": [
+    {
+      "rule": {
+        "==": [
+          "$configure_first_configure--$response--$status_code",
+          400
+        ]
+      },
+      "data": null,
+      "response": {
+        "status_code" : 200,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "message" : "configure_second configure status code is 400"
+          }
+        }
+      }
+    },
+    {
+      "rule": {
+        "==": [
+          "$configure_second_configure--$response--$status_code",
+          200
+        ]
+      },
+      "data": null,
+      "next_success": "",
+      "response": {
+        "status_code" : 200,
+        "transform": "ToJson",
+        "log_after_modify" : "",
+        "adds": {
+          "header": {
+            "key" : "123",
+            "userID" : "userid"
+          },
+          "body": {
+            "user.anime": "$configure_second_configure--$request--$body[user][favorite_anime]",
+            "user.cars": "$configure_first_configure--$request--$body[user][favorite_cars]",
+            "user.favorite_cars": "$configure_first_configure--$request--$body[user][favorite_cars][0]"
+          }
+        },
+        "modifies": {
+          "header" :{},
+          "body": {
+          }
+        },
+        "deletes": {
+          "header" : [],
+          "body": [
+          ]
+        }
+      }
+    }
+  ]
+}
