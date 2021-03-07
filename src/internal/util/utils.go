@@ -87,7 +87,7 @@ func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
 		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
 		return c.XMLBlob(statusCode, resByte)
 	default:
-		logrus.Info("type not supported. only support ToJson and ToXml")
+		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(wrapper.Configure.Response.Transform))
 		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
 	}
 }
