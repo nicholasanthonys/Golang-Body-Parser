@@ -18,7 +18,6 @@ type (
 	Routes []Route
 
 	Configure struct {
-		ConfigureBased        string  `json:"configure_based"`
 		ListStatusCodeSuccess []int   `json:"list_status_code_success"`
 		Request               Command `json:"request"`
 		Response              Command `json:"response"`
