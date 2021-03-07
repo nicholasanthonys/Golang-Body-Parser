@@ -21,7 +21,8 @@ import (
 var configureDir string
 var routes model.Routes
 var projectByte []byte
-var project model.Project
+var SerialProject model.Serial
+var ParallelProject model.Parallel
 var fullProjectDirectory string
 var logValue interface{} // value to be logged
 
@@ -54,35 +55,35 @@ func SetRouteHandler() *echo.Echo {
 
 			if strings.ToLower(route.Method) == "post" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.POST(route.Path, doParallel, prepareRouteProject)
+					e.POST(route.Path, doParallel, prepareParallelRoute)
 				} else {
 					e.POST(route.Path,
-						doSerial, prepareRouteProject)
+						doSerial, prepareSerialRoute)
 				}
 			}
 
 			if strings.ToLower(route.Method) == "get" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.GET(route.Path, doParallel, prepareRouteProject)
+					e.GET(route.Path, doParallel, prepareParallelRoute)
 				} else {
-					e.GET(route.Path, doSerial, prepareRouteProject)
+					e.GET(route.Path, doSerial, prepareSerialRoute)
 				}
 			}
 
 			if strings.ToLower(route.Method) == "put" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.PUT(route.Path, doParallel, prepareRouteProject)
+					e.PUT(route.Path, doParallel, prepareParallelRoute)
 				} else {
-					e.PUT(route.Path, doSerial, prepareRouteProject)
+					e.PUT(route.Path, doSerial, prepareSerialRoute)
 				}
 
 			}
 
 			if strings.ToLower(route.Method) == "delete" {
 				if strings.ToLower(route.Type) == "parallel" {
-					e.DELETE(route.Path, doParallel, prepareRouteProject)
+					e.DELETE(route.Path, doParallel, prepareParallelRoute)
 				} else {
-					e.DELETE(route.Path, doSerial, prepareRouteProject)
+					e.DELETE(route.Path, doSerial, prepareSerialRoute)
 				}
 			}
 
@@ -104,8 +105,8 @@ func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c 
 	mapWrapper[mapKeyName] = requestFromUser
 }
 
-// prepareRouteProject middleware that find defined route in route.json and read project.json
-func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
+// prepareSerialRoute middleware that find defined route in route.json and read SerialProject.json
+func prepareSerialRoute(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		index := util.FindRouteIndex(routes, c.Path())
 		if index < 0 {
@@ -113,73 +114,131 @@ func prepareRouteProject(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		route := routes[index]
 		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
-		logrus.Info("full project directory is")
+		logrus.Info("full SerialProject directory is")
 		logrus.Info(fullProjectDirectory)
 
-		// Read project .json
-		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "project.json")
-		err := json.Unmarshal(projectByte, &project)
+		// Read SerialProject .json
+		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "serial.json")
+		err := json.Unmarshal(projectByte, &SerialProject)
 
 		if err != nil {
 			resMap := make(map[string]string)
-			resMap["message"] = "Problem In unmarshaling File project.json. "
+			resMap["message"] = "Problem In unmarshaling File serial.json. "
 			resMap["error"] = err.Error()
 			return c.JSON(http.StatusInternalServerError, resMap)
 		}
-
 		return next(c)
 	}
+}
 
+// prepareSerialRoute middleware that find defined route in route.json and read SerialProject.json
+func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		index := util.FindRouteIndex(routes, c.Path())
+		if index < 0 {
+			return c.JSON(404, "Cannot FindInSliceOfString Route "+c.Path())
+		}
+		route := routes[index]
+		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
+		logrus.Info("full SerialProject directory is")
+		logrus.Info(fullProjectDirectory)
+
+		// Read SerialProject .json
+		projectByte = util.ReadJsonFile(fullProjectDirectory + "/" + "parallel.json")
+		err := json.Unmarshal(projectByte, &ParallelProject)
+
+		if err != nil {
+			resMap := make(map[string]string)
+			resMap["message"] = "Problem In unmarshaling File parallel.json. "
+			resMap["error"] = err.Error()
+			return c.JSON(http.StatusInternalServerError, resMap)
+		}
+		return next(c)
+	}
 }
 
 // doParallel execute every configure in parallel-way.
 func doParallel(c echo.Context) error {
-	// disable parallel for a while...
-	return nil
-	////*read the request that will be sent from user
-	//reqByte, err := ioutil.ReadAll(c.Request().Body)
-	//
-	//if err != nil {
-	//	resMap := make(map[string]string)
-	//	resMap["message"] = "Problem In Reading Request Body. " + err.Error()
-	//	return c.JSON(http.StatusInternalServerError, resMap)
-	//}
-	//
-	////* declare a WaitGroup
-	//var wg sync.WaitGroup
-	//mapWrapper := make(map[string]model.Wrapper)
-	//
-	//for _, configureItem := range project.Configures {
-	//	var configure model.Configure
-	//	requestFromUser := model.Wrapper{
-	//		Configure: configure,
-	//		Request: model.Fields{
-	//			Param:  make(map[string]interface{}),
-	//			Header: make(map[string]interface{}),
-	//			Body:   make(map[string]interface{}),
-	//			Query:  make(map[string]interface{}),
-	//		},
-	//		Response: model.Fields{
-	//			Param:  make(map[string]interface{}),
-	//			Header: make(map[string]interface{}),
-	//			Body:   make(map[string]interface{}),
-	//			Query:  make(map[string]interface{}),
-	//		},
-	//	}
-	//	configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
-	//	//* assign configure byte to configure
-	//	_ = json.Unmarshal(configByte, &configure)
-	//	requestFromUser.Configure = configure
-	//
-	//	wg.Add(1)
-	//	go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte)
-	//
-	//}
-	//wg.Wait()
-	//
-	////*now we need to parse the response.json command
-	//resultWrapper := parseResponse(mapWrapper, fullProjectDirectory+"/response.json")
-	//return util.ResponseWriter(resultWrapper, c)
+	//*read the request that will be sent from user
+	reqByte, err := ioutil.ReadAll(c.Request().Body)
+
+	if err != nil {
+		resMap := make(map[string]string)
+		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
+		return c.JSON(http.StatusInternalServerError, resMap)
+	}
+
+	//* declare a WaitGroup
+	var wg sync.WaitGroup
+	mapWrapper := make(map[string]model.Wrapper)
+
+	for _, configureItem := range ParallelProject.Configures {
+		var configure model.Configure
+		requestFromUser := model.Wrapper{
+			Configure: configure,
+			Request: model.Fields{
+				Param:  make(map[string]interface{}),
+				Header: make(map[string]interface{}),
+				Body:   make(map[string]interface{}),
+				Query:  make(map[string]interface{}),
+			},
+			Response: model.Fields{
+				Param:  make(map[string]interface{}),
+				Header: make(map[string]interface{}),
+				Body:   make(map[string]interface{}),
+				Query:  make(map[string]interface{}),
+			},
+		}
+		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
+		//* assign configure byte to configure
+		_ = json.Unmarshal(configByte, &configure)
+		requestFromUser.Configure = configure
+
+		wg.Add(1)
+		go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte)
+
+	}
+	wg.Wait()
+
+	var isAllLogicFail = false
+	var cLogicItemTrueIndex = 0
+	// process the c logics
+	for index, cLogicItem := range ParallelProject.CLogics {
+		InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
+		InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
+		result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
+
+		if err != nil {
+			isAllLogicFail = true
+			logrus.Error(err.Error())
+			// send response
+			resultWrapper := parseResponse(mapWrapper, cLogicItem.Response)
+			setHeaderResponse(resultWrapper.Response.Header, c)
+			return util.ResponseWriter(resultWrapper, c)
+		}
+		// get type of json logic result
+		vt := reflect.TypeOf(result)
+		if vt.Kind() == reflect.Bool {
+			if result.(bool) {
+				cLogicItemTrueIndex = index
+				isAllLogicFail = false
+				break
+			} else {
+				isAllLogicFail = true
+			}
+		}
+	}
+
+	if !isAllLogicFail {
+		resultWrapper := parseResponse(mapWrapper, ParallelProject.CLogics[cLogicItemTrueIndex].Response)
+		setHeaderResponse(resultWrapper.Response.Header, c)
+		return util.ResponseWriter(resultWrapper, c)
+	} else {
+		resultWrapper := parseResponse(mapWrapper, ParallelProject.NextFailure)
+		setHeaderResponse(resultWrapper.Response.Header, c)
+		return util.ResponseWriter(resultWrapper, c)
+	}
+
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
@@ -256,7 +315,7 @@ func doSerial(c echo.Context) error {
 	var mapWrapper = make(map[string]model.Wrapper) ///*slice that contains wrapper
 	var mapConfigures = make(map[string]model.ConfigureItem)
 
-	for _, configureItem := range project.Configures {
+	for _, configureItem := range SerialProject.Configures {
 		//read actual configure based on configureItem.file_name
 		// Initialization configure object
 		var configure = model.Configure{}
@@ -289,9 +348,9 @@ func doSerial(c echo.Context) error {
 
 	}
 
-	// assumption :  the first configure to be processed is configures at index 0 from project.configures
-	nextSuccess := project.Configures[0].CLogics[0].NextSuccess
-	alias := project.Configures[0].Alias
+	// assumption :  the first configure to be processed is configures at index 0 from SerialProject.configures
+	nextSuccess := SerialProject.Configures[0].CLogics[0].NextSuccess
+	alias := SerialProject.Configures[0].Alias
 	finalResponseConfigure := model.Command{}
 
 	for len(strings.Trim(nextSuccess, " ")) > 0 {
