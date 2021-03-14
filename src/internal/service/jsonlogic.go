@@ -30,10 +30,10 @@ func InterfaceDirectModifier(in interface{}, mapWrapper map[string]model.Wrapper
 		if strings.HasPrefix(fmt.Sprintf("%v", in), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", in), separator) //$configure1.json, $request, $body[user][name]
 			if splittedValue[1] == "$request" {
-				val := RetrieveValue(splittedValue[2], mapWrapper[splittedValue[0]].Request)
+				val := RetrieveValue(splittedValue[2], mapWrapper[splittedValue[0]].Request, 0)
 				in = val
 			} else {
-				val := RetrieveValue(splittedValue[2], mapWrapper[splittedValue[0]].Response)
+				val := RetrieveValue(splittedValue[2], mapWrapper[splittedValue[0]].Response, 0)
 				in = val
 			}
 		}

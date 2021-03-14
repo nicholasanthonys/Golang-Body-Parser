@@ -94,9 +94,9 @@ func SetRouteHandler() *echo.Echo {
 }
 
 // worker will called processingRequest. This function is called by doParallel function.
-func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte) {
+func worker(wg *sync.WaitGroup, mapKeyName string, configure model.Configure, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
 	defer wg.Done()
-	_, status, err := processingRequest(mapKeyName, c, &requestFromUser, mapWrapper, requestBody)
+	_, status, err := processingRequest(mapKeyName, c, &requestFromUser, mapWrapper, requestBody, loopIndex)
 	if err != nil {
 		logrus.Error("Go Worker - Error Process")
 		logrus.Error(err.Error())
@@ -196,8 +196,14 @@ func doParallel(c echo.Context) error {
 		_ = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
 
-		wg.Add(1)
-		go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte)
+		loop := requestFromUser.Configure.Request.Loop
+		if loop == 0 {
+			loop = 1
+		}
+		for i := 0; i < loop; i++ {
+			wg.Add(1)
+			go worker(&wg, configureItem.Alias, configure, c, mapWrapper, requestFromUser, reqByte, i)
+		}
 
 	}
 	wg.Wait()
@@ -271,22 +277,22 @@ func parseResponse(mapWrapper map[string]model.Wrapper, command model.Command) m
 	//}
 
 	//*header
-	AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", resultWrapper.Response.Header, mapWrapper)
+	AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", resultWrapper.Response.Header, mapWrapper, 0)
 	//*modify header
-	ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", resultWrapper.Response.Header, mapWrapper)
+	ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", resultWrapper.Response.Header, mapWrapper, 0)
 	//*Deletion Header
 	DeletionHeaderOrQuery(resultWrapper.Configure.Response.Deletes.Header, resultWrapper.Response.Header)
 
 	//*add
-	AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", resultWrapper.Response.Body, mapWrapper)
+	AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", resultWrapper.Response.Body, mapWrapper, 0)
 	//*modify
-	ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", resultWrapper.Response.Body, mapWrapper)
+	ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", resultWrapper.Response.Body, mapWrapper, 0)
 	//* delete
 	DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response)
 
 	//*In case user want to log final response
 	if len(resultWrapper.Configure.Response.LogAfterModify) > 0 {
-		logValue = RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response)
+		logValue = RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, 0)
 		util.DoLogging(logValue, "after", "final response", false)
 	}
 
@@ -359,7 +365,8 @@ func doSerial(c echo.Context) error {
 
 		// Processing request
 		requestFromUser := mapWrapper[alias]
-		_, _, err := processingRequest(alias, c, &requestFromUser, mapWrapper, reqByte)
+		// Loop only available for parallel request, therefore, set loopIndex to 0
+		_, _, err := processingRequest(alias, c, &requestFromUser, mapWrapper, reqByte, 0)
 
 		if err != nil {
 			// next failure
@@ -446,8 +453,7 @@ func setHeaderResponse(header map[string]interface{}, c echo.Context) {
 }
 
 // processingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte) (*model.Wrapper, int, error) {
-
+func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte, loopIndex int) (*model.Wrapper, int, error) {
 	//*check the content type user request
 	var contentType string
 	var err error
@@ -484,7 +490,7 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 
 	//* In case user want to log before modify/changing request
 	if len(wrapper.Configure.Request.LogBeforeModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Request.LogBeforeModify, wrapper.Request)
+		logValue = RetrieveValue(wrapper.Configure.Request.LogBeforeModify, wrapper.Request, loopIndex)
 		util.DoLogging(logValue, "before", aliasName, true)
 	}
 
@@ -492,14 +498,14 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	mapWrapper[aliasName] = *wrapper
 
 	//* Do the Map Modification
-	DoCommand(wrapper.Configure.Request, wrapper.Request, mapWrapper)
+	DoCommand(wrapper.Configure.Request, wrapper.Request, mapWrapper, loopIndex)
 
 	//*get the destinationPath value before sending request
-	wrapper.Configure.Request.DestinationPath = ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper)
+	wrapper.Configure.Request.DestinationPath = ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
 	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Request.LogAfterModify, wrapper.Request)
+		logValue = RetrieveValue(wrapper.Configure.Request.LogAfterModify, wrapper.Request, loopIndex)
 		util.DoLogging(logValue, "after", aliasName, true)
 	}
 
@@ -522,16 +528,16 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 
 	//* In case user want to log before modify/changing request
 	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Response.LogBeforeModify, wrapper.Response)
+		logValue = RetrieveValue(wrapper.Configure.Response.LogBeforeModify, wrapper.Response, loopIndex)
 		util.DoLogging(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
-	DoCommand(wrapper.Configure.Response, wrapper.Response, mapWrapper)
+	DoCommand(wrapper.Configure.Response, wrapper.Response, mapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
 	if len(wrapper.Configure.Response.LogAfterModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Response.LogAfterModify, wrapper.Response)
+		logValue = RetrieveValue(wrapper.Configure.Response.LogAfterModify, wrapper.Response, loopIndex)
 		util.DoLogging(logValue, "after", aliasName, false)
 	}
 	return wrapper, http.StatusOK, nil
