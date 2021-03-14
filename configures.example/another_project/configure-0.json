@@ -1,6 +1,7 @@
 {
   "request": {
-    "destination_url": "http://mockbin.org/bin/49d8dbd5-32d3-47ba-ae4e-2ea77fa2dfc8",
+    "loop" : 3,
+    "destination_url": "http://mockbin.org/bin/86dc2caa-545f-4c49-b84d-ebecb0e22550",
     "destination_path": "/user",
     "method": "POST",
     "transform": "ToJson",
@@ -10,6 +11,8 @@
       "header": {
       },
       "body": {
+        "number" : "$configure_first_configure--$request--$body[phone_numbers][loop]",
+        "content" : "$configure_first_configure--$request--$body[content]",
         "user.favorite_cars": [
           "honda",
           "fiat",
@@ -34,7 +37,8 @@
       "header": [
       ],
       "body": [
-        "user.tes"
+        "user.tes",
+        "phone_numbers"
       ],
       "query": [
       ]
