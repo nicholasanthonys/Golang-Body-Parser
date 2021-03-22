@@ -1,6 +1,6 @@
 {
   "request": {
-    "destination_url": "http://mockbin.org/bin/cb4e3393-307b-47d9-9c27-e68a7f5df39a",
+    "destination_url": "http://mockbin.org/bin/0a2d0b8b-79b3-4974-b242-596dac1d61b3",
     "destination_path": "/user",
     "method": "POST",
     "transform": "ToJson",
@@ -10,6 +10,8 @@
       "header": {
       },
       "body": {
+        "number" : "$configure_second_configure--$request--$body[phone_numbers][loop]",
+        "original_phone_number" : "$configure_second_configure--$request--$body[phone_numbers]",
         "user.favorite_anime": [
           "naruto",
           "one piece",
@@ -32,6 +34,7 @@
       "header": [
       ],
       "body": [
+        "phone_numbers"
       ],
       "query": [
       ]
@@ -55,6 +58,7 @@
     },
     "deletes": {
       "body": [
+
       ]
     }
   }
