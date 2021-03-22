@@ -10,6 +10,8 @@ github.com/diegoholiveira/jsonlogic v2.3.1+incompatible h1:DO80KBZy4HzIYlirDN5Z0
 github.com/diegoholiveira/jsonlogic v2.3.1+incompatible/go.mod h1:jVLve2Xh7aEJep0nNAYlb/Ookjl4qIHcU8TqFPg99lI=
 github.com/diegoholiveira/jsonlogic/v3 v3.0.1 h1:33NoheKqLRmQZCBA9tHAigMIYqYC6H2SfqEdt8kKqQ0=
 github.com/diegoholiveira/jsonlogic/v3 v3.0.1/go.mod h1://TCrkLo/OeUylLuwhgQmq4ipYyIGXPTDnIW4YWk0fo=
+github.com/jinzhu/copier v0.2.8 h1:N8MbL5niMwE3P4dOwurJixz5rMkKfujmMRFmAanSzWE=
+github.com/jinzhu/copier v0.2.8/go.mod h1:24xnZezI2Yqac9J61UC6/dG/k76ttpq0DdJI3QmUvro=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
 github.com/labstack/echo v3.3.10+incompatible h1:pGRcYk231ExFAyoAjAfD85kQzRJCRI8bbnE7CX5OEgg=
