@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/diegoholiveira/jsonlogic"
+	"github.com/jinzhu/copier"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
@@ -467,6 +468,7 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 
 	//*convert request to map string interface based on the content type
 	wrapper.Request.Body, status, err = parseRequestBody(c, contentType, reqByte)
+
 	if err != nil {
 		return nil, status, err
 	}
@@ -497,15 +499,19 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	//*assign first before do any add,modification,delete in case value want reference each other
 	mapWrapper[aliasName] = *wrapper
 
+	// copy wrapper
+	tempWrapper := model.Wrapper{}
+	copier.Copy(&tempWrapper, &wrapper)
+
 	//* Do the Map Modification
-	DoCommand(wrapper.Configure.Request, wrapper.Request, mapWrapper, loopIndex)
+	DoCommand(tempWrapper.Configure.Request, tempWrapper.Request, mapWrapper, loopIndex)
 
 	//*get the destinationPath value before sending request
-	wrapper.Configure.Request.DestinationPath = ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
+	tempWrapper.Configure.Request.DestinationPath = ModifyPath(tempWrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
-	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Request.LogAfterModify, wrapper.Request, loopIndex)
+	if len(tempWrapper.Configure.Request.LogAfterModify) > 0 {
+		logValue = RetrieveValue(tempWrapper.Configure.Request.LogAfterModify, tempWrapper.Request, loopIndex)
 		util.DoLogging(logValue, "after", aliasName, true)
 	}
 
@@ -518,7 +524,7 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
-	_, err = Receiver(wrapper.Configure, response, &wrapper.Response)
+	_, err = Receiver(tempWrapper.Configure, response, &wrapper.Response)
 
 	//*close http
 	defer response.Body.Close()
@@ -527,17 +533,17 @@ func processingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 
 	//* In case user want to log before modify/changing request
-	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Response.LogBeforeModify, wrapper.Response, loopIndex)
-		util.DoLogging(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
+	if len(tempWrapper.Configure.Response.LogBeforeModify) > 0 {
+		logValue = RetrieveValue(tempWrapper.Configure.Response.LogBeforeModify, tempWrapper.Response, loopIndex)
+		util.DoLogging(tempWrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
-	DoCommand(wrapper.Configure.Response, wrapper.Response, mapWrapper, loopIndex)
+	DoCommand(tempWrapper.Configure.Response, tempWrapper.Response, mapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
-	if len(wrapper.Configure.Response.LogAfterModify) > 0 {
-		logValue = RetrieveValue(wrapper.Configure.Response.LogAfterModify, wrapper.Response, loopIndex)
+	if len(tempWrapper.Configure.Response.LogAfterModify) > 0 {
+		logValue = RetrieveValue(tempWrapper.Configure.Response.LogAfterModify, tempWrapper.Response, loopIndex)
 		util.DoLogging(logValue, "after", aliasName, false)
 	}
 	return wrapper, http.StatusOK, nil
