@@ -1,7 +1,8 @@
-package service
+package response
 
 import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -41,12 +42,12 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 			if strings.Contains(contentType, "application/json") {
 
 				//* assign map resMap with response []byte based on response content type
-				requestFromUserResponse.Body, _ = FromJson(responseByte)
+				requestFromUserResponse.Body, _ = service.FromJson(responseByte)
 
 			} else if strings.Contains(contentType, "application/xml") {
 
 				//* assign map resMap with response []byte based on response content type
-				requestFromUserResponse.Body, _ = FromXmL(responseByte)
+				requestFromUserResponse.Body, _ = service.FromXmL(responseByte)
 
 			} else if strings.Contains(contentType, "text/plain") {
 				//* if content type contain text/plain

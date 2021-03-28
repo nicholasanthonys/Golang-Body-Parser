@@ -1,6 +1,7 @@
 {
   "request": {
-    "destination_url": "http://localhost:3001/dummy-response",
+    "loop" : "2",
+    "destination_url": "http://mockbin.org/bin/9edd0271-4e72-4847-9c52-17776080e180",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
@@ -10,24 +11,24 @@
       "header": {
       },
       "body": {
-        "number" : "$configure_zero_configure--$request--$body[phone_numbers][loop]",
-        "content" : "$configure_zero_configure--$request--$body[content]",
-        "user.favorite_cars": [
-          "honda",
-          "fiat",
-          "toyota",
-          "ferrari"
-        ]
+        "number" : "$configure_second_configure--$request--$body[phone_numbers][loop]",
+        "original_phone_number" : "$configure_second_configure--$request--$body[phone_numbers]",
+        "user.favorite_anime": [
+          "naruto",
+          "one piece",
+          "dragon ball"
+        ],
+        "user.favorite_cars" : [ "Mazda", "Aston  Martin", "Ferrari"]
       },
       "query": {
-        "address": "mutiara cibaduyut c20"
+        "foo" : "tes"
       }
+
     },
     "modifies": {
       "header": {
       },
       "body": {
-        "user.favorite_cars.0": "mazda"
       },
       "query": {
       }
@@ -36,7 +37,6 @@
       "header": [
       ],
       "body": [
-        "user.tes",
         "phone_numbers"
       ],
       "query": [
@@ -61,6 +61,7 @@
     },
     "deletes": {
       "body": [
+
       ]
     }
   }

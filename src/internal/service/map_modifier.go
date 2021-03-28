@@ -108,13 +108,17 @@ func RetrieveValue(value interface{}, takeFrom model.Fields, loopIndex int) inte
 		if listTraverseVal != nil {
 			if destination == "body" {
 				realValue = recursiveGetValue(listTraverseVal, takeFrom.Body, 0, loopIndex)
-			} else if destination == "header" {
+			}
+			if destination == "header" {
 				realValue = recursiveGetValue(listTraverseVal, takeFrom.Header, 0, loopIndex)
-			} else if destination == "query" {
+			}
+			if destination == "query" {
 				realValue = recursiveGetValue(listTraverseVal, takeFrom.Query, 0, loopIndex)
-			} else if destination == "path" {
+			}
+			if destination == "path" {
 				realValue = recursiveGetValue(listTraverseVal, takeFrom.Param, 0, loopIndex)
-			} else if destination == "status_code" {
+			}
+			if destination == "status_code" {
 				realValue = takeFrom.StatusCode
 			}
 		} else {
@@ -195,47 +199,50 @@ func recursiveGetValue(listTraverse []string, in interface{}, index int, loopInd
 	return in
 }
 
-//*DoCommand is a function that will do the command from configure.json for Header, Query, and Body
+//*DoAddModifyDelete is a function that will do the command from configure.json for Header, Query, and Body
 //* Here, we call DoCommandConfigure for each Header, Query, and Body
 //* fields is field that want to be modify
-func DoCommand(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper, loopIndex int) {
+func DoAddModifyDelete(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper, loopIndex int) model.Fields {
 
 	//*header
-	AddToWrapper(command.Adds.Header, "--", fields.Header, takeFrom, loopIndex)
+	fields.Header = AddToWrapper(command.Adds.Header, "--", fields.Header, takeFrom, loopIndex)
 	//*modify header
-	ModifyWrapper(command.Modifies.Header, "--", fields.Header, takeFrom, loopIndex)
+	fields.Header = ModifyWrapper(command.Modifies.Header, "--", fields.Header, takeFrom, loopIndex)
 	//*Deletion Header
-	DeletionHeaderOrQuery(command.Deletes.Header, fields.Header)
+	fields.Header = DeletionHeaderOrQuery(command.Deletes.Header, fields.Header)
 
 	//* Add Query
-	AddToWrapper(command.Adds.Query, "--", fields.Query, takeFrom, loopIndex)
+	fields.Query = AddToWrapper(command.Adds.Query, "--", fields.Query, takeFrom, loopIndex)
 	//*modify Query
-	ModifyWrapper(command.Modifies.Query, "--", fields.Query, takeFrom, loopIndex)
+	fields.Query = ModifyWrapper(command.Modifies.Query, "--", fields.Query, takeFrom, loopIndex)
 	//*Deletion Query
-	DeletionHeaderOrQuery(command.Deletes.Query, fields.Query)
+	fields.Query = DeletionHeaderOrQuery(command.Deletes.Query, fields.Query)
 
 	//* add body
-	AddToWrapper(command.Adds.Body, "--", fields.Body, takeFrom, loopIndex)
+	fields.Body = AddToWrapper(command.Adds.Body, "--", fields.Body, takeFrom, loopIndex)
 	//*modify body
-	ModifyWrapper(command.Modifies.Body, "--", fields.Body, takeFrom, loopIndex)
+	fields.Body = ModifyWrapper(command.Modifies.Body, "--", fields.Body, takeFrom, loopIndex)
 	//*deletion to body
-	DeletionBody(command.Deletes, fields)
+	fields.Body = DeletionBody(command.Deletes, fields.Body)
 
+	return fields
 }
 
-func DeletionBody(deleteField model.DeleteFields, fields model.Fields) {
+func DeletionBody(deleteField model.DeleteFields, mapKeyToBeRemoved map[string]interface{}) map[string]interface{} {
 	//* Do Deletion
 	for _, key := range deleteField.Body {
 		listTraverse := strings.Split(key, ".")
-		DeleteRecursive(listTraverse, fields.Body, 0)
+		DeleteRecursive(listTraverse, mapKeyToBeRemoved, 0)
 	}
+	return mapKeyToBeRemoved
 }
 
-func DeletionHeaderOrQuery(deleteField []string, mapToBeDeleted map[string]interface{}) {
+func DeletionHeaderOrQuery(deleteField []string, mapToBeDeleted map[string]interface{}) map[string]interface{} {
 	//* Do Deletion
 	for _, key := range deleteField {
 		delete(mapToBeDeleted, key)
 	}
+	return mapToBeDeleted
 }
 
 func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper, loopIndex int) string {
@@ -287,7 +294,7 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 }
 
 //*AddToWrapper is a function that will add value to the specified key to a map
-func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper, loopIndex int) {
+func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper, loopIndex int) map[string]interface{} {
 	//* Add key
 	for key, value := range commands {
 		//*get the value
@@ -316,10 +323,11 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		//AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeAdded, 0)
 		AddRecursive(listTraverseKey, realValue, mapToBeAdded, 0)
 	}
+	return mapToBeAdded
 }
 
 //*ModifyWrapper is a function that will modify value based from specific key
-func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom map[string]model.Wrapper, loopIndex int) {
+func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom map[string]model.Wrapper, loopIndex int) map[string]interface{} {
 	for key, value := range commands {
 
 		var realValue interface{}
@@ -333,9 +341,11 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 
 			if splittedValue[1] == "$request" {
+				//* get the request from fields
+				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Request, loopIndex)
 			} else {
 				//* get the response from fields
-				realValue = RetrieveValue(value, takeFrom[splittedValue[0]].Response, loopIndex)
+				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Response, loopIndex)
 			}
 
 		} else {
@@ -345,4 +355,5 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 		listTraverseKey := strings.Split(key, ".")
 		ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
 	}
+	return mapToBeModified
 }

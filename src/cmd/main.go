@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/sirupsen/logrus"
 )
 
@@ -28,7 +27,7 @@ func main() {
 	}
 
 	//*start Server
-	err = service.SetRouteHandler().Start(os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT"))
+	err = SetRouteHandler().Start(os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT"))
 	if err != nil {
 		panic(err)
 	}

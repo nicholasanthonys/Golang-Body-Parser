@@ -211,3 +211,11 @@ func DoLogging(logValue interface{}, event string, identifier string, isRequest 
 	logrus.Info(sentence)
 	logrus.Info(logValue)
 }
+
+func IsFileNameJson(filename string) bool {
+	r := []rune(filename)
+
+	// .json there are 5 character
+	extension := string(r[len(filename)-5:])
+	return extension == ".json"
+}
