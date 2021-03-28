@@ -42,7 +42,7 @@ type (
 
 	Command struct {
 		StatusCode      int          `json:"status_code"`
-		Loop            int          `json:"loop"`
+		Loop            string       `json:"loop"`
 		DestinationPath string       `json:"destination_path"`
 		DestinationUrl  string       `json:"destination_url"`
 		Method          string       `json:"method"`
