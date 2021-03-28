@@ -17,7 +17,8 @@
           "naruto",
           "one piece",
           "dragon ball"
-        ]
+        ],
+        "user.favorite_cars" : [ "Mazda", "Aston  Martin", "Ferrari"]
       },
       "query": {
         "foo" : "tes"
