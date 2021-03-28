@@ -2,18 +2,27 @@
   "configures": [
     {
       "file_name": "configure-0.json",
-      "alias": "$configure_first_configure",
+      "alias": "$configure_zero_configure",
+      "next_failure" : {
+        "status_code" : 500,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "error_message" : "Failure happen at zero_configure,. There is an error",
+            "message"  : "$configure_zero_configure--$response--$body"
+          }
+        }
+      },
       "c_logics": [
         {
           "rule": {
             "==": [
-              "$configure_first_configure--$request--$body[query][address]",
-              "mutiara cibaduyut c20"
+              "abc",
+              "abc"
             ]
           },
           "data": null,
-          "next_success": "$configure_first_configure--$request--$body[query][address]",
-          "next_failure": ""
+          "next_success": "parallel.json"
         }
       ]
     }
