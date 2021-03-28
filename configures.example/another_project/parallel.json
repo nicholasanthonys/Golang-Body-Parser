@@ -1,11 +1,11 @@
 {
   "configures": [
     {
-      "file_name": "configure-0.json",
+      "file_name": "configure-1.json",
       "alias": "$configure_first_configure"
     },
     {
-      "file_name": "configure-1.json",
+      "file_name": "configure-2.json",
       "alias": "$configure_second_configure"
     }
   ],
@@ -27,12 +27,13 @@
         ]
       },
       "data": null,
+      "next_success" : null,
       "response": {
-        "status_code" : 200,
+        "status_code" : 400,
         "transform" : "ToJson",
         "adds" : {
           "body" : {
-            "message" : "configure_second configure status code is 400"
+            "message" : "configure_first configure status code is 400"
           }
         }
       }
@@ -57,8 +58,8 @@
           },
           "body": {
             "user.anime": "$configure_second_configure--$request--$body[user][favorite_anime]",
-            "user.cars": "$configure_first_configure--$request--$body[user][favorite_cars]",
-            "user.favorite_cars": "$configure_first_configure--$request--$body[user][favorite_cars][0]"
+            "user.cars": "$configure_second_configure--$request--$body[user][favorite_cars]",
+            "user.favorite_cars": "$configure_second_configure--$request--$body[user][favorite_cars][0]"
           }
         },
         "modifies": {
