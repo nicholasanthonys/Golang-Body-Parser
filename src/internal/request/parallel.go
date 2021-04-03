@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model/response"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
@@ -88,8 +88,18 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 		}
 
 		for i := 0; i < loop; i++ {
-			wg.Add(1)
-			go worker(&wg, configureItem.Alias, c, mapWrapper, requestFromUser, reqByte, i)
+			if len(requestFromUser.Configure.Request.CLogics) > 0 {
+				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, mapWrapper)
+				if cLogicItem != nil {
+					wg.Add(1)
+					go worker(&wg, configureItem.Alias, c, mapWrapper, requestFromUser, reqByte, i)
+				}
+			} else {
+				// no clogics
+				wg.Add(1)
+				go worker(&wg, configureItem.Alias, c, mapWrapper, requestFromUser, reqByte, i)
+			}
+
 		}
 
 	}
