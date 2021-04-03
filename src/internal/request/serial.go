@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model/response"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"

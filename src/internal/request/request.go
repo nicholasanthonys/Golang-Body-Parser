@@ -5,7 +5,7 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/model/response"
+	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"

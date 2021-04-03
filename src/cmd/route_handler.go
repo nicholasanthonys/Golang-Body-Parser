@@ -5,7 +5,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model/request"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/request"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"net/http"
