@@ -14,7 +14,8 @@
     "transform" : "ToJson",
     "adds" : {
       "body" : {
-        "error_message" : "all logics is fail"
+        "error_message" : "all logics is fail",
+        "response_second_configure" : "$configure_zero_configure--$response--$status_code"
       }
     }
   },
