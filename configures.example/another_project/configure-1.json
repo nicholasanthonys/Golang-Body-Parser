@@ -1,7 +1,7 @@
 {
   "request": {
-    "loop" : "$configure_zero_configure---$response--$body[DummyObject][loop]",
-    "destination_url": "http://mockbin.org/bin/4c05e6ad-24d8-4b72-a1cc-9e76542410ee",
+    "loop": "$configure_zero_configure---$response--$body[DummyObject][loop]",
+    "destination_url": "http://mockbin.org/bin/d53f6eca-b100-44cd-8994-6aa2e4bddded",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
@@ -11,12 +11,11 @@
       "header": {
       },
       "body": {
-        "hello" : "hai"
+        "hello": "hai"
       },
       "query": {
-        "foo" : "tes"
+        "foo": "tes"
       }
-
     },
     "modifies": {
       "header": {
@@ -34,7 +33,18 @@
       ],
       "query": [
       ]
-    }
+    },
+    "c_logics": [
+      {
+        "rule": {
+          "==": [
+            "abc",
+            "def"
+          ]
+        },
+        "data": null
+      }
+    ]
   },
   "response": {
     "transform": "ToJson",
@@ -54,7 +64,6 @@
     },
     "deletes": {
       "body": [
-
       ]
     }
   }
