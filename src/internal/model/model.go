@@ -52,6 +52,7 @@ type (
 		Adds            Fields       `json:"adds"`
 		Deletes         DeleteFields `json:"deletes"`
 		Modifies        Fields       `json:"modifies"`
+		CLogics         []CLogicItem `json:"c_logics"`
 	}
 
 	Wrapper struct {
