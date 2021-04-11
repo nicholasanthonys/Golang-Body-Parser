@@ -68,7 +68,7 @@ func TestMapModifierBody(t *testing.T) {
 	wrapperConfigure1 := mapWrapper["$configure_second_configure"]
 
 	//take configure index
-	service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	requestFromUser.Request.Body = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper, 0)
 
 	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
@@ -92,7 +92,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//*Modify Body
-	service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper)
+	requestFromUser.Request.Body = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper, 0)
 	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
@@ -113,7 +113,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//* Deletion Body
-	service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, requestFromUser.Request)
+	requestFromUser.Request.Body = service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, requestFromUser.Request.Body)
 	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
@@ -138,7 +138,7 @@ func TestMapModifierBody(t *testing.T) {
 func TestMapModifierHeader(t *testing.T) {
 	//* Add Header
 	wrapperConfigure1 := mapWrapper["$configure_second_configure"]
-	service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper)
+	requestFromUser.Request.Header = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper, 0)
 
 	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Header)
 	if err != nil {
@@ -161,7 +161,7 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 
 	//*Modify Header
-	service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", requestFromUser.Request.Header, mapWrapper)
+	requestFromUser.Request.Header = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", requestFromUser.Request.Header, mapWrapper, 0)
 
 	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Header)
 	if err != nil {
@@ -184,7 +184,7 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 
 	//*Deletion Header
-	service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Header, requestFromUser.Request.Header)
+	requestFromUser.Request.Header = service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Header, requestFromUser.Request.Header)
 	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Header)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
@@ -212,7 +212,7 @@ func TestMapModifierHeader(t *testing.T) {
 func TestMapModifierQuery(t *testing.T) {
 	//* Add Query
 	wrapperConfigure1 := mapWrapper["$configure_second_configure"]
-	service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper)
+	requestFromUser.Request.Query = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper, 0)
 
 	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Query)
 	if err != nil {
@@ -235,7 +235,7 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 
 	//*Modify query
-	service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", requestFromUser.Request.Query, mapWrapper)
+	requestFromUser.Request.Query = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", requestFromUser.Request.Query, mapWrapper, 0)
 
 	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Query)
 	if err != nil {
