@@ -16,4 +16,4 @@ services:
 networks: 
   site1 : 
     external: 
-      name : prody_middleware_net
+      name : proxy_middleware_net
