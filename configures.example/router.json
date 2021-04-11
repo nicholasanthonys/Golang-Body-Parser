@@ -16,5 +16,11 @@
     "project_directory" : "another_project",
     "type" : "serial",
     "method" : "POST"
+  },
+  {
+    "path" : "/parallel-serial",
+    "project_directory" : "parallel_to_serial",
+    "type" : "parallel",
+    "method" : "POST"
   }
 ]
