@@ -47,7 +47,7 @@
         ]
       },
       "data": null,
-      "next_success": "",
+      "next_success": null,
       "response": {
         "status_code" : 200,
         "transform": "ToJson",
@@ -74,6 +74,7 @@
           ]
         }
       }
+
     }
   ]
 }
