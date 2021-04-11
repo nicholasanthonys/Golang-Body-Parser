@@ -8,7 +8,7 @@
         "transform" : "ToJson",
         "adds" : {
           "body" : {
-            "error_message" : "Failure happen at zero_configure,. There is an error",
+            "error_message" : "Failure happen at zero_configure. There is an error",
             "message"  : "$configure_zero_configure--$response--$body"
           }
         }
