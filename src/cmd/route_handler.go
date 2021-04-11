@@ -118,12 +118,12 @@ func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {
 // parallelRouteHandler execute every configure in parallel-way.
 func parallelRouteHandler(c echo.Context) error {
 	mapWrapper := make(map[string]model.Wrapper)
-	return request.DoParallel(c, fullProjectDirectory, mapWrapper)
+	return request.DoParallel(c, fullProjectDirectory, mapWrapper, 0)
 }
 
 // serialRouteHandler process configure in serial-way.
 func serialRouteHandler(c echo.Context) error {
 	mapWrapper := make(map[string]model.Wrapper)
-	return request.DoSerial(c, fullProjectDirectory, mapWrapper)
+	return request.DoSerial(c, fullProjectDirectory, mapWrapper, 0)
 
 }

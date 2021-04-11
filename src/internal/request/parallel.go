@@ -17,7 +17,13 @@ import (
 	"sync"
 )
 
-func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[string]model.Wrapper) error {
+func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[string]model.Wrapper, counter int) error {
+
+	if counter == 10 {
+		resMap := make(map[string]string)
+		resMap["message"] = "Circular Serial-Parallel"
+		return c.JSON(http.StatusInternalServerError, resMap)
+	}
 
 	// Read parallel.json
 	ParallelProject := model.Parallel{}
@@ -73,6 +79,8 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 		var loop int
 		if lt.Kind() == reflect.String {
 			loop, err = strconv.Atoi(loopIn.(string))
+			logrus.Info("loop in i s")
+			logrus.Info(loopIn)
 			if err != nil {
 				log.Error(err)
 				logrus.Info("set loop to 1 ")
@@ -128,7 +136,7 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 		// update alias
 		if len(strings.Trim(nextSuccess, " ")) > 0 {
 			if nextSuccess == "serial.json" {
-				return DoSerial(c, fullProjectDirectory, mapWrapper)
+				return DoSerial(c, fullProjectDirectory, mapWrapper, counter+1)
 			}
 		}
 		if len(strings.Trim(nextSuccess, " ")) == 0 {

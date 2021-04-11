@@ -13,7 +13,13 @@ import (
 	"strings"
 )
 
-func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string]model.Wrapper) error {
+func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string]model.Wrapper, counter int) error {
+	if counter == 10 {
+		resMap := make(map[string]string)
+		resMap["message"] = "Circular Serial-Parallel"
+		return c.JSON(http.StatusInternalServerError, resMap)
+	}
+
 	var SerialProject model.Serial
 	SerialProject = model.Serial{}
 	// Read SerialProject .json
@@ -91,14 +97,8 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string
 		mapWrapper[alias] = requestFromUser
 		cLogicItemTrue, err := service.CLogicsChecker(mapConfigures[alias].CLogics, mapWrapper)
 
-		if err != nil {
+		if err != nil || cLogicItemTrue == nil {
 			logrus.Error(err)
-			resultWrapper := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
-			response.SetHeaderResponse(resultWrapper.Response.Header, c)
-			return util.ResponseWriter(resultWrapper, c)
-		}
-
-		if cLogicItemTrue == nil {
 			resultWrapper := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
 			response.SetHeaderResponse(resultWrapper.Response.Header, c)
 			return util.ResponseWriter(resultWrapper, c)
@@ -109,7 +109,7 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string
 		// update alias
 		if len(strings.Trim(nextSuccess, " ")) > 0 {
 			if nextSuccess == "parallel.json" {
-				return DoParallel(c, fullProjectDirectory, mapWrapper)
+				return DoParallel(c, fullProjectDirectory, mapWrapper, counter+1)
 			}
 			alias = nextSuccess
 		}
