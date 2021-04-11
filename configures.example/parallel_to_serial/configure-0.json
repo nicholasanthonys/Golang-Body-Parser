@@ -1,7 +1,7 @@
 {
   "request": {
-    "loop": "$configure_zero_configure---$response--$body[DummyObject][loop]",
-    "destination_url": "http://mockbin.org/bin/d53f6eca-b100-44cd-8994-6aa2e4bddded",
+    "loop" : "1",
+    "destination_url": "http://mockbin.org/bin/0147b6a5-9669-4eba-a52a-aa3578d1a34b",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
@@ -11,16 +11,28 @@
       "header": {
       },
       "body": {
-        "hello": "hai"
+        "numbers" : [
+          "123-456",
+          "234-567",
+          "345-678"
+        ],
+        "content" : "Hello World from configure-0.json",
+        "user.favorite_foods": [
+          "fried rice",
+          "chicken",
+          "soup"
+        ]
+
       },
       "query": {
-        "foo": "tes"
+        "filter" : "on"
       }
     },
     "modifies": {
       "header": {
       },
       "body": {
+        "user.favorite_foods.0": "noodle"
       },
       "query": {
       }
@@ -29,22 +41,10 @@
       "header": [
       ],
       "body": [
-        "phone_numbers"
       ],
       "query": [
       ]
-    },
-    "c_logics": [
-      {
-        "rule": {
-          "==": [
-            "abc",
-            "abc"
-          ]
-        },
-        "data": null
-      }
-    ]
+    }
   },
   "response": {
     "transform": "ToJson",

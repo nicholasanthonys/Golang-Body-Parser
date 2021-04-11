@@ -1,0 +1,54 @@
+{
+  "configures": [
+    {
+      "file_name": "configure-0.json",
+      "alias": "$configure_zero_configure"
+    },
+    {
+      "file_name": "configure-1.json",
+      "alias": "$configure_first_configure"
+    }
+  ],
+  "next_failure" : {
+    "status_code" : 500,
+    "transform" : "ToJson",
+    "adds" : {
+      "body" : {
+        "error_message" : "all logics is fail",
+        "response_second_configure" : "$configure_zero_configure--$response--$status_code"
+      }
+    }
+  },
+  "c_logics": [
+    {
+      "rule": {
+        "==": [
+          "$configure_zero_configure--$response--$status_code",
+          400
+        ]
+      },
+      "data": null,
+      "next_success" : null,
+      "response": {
+        "status_code" : 400,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "message" : "configure_zero configure status code is 400",
+            "status_code" :  "$configure_zero_configure--$response--$status_code"
+          }
+        }
+      }
+    },
+    {
+      "rule": {
+        "==": [
+          "$configure_first_configure--$response--$status_code",
+          200
+        ]
+      },
+      "data": null,
+      "next_success": "serial.json"
+    }
+  ]
+}

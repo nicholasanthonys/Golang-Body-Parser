@@ -1,7 +1,7 @@
 {
   "request": {
-    "loop": "$configure_zero_configure---$response--$body[DummyObject][loop]",
-    "destination_url": "http://mockbin.org/bin/d53f6eca-b100-44cd-8994-6aa2e4bddded",
+    "loop": "1",
+    "destination_url": "http://mockbin.org/bin/2eb28d6e-9c49-4b38-a738-e34341ba46f6",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
@@ -11,10 +11,10 @@
       "header": {
       },
       "body": {
-        "hello": "hai"
+        "numbers": "$configure_zero_configure--$request--$body[numbers]",
+        "content": "Hello World from configure-0.json"
       },
       "query": {
-        "foo": "tes"
       }
     },
     "modifies": {
@@ -29,7 +29,6 @@
       "header": [
       ],
       "body": [
-        "phone_numbers"
       ],
       "query": [
       ]
@@ -37,12 +36,32 @@
     "c_logics": [
       {
         "rule": {
-          "==": [
-            "abc",
-            "abc"
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "tempNumbers.0"
+                },
+                "123-456"
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "tempNumbers.1"
+                },
+                "234-567"
+              ]
+            }
           ]
         },
-        "data": null
+        "data": {
+          "tempNumbers": [
+            "123-456",
+            "234-567",
+            "345-678"
+          ]
+        }
       }
     ]
   },
@@ -54,6 +73,7 @@
       "header": {
       },
       "body": {
+        "test": "test key From add response configure-2.json"
       },
       "query": {
       }

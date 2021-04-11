@@ -1,7 +1,6 @@
 {
   "request": {
-    "loop": "$configure_zero_configure---$response--$body[DummyObject][loop]",
-    "destination_url": "http://mockbin.org/bin/d53f6eca-b100-44cd-8994-6aa2e4bddded",
+    "destination_url": "http://mockbin.org/bin/c860647b-d2a9-4663-b5e8-e8f05680738a",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
@@ -11,11 +10,12 @@
       "header": {
       },
       "body": {
-        "hello": "hai"
+        "numbers" : "$configure_zero_configure--$request--$body[numbers]"
       },
       "query": {
-        "foo": "tes"
+        "foo" : "tes"
       }
+
     },
     "modifies": {
       "header": {
@@ -29,22 +29,10 @@
       "header": [
       ],
       "body": [
-        "phone_numbers"
       ],
       "query": [
       ]
-    },
-    "c_logics": [
-      {
-        "rule": {
-          "==": [
-            "abc",
-            "abc"
-          ]
-        },
-        "data": null
-      }
-    ]
+    }
   },
   "response": {
     "transform": "ToJson",
@@ -54,6 +42,7 @@
       "header": {
       },
       "body": {
+        "test" : "test key From add response configure-2.json"
       },
       "query": {
       }
@@ -64,6 +53,7 @@
     },
     "deletes": {
       "body": [
+
       ]
     }
   }

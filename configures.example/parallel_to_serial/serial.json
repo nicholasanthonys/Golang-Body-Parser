@@ -1,0 +1,42 @@
+{
+  "configures": [
+    {
+      "file_name": "configure-2.json",
+      "alias": "$configure_second_configure",
+      "next_failure" : {
+        "status_code" : 500,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "error_message" : "Failure happen at zero_configure. There is an error",
+            "message"  : "$configure_second_configure--$response--$body"
+          }
+        }
+      },
+      "c_logics": [
+        {
+          "rule": {
+            "==": [
+              "abc",
+              "abc"
+            ]
+          },
+          "data": null,
+          "next_success" :null,
+          "response": {
+            "status_code" : 200,
+            "transform" : "ToJson",
+            "adds" : {
+              "body" : {
+                "numbers" : "$configure_second_configure--$request--$body[numbers]",
+                "content_0" : "$configure_zero_configure--$request--$body[content]",
+                "content_1" : "$configure_first_configure--$request--$body[content]",
+                "test" : "$configure_first_configure--$response--$body[test]"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
