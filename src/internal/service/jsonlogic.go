@@ -1,8 +1,10 @@
 package service
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"github.com/diegoholiveira/jsonlogic"
+	"github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"reflect"
@@ -50,15 +52,32 @@ func InterfaceDirectModifier(in interface{}, mapWrapper map[string]model.Wrapper
 
 func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper map[string]model.Wrapper) (*model.CLogicItem, error) {
 	for _, cLogicItem := range cLogics {
-		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
 		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
-		result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
+		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
+
+		ruleByte, err := json.Marshal(cLogicItem.Rule)
+		if err != nil {
+			return nil, err
+		}
+
+		dataByte, err := json.Marshal(cLogicItem.Data)
+		if err != nil {
+			return nil, err
+		}
+		ruleReader := bytes.NewReader(ruleByte)
+		dataReader := bytes.NewReader(dataByte)
+		var resultBuf bytes.Buffer
+		err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
 
 		if err != nil {
 			logrus.Error("error is ")
 			logrus.Error(err.Error())
 			return nil, err
 		}
+
+		var result interface{}
+		decoder := json.NewDecoder(&resultBuf)
+		decoder.Decode(&result)
 
 		// get type of json logic result
 		vt := reflect.TypeOf(result)
