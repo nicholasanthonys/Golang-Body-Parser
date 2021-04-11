@@ -1,8 +1,9 @@
 package test
 
 import (
+	"bytes"
 	"encoding/json"
-	"github.com/diegoholiveira/jsonlogic"
+	"github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
@@ -10,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -88,7 +91,7 @@ func TestReadWithConfigure(t *testing.T) {
 		requestFromUser.Configure = configure
 		mapWrapper[configureItem.Alias] = requestFromUser
 
-		service.DoCommand(requestFromUser.Configure.Request, requestFromUser.Request, mapWrapper)
+		requestFromUser.Request = service.DoAddModifyDelete(requestFromUser.Configure.Request, requestFromUser.Request, mapWrapper, 0)
 	}
 
 	var tempMap map[string]interface{}
@@ -133,5 +136,47 @@ func TestReadWithConfigure(t *testing.T) {
 	result, err := jsonlogic.ApplyInterface(clogicModified.Rule, clogicModified.Data)
 	boolResult := result.(bool)
 	assert.Equal(t, expectedLogic, boolResult)
+}
+
+func TestGetVarArray(t *testing.T) {
+	rule := strings.NewReader(`{
+          "and": [
+            {
+              "==": [
+                { "var" : "tempNumbers.0"},
+               "123-456"
+              ]
+            },
+            {
+              "==": [
+                { "var" : "tempNumbers.1"},
+                "234-567"
+              ]
+            }
+          ]
+        }`)
+
+	data := strings.NewReader(`{
+          "tempNumbers": [
+            "123-456",
+            "234-567",
+            "345-678"
+          ]
+        }`)
+
+	var resultBuf bytes.Buffer
+
+	jsonlogic.Apply(rule, data, &resultBuf)
+
+	var result interface{}
+	decoder := json.NewDecoder(&resultBuf)
+	decoder.Decode(&result)
+
+	vt := reflect.TypeOf(result)
+
+	assert.Equal(t, reflect.Bool, vt.Kind())
+	if vt.Kind() == reflect.Bool {
+		assert.Equal(t, true, result.(bool))
+	}
 
 }
