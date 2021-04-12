@@ -7,6 +7,7 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/request"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
+	"github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
@@ -117,13 +118,13 @@ func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {
 
 // parallelRouteHandler execute every configure in parallel-way.
 func parallelRouteHandler(c echo.Context) error {
-	mapWrapper := make(map[string]model.Wrapper)
+	mapWrapper := cmap.New()
 	return request.DoParallel(c, fullProjectDirectory, mapWrapper, 0)
 }
 
 // serialRouteHandler process configure in serial-way.
 func serialRouteHandler(c echo.Context) error {
-	mapWrapper := make(map[string]model.Wrapper)
+	mapWrapper := cmap.New()
 	return request.DoSerial(c, fullProjectDirectory, mapWrapper, 0)
 
 }

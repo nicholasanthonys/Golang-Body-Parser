@@ -3,12 +3,11 @@ package request
 import (
 	"encoding/json"
 	"github.com/labstack/echo"
-	"github.com/labstack/gommon/log"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
+	cmap "github.com/orcaman/concurrent-map"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -17,7 +16,7 @@ import (
 	"sync"
 )
 
-func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[string]model.Wrapper, counter int) error {
+func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
 
 	if counter == 10 {
 		resMap := make(map[string]string)
@@ -55,19 +54,19 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 		var configure model.Configure
 		requestFromUser := model.Wrapper{
 			Configure: configure,
-			Request: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
-			Response: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
+			Request:   cmap.New(),
+			Response:  cmap.New(),
 		}
+
+		requestFromUser.Request.Set("param", make(map[string]interface{}))
+		requestFromUser.Request.Set("header", make(map[string]interface{}))
+		requestFromUser.Request.Set("body", make(map[string]interface{}))
+		requestFromUser.Request.Set("query", make(map[string]interface{}))
+
+		requestFromUser.Response.Set("statusCode", "")
+		requestFromUser.Response.Set("header", make(map[string]interface{}))
+		requestFromUser.Response.Set("body", make(map[string]interface{}))
+
 		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
 		//* assign configure byte to configure
 		_ = json.Unmarshal(configByte, &configure)
@@ -79,11 +78,9 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 		var loop int
 		if lt.Kind() == reflect.String {
 			loop, err = strconv.Atoi(loopIn.(string))
-			logrus.Info("loop in i s")
-			logrus.Info(loopIn)
 			if err != nil {
 				log.Error(err)
-				logrus.Info("set loop to 1 ")
+				log.Info("set loop to 1 ")
 			}
 		}
 
@@ -119,16 +116,22 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 
 		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, mapWrapper)
 		if err != nil {
-			logrus.Error(err)
-			resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
-			response.SetHeaderResponse(resultWrapper.Response.Header, c)
-			return util.ResponseWriter(resultWrapper, c)
+			log.Error(err)
+			tmpMapResponse := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
+
+			tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
+
+			//// write  to concurent map
+			//resultWrapper.Response.Set("header", tempHeader)
+
+			return util.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, c)
 		}
 
 		if cLogicItemTrue == nil {
 			resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
-			response.SetHeaderResponse(resultWrapper.Response.Header, c)
-			return util.ResponseWriter(resultWrapper, c)
+
+			resultWrapper["header"] = response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), c)
+			return util.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, c)
 		}
 
 		// update next_success
@@ -147,60 +150,22 @@ func DoParallel(c echo.Context, fullProjectDirectory string, mapWrapper map[stri
 	}
 
 	resultWrapper := response.ParseResponse(mapWrapper, finalResponseConfigure)
-	response.SetHeaderResponse(resultWrapper.Response.Header, c)
-	return util.ResponseWriter(resultWrapper, c)
 
-	//var isAllLogicFail = false
-	//var cLogicItemTrueIndex = 0
+	resultWrapper["header"] = response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), c)
+	return util.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, c)
 
-	//logrus.Info("parallel project")
-	//logrus.Info(ParallelProject.CLogics)
-	//// process the c logics
-	//for index, cLogicItem := range ParallelProject.CLogics {
-	//	cLogicItem.Rule = service.InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
-	//	cLogicItem.Data = service.InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
-	//	result, err := jsonlogic.ApplyInterface(cLogicItem.Rule, cLogicItem.Data)
-	//
-	//	if err != nil {
-	//		isAllLogicFail = true
-	//		logrus.Error(err.Error())
-	//		// send response
-	//		resultWrapper := response.ParseResponse(mapWrapper, cLogicItem.Response)
-	//		response.SetHeaderResponse(resultWrapper.Response.Header, c)
-	//		return util.ResponseWriter(resultWrapper, c)
-	//	}
-	//	// get type of json logic result
-	//	vt := reflect.TypeOf(result)
-	//	if vt.Kind() == reflect.Bool {
-	//		if result.(bool) {
-	//			cLogicItemTrueIndex = index
-	//			isAllLogicFail = false
-	//			break
-	//		} else {
-	//			isAllLogicFail = true
-	//		}
-	//	}
-	//}
-	//
-	//if !isAllLogicFail {
-	//	resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.CLogics[cLogicItemTrueIndex].Response)
-	//	response.SetHeaderResponse(resultWrapper.Response.Header, c)
-	//	return util.ResponseWriter(resultWrapper, c)
-	//} else {
-	//	resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
-	//	response.SetHeaderResponse(resultWrapper.Response.Header, c)
-	//	return util.ResponseWriter(resultWrapper, c)
-	//}
 }
 
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
-func worker(wg *sync.WaitGroup, mapKeyName string, c echo.Context, mapWrapper map[string]model.Wrapper, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
+func worker(wg *sync.WaitGroup, mapKeyName string, c echo.Context, mapWrapper cmap.ConcurrentMap, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
 	defer wg.Done()
-	_, status, err := ProcessingRequest(mapKeyName, c, &requestFromUser, mapWrapper, requestBody, loopIndex)
+	_, status, err := ProcessingRequest(mapKeyName, c, requestFromUser, mapWrapper, requestBody, loopIndex)
 	if err != nil {
-		logrus.Error("Go Worker - Error Process")
-		logrus.Error(err.Error())
-		logrus.Error("status : ", status)
+		log.Error("Go Worker - Error Process")
+		log.Error(err.Error())
+		log.Error("status : ", status)
 	}
-	mapWrapper[mapKeyName] = requestFromUser
+	//mapWrapper[mapKeyName] = requestFromUser
+
+	mapWrapper.Set(mapKeyName, requestFromUser)
 }

@@ -5,13 +5,13 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
+	cmap "github.com/orcaman/concurrent-map"
 	"reflect"
 	"strconv"
 )
 
 // setHeaderResponse set custom key-value pair for header, except Content-Length and Content-type
-func SetHeaderResponse(header map[string]interface{}, c echo.Context) {
+func SetHeaderResponse(header map[string]interface{}, c echo.Context) map[string]interface{} {
 	for key, val := range header {
 		rt := reflect.TypeOf(val)
 		//* only add if interface type is string
@@ -23,23 +23,23 @@ func SetHeaderResponse(header map[string]interface{}, c echo.Context) {
 		}
 	}
 
+	return header
+
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
-func ParseResponse(mapWrapper map[string]model.Wrapper, command model.Command) model.Wrapper {
+func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[string]interface{} {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{
 			Response: command,
 		},
-		Request: model.Fields{},
-		Response: model.Fields{
-			Param:  make(map[string]interface{}),
-			Header: make(map[string]interface{}),
-			Body:   make(map[string]interface{}),
-			Query:  make(map[string]interface{}),
-		},
+		Response: cmap.New(),
 	}
+
+	resultWrapper.Response.Set("statusCode", "")
+	resultWrapper.Response.Set("header", make(map[string]interface{}))
+	resultWrapper.Response.Set("body", make(map[string]interface{}))
 
 	//* now we will set the response body based from configurex.json if there is $configure value in configureBased.
 	//keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
@@ -51,22 +51,22 @@ func ParseResponse(mapWrapper map[string]model.Wrapper, command model.Command) m
 	//		resultWrapper.Response = mapWrapper[keyConfigure].Response
 	//	}
 	//}
+	tmpHeader := make(map[string]interface{})
+	tmpBody := make(map[string]interface{})
 
-	logrus.Info("result wrapper configur response transform")
-	logrus.Info(resultWrapper.Configure.Response.Transform)
 	//*header
-	resultWrapper.Response.Header = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", resultWrapper.Response.Header, mapWrapper, 0)
+	tmpHeader = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", tmpHeader, mapWrapper, 0)
 	//*modify header
-	resultWrapper.Response.Header = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", resultWrapper.Response.Header, mapWrapper, 0)
+	tmpHeader = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", tmpHeader, mapWrapper, 0)
 	//*Deletion Header
-	resultWrapper.Response.Header = service.DeletionHeaderOrQuery(resultWrapper.Configure.Response.Deletes.Header, resultWrapper.Response.Header)
+	tmpHeader = service.DeletionHeaderOrQuery(resultWrapper.Configure.Response.Deletes.Header, tmpHeader)
 
 	//*add
-	resultWrapper.Response.Body = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", resultWrapper.Response.Body, mapWrapper, 0)
+	tmpBody = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", tmpBody, mapWrapper, 0)
 	//*modify
-	resultWrapper.Response.Body = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", resultWrapper.Response.Body, mapWrapper, 0)
+	tmpBody = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", tmpBody, mapWrapper, 0)
 	//* delete
-	resultWrapper.Response.Body = service.DeletionBody(resultWrapper.Configure.Response.Deletes, resultWrapper.Response.Body)
+	tmpBody = service.DeletionBody(resultWrapper.Configure.Response.Deletes, tmpBody)
 
 	//*In case user want to log final response
 	if len(resultWrapper.Configure.Response.LogAfterModify) > 0 {
@@ -82,7 +82,11 @@ func ParseResponse(mapWrapper map[string]model.Wrapper, command model.Command) m
 		statusCode = resultWrapper.Configure.Response.StatusCode
 	}
 
-	resultWrapper.Response.StatusCode = strconv.Itoa(statusCode)
+	statusCodeString := strconv.Itoa(statusCode)
 
-	return resultWrapper
+	return map[string]interface{}{
+		"statusCode": statusCodeString,
+		"header":     tmpHeader,
+		"body":       tmpBody,
+	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/clbanning/mxj"
 	"github.com/labstack/echo"
-	"github.com/sirupsen/logrus"
 	"net/url"
 )
 
@@ -26,8 +25,8 @@ func FromJson(byteVal []byte) (map[string]interface{}, error) {
 
 	myMap, err := mxj.NewMapJson(byteVal)
 	if err != nil {
-		logrus.Warn("error")
-		logrus.Warn(err.Error())
+		log.Error("error")
+		log.Error(err.Error())
 		return nil, err
 	}
 	return myMap, nil
@@ -36,8 +35,8 @@ func FromJson(byteVal []byte) (map[string]interface{}, error) {
 func FromXmL(byteVal []byte) (map[string]interface{}, error) {
 	myMap, err := mxj.NewMapXml(byteVal)
 	if err != nil {
-		logrus.Warn("error")
-		logrus.Warn(err.Error())
+		log.Error("error")
+		log.Error(err.Error())
 		return nil, err
 	}
 	return myMap, nil

@@ -4,12 +4,24 @@ import (
 	"fmt"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/openpgp/errors"
 	"reflect"
 	"strconv"
 	"strings"
 )
+
+var log = logrus.New()
+
+func init() {
+	//* init logger with timestamp
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	log.SetFormatter(customFormatter)
+	customFormatter.FullTimestamp = true
+	log.Level = logrus.ErrorLevel
+}
 
 // AddRecursive is a function that do the add key-value based on the listTraverse
 func AddRecursive(listTraverse []string, value interface{}, in interface{}, index int) interface{} {
@@ -55,8 +67,8 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 			if err == nil {
 				in.([]interface{})[realIndex] = value
 			} else {
-				logrus.Error(err.Error())
-				logrus.Error("error converting index")
+				log.Error(err.Error())
+				log.Error("error converting index")
 			}
 
 		}
@@ -96,7 +108,7 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 }
 
 // RetrieveValue is a function that check the value type value from configure and retrieve the value from header,body, or query
-func RetrieveValue(value interface{}, takeFrom model.Fields, loopIndex int) interface{} {
+func RetrieveValue(value interface{}, takeFrom cmap.ConcurrentMap, loopIndex int) interface{} {
 	//*declare empty result
 	var realValue interface{}
 	//* check the type of the value
@@ -106,20 +118,31 @@ func RetrieveValue(value interface{}, takeFrom model.Fields, loopIndex int) inte
 		//* We Call Sanitizevalue to clear the value from the square bracket and the Dollar Sign
 		listTraverseVal, destination := util.SanitizeValue(fmt.Sprintf("%v", value))
 		if listTraverseVal != nil {
+			var key string
 			if destination == "body" {
-				realValue = recursiveGetValue(listTraverseVal, takeFrom.Body, 0, loopIndex)
+				key = "body"
 			}
 			if destination == "header" {
-				realValue = recursiveGetValue(listTraverseVal, takeFrom.Header, 0, loopIndex)
+				key = "header"
 			}
 			if destination == "query" {
-				realValue = recursiveGetValue(listTraverseVal, takeFrom.Query, 0, loopIndex)
+				key = "query"
 			}
 			if destination == "path" {
-				realValue = recursiveGetValue(listTraverseVal, takeFrom.Param, 0, loopIndex)
+				key = "param"
 			}
 			if destination == "status_code" {
-				realValue = takeFrom.StatusCode
+				key = "statusCode"
+			}
+			if tmp, ok := takeFrom.Get(key); ok {
+				if key != "statusCode" {
+					tmpMap := tmp.(map[string]interface{})
+					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
+				} else {
+					tmpMap := tmp.(string)
+					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
+				}
+
 			}
 		} else {
 			realValue = value
@@ -161,8 +184,8 @@ func recursiveGetValue(listTraverse []string, in interface{}, index int, loopInd
 				}
 
 				if err != nil {
-					logrus.Error("error converting string to integer")
-					logrus.Error(errors.ErrKeyIncorrect)
+					log.Error("error converting string to integer")
+					log.Error(errors.ErrKeyIncorrect)
 					return nil
 				}
 
@@ -202,30 +225,47 @@ func recursiveGetValue(listTraverse []string, in interface{}, index int, loopInd
 //*DoAddModifyDelete is a function that will do the command from configure.json for Header, Query, and Body
 //* Here, we call DoCommandConfigure for each Header, Query, and Body
 //* fields is field that want to be modify
-func DoAddModifyDelete(command model.Command, fields model.Fields, takeFrom map[string]model.Wrapper, loopIndex int) model.Fields {
+func DoAddModifyDelete(command model.Command, fields cmap.ConcurrentMap, takeFrom cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
+
+	tmpHeader := make(map[string]interface{})
+	tmpBody := make(map[string]interface{})
+	tmpQuery := make(map[string]interface{})
 
 	//*header
-	fields.Header = AddToWrapper(command.Adds.Header, "--", fields.Header, takeFrom, loopIndex)
-	//*modify header
-	fields.Header = ModifyWrapper(command.Modifies.Header, "--", fields.Header, takeFrom, loopIndex)
-	//*Deletion Header
-	fields.Header = DeletionHeaderOrQuery(command.Deletes.Header, fields.Header)
+	if tmp, ok := fields.Get("header"); ok {
+		fieldHeader := tmp.(map[string]interface{})
+		tmpHeader = AddToWrapper(command.Adds.Header, "--", fieldHeader, takeFrom, loopIndex)
+		//*modify header
+		tmpHeader = ModifyWrapper(command.Modifies.Header, "--", fieldHeader, takeFrom, loopIndex)
+		//*Deletion Header
+		tmpHeader = DeletionHeaderOrQuery(command.Deletes.Header, fieldHeader)
+	}
 
-	//* Add Query
-	fields.Query = AddToWrapper(command.Adds.Query, "--", fields.Query, takeFrom, loopIndex)
-	//*modify Query
-	fields.Query = ModifyWrapper(command.Modifies.Query, "--", fields.Query, takeFrom, loopIndex)
-	//*Deletion Query
-	fields.Query = DeletionHeaderOrQuery(command.Deletes.Query, fields.Query)
+	if tmp, ok := fields.Get("query"); ok {
+		fieldQuery := tmp.(map[string]interface{})
+		//* Add Query
+		tmpQuery = AddToWrapper(command.Adds.Query, "--", fieldQuery, takeFrom, loopIndex)
+		//*modify Query
+		tmpQuery = ModifyWrapper(command.Modifies.Query, "--", fieldQuery, takeFrom, loopIndex)
+		//*Deletion Query
+		tmpQuery = DeletionHeaderOrQuery(command.Deletes.Query, fieldQuery)
+	}
 
-	//* add body
-	fields.Body = AddToWrapper(command.Adds.Body, "--", fields.Body, takeFrom, loopIndex)
-	//*modify body
-	fields.Body = ModifyWrapper(command.Modifies.Body, "--", fields.Body, takeFrom, loopIndex)
-	//*deletion to body
-	fields.Body = DeletionBody(command.Deletes, fields.Body)
+	if tmp, ok := fields.Get("body"); ok {
+		fieldBody := tmp.(map[string]interface{})
+		//* add body
+		tmpBody = AddToWrapper(command.Adds.Body, "--", fieldBody, takeFrom, loopIndex)
+		//*modify body
+		tmpBody = ModifyWrapper(command.Modifies.Body, "--", fieldBody, takeFrom, loopIndex)
+		//*deletion to body
+		tmpBody = DeletionBody(command.Deletes, fieldBody)
+	}
 
-	return fields
+	return map[string]interface{}{
+		"header": tmpHeader,
+		"body":   tmpBody,
+		"query":  tmpQuery,
+	}
 }
 
 func DeletionBody(deleteField model.DeleteFields, mapKeyToBeRemoved map[string]interface{}) map[string]interface{} {
@@ -245,7 +285,7 @@ func DeletionHeaderOrQuery(deleteField []string, mapToBeDeleted map[string]inter
 	return mapToBeDeleted
 }
 
-func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper, loopIndex int) string {
+func ModifyPath(path string, separator string, takeFrom cmap.ConcurrentMap, loopIndex int) string {
 	//*example, what we got here is like this
 	//* /person/{{$configure1.json--$request--$body[user][name]/transaction/{{$configure1.json--$request--$body[user][name]}}
 	//* we need to split based from separator /, and looping and find if there is {{ }}
@@ -262,14 +302,17 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 
 				//remove dollar sign
 				splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
+				var wrapper model.Wrapper
+				if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
+					wrapper = tmp.(model.Wrapper)
+				}
 				if splittedValue[1] == "$request" {
 					//* get the request from fields
-					realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Request, loopIndex)
+					realValue = RetrieveValue(splittedValue[2], wrapper.Request, loopIndex)
 
 				} else {
-
 					//* get the response from fields
-					realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Response, loopIndex)
+					realValue = RetrieveValue(splittedValue[2], wrapper.Response, loopIndex)
 				}
 
 				if realValue != nil {
@@ -281,7 +324,8 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 					}
 
 				} else {
-					logrus.Info("real value for path is nil, returning empty string")
+					log.Info("real value for path is nil, returning empty string")
+					return ""
 				}
 
 			}
@@ -294,7 +338,7 @@ func ModifyPath(path string, separator string, takeFrom map[string]model.Wrapper
 }
 
 //*AddToWrapper is a function that will add value to the specified key to a map
-func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom map[string]model.Wrapper, loopIndex int) map[string]interface{} {
+func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
 	//* Add key
 	for key, value := range commands {
 		//*get the value
@@ -305,29 +349,30 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
 			//remove dollar sign
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
-			if splittedValue[1] == "$request" {
-				//* get the request from fields
-				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Request, loopIndex)
-
-			} else {
-
-				//* get the response from fields
-				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Response, loopIndex)
+			var wrapper model.Wrapper
+			if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
+				wrapper = tmp.(model.Wrapper)
+				if splittedValue[1] == "$request" {
+					//* get the request from fields
+					realValue = RetrieveValue(splittedValue[2], wrapper.Request, loopIndex)
+				} else {
+					//* get the response from fields
+					realValue = RetrieveValue(splittedValue[2], wrapper.Response, loopIndex)
+				}
 			}
+
 		} else {
-			//realValue = fmt.Sprintf("%v", value)
 			realValue = value
 		}
 		listTraverseKey := strings.Split(key, ".")
 
-		//AddRecursive(listTraverseKey, fmt.Sprintf("%v", realValue), mapToBeAdded, 0)
 		AddRecursive(listTraverseKey, realValue, mapToBeAdded, 0)
 	}
 	return mapToBeAdded
 }
 
 //*ModifyWrapper is a function that will modify value based from specific key
-func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom map[string]model.Wrapper, loopIndex int) map[string]interface{} {
+func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
 	for key, value := range commands {
 
 		var realValue interface{}
@@ -339,13 +384,16 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 
 			////remove dollar sign from $configure
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
-
+			var wrapper model.Wrapper
+			if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
+				wrapper = tmp.(model.Wrapper)
+			}
 			if splittedValue[1] == "$request" {
 				//* get the request from fields
-				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Request, loopIndex)
+				realValue = RetrieveValue(splittedValue[2], wrapper.Request, loopIndex)
 			} else {
 				//* get the response from fields
-				realValue = RetrieveValue(splittedValue[2], takeFrom[splittedValue[0]].Response, loopIndex)
+				realValue = RetrieveValue(splittedValue[2], wrapper.Response, loopIndex)
 			}
 
 		} else {

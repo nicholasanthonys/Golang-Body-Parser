@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
+	cmap "github.com/orcaman/concurrent-map"
 	"reflect"
 	"strings"
 )
 
-func InterfaceDirectModifier(in interface{}, mapWrapper map[string]model.Wrapper, separator string) interface{} {
+func InterfaceDirectModifier(in interface{}, mapWrapper cmap.ConcurrentMap, separator string) interface{} {
 
 	if in == nil {
 		return nil
@@ -35,11 +35,17 @@ func InterfaceDirectModifier(in interface{}, mapWrapper map[string]model.Wrapper
 		//* if value has prefix $configure
 		if strings.HasPrefix(fmt.Sprintf("%v", in), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", in), separator) //$configure1.json, $request, $body[user][name]
+			// Retrieve item from map.
+			var wrapper model.Wrapper
+			if tmp, ok := mapWrapper.Get(splittedValue[0]); ok {
+				wrapper = tmp.(model.Wrapper)
+			}
 			if splittedValue[1] == "$request" {
-				val = RetrieveValue(splittedValue[2], mapWrapper[splittedValue[0]].Request, 0)
+
+				val = RetrieveValue(splittedValue[2], wrapper.Request, 0)
 				in = val
 			} else {
-				val := RetrieveValue(splittedValue[2], mapWrapper[splittedValue[0]].Response, 0)
+				val := RetrieveValue(splittedValue[2], wrapper.Response, 0)
 
 				in = val
 			}
@@ -50,7 +56,7 @@ func InterfaceDirectModifier(in interface{}, mapWrapper map[string]model.Wrapper
 
 }
 
-func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper map[string]model.Wrapper) (*model.CLogicItem, error) {
+func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper cmap.ConcurrentMap) (*model.CLogicItem, error) {
 	for _, cLogicItem := range cLogics {
 		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
@@ -70,8 +76,8 @@ func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper map[string]model.Wrap
 		err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
 
 		if err != nil {
-			logrus.Error("error is ")
-			logrus.Error(err.Error())
+			log.Error("error is ")
+			log.Error(err.Error())
 			return nil, err
 		}
 

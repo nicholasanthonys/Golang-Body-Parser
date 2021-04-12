@@ -7,13 +7,13 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
+	cmap "github.com/orcaman/concurrent-map"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string]model.Wrapper, counter int) error {
+func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
 	if counter == 10 {
 		resMap := make(map[string]string)
 		resMap["message"] = "Circular Serial-Parallel"
@@ -49,19 +49,19 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string
 		var configure = model.Configure{}
 		requestFromUser := model.Wrapper{
 			Configure: model.Configure{},
-			Request: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
-			Response: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
+			Request:   cmap.New(),
+			Response:  cmap.New(),
 		}
+
+		requestFromUser.Request.Set("param", make(map[string]interface{}))
+		requestFromUser.Request.Set("header", make(map[string]interface{}))
+		requestFromUser.Request.Set("body", make(map[string]interface{}))
+		requestFromUser.Request.Set("query", make(map[string]interface{}))
+
+		requestFromUser.Response.Set("statusCode", "")
+		requestFromUser.Response.Set("header", make(map[string]interface{}))
+		requestFromUser.Response.Set("body", make(map[string]interface{}))
+
 		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
 
 		//* assign configure byte to configure
@@ -72,7 +72,8 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string
 		mapConfigures[configureItem.Alias] = configureItem
 
 		// store map wrapper
-		mapWrapper[configureItem.Alias] = requestFromUser
+		mapWrapper.Set(configureItem.Alias, requestFromUser)
+		//mapWrapper[configureItem.Alias] = requestFromUser
 
 	}
 
@@ -83,25 +84,31 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string
 
 	for {
 		// Processing request
-		requestFromUser := mapWrapper[alias]
+
+		// Retrieve item from map.
+		var wrapper model.Wrapper
+		if tmp, ok := mapWrapper.Get(alias); ok {
+			wrapper = tmp.(model.Wrapper)
+		}
 		// Loop only available for parallel request, therefore, set loopIndex to 0
-		_, _, err := ProcessingRequest(alias, c, &requestFromUser, mapWrapper, reqByte, 0)
+		_, _, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
 		if err != nil {
 			// next failure
-			resultWrapper := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
-			response.SetHeaderResponse(resultWrapper.Response.Header, c)
-			return util.ResponseWriter(resultWrapper, c)
-			//return util.ErrorWriter(c, requestFromUser.Configure, err, status)
+			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
+
+			return util.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 		}
 
-		mapWrapper[alias] = requestFromUser
+		mapWrapper.Set(alias, wrapper)
 		cLogicItemTrue, err := service.CLogicsChecker(mapConfigures[alias].CLogics, mapWrapper)
 
 		if err != nil || cLogicItemTrue == nil {
-			logrus.Error(err)
-			resultWrapper := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
-			response.SetHeaderResponse(resultWrapper.Response.Header, c)
-			return util.ResponseWriter(resultWrapper, c)
+			log.Error(err)
+			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
+
+			return util.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 		}
 
 		// update next_success
@@ -120,7 +127,13 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper map[string
 
 	}
 
-	resultWrapper := response.ParseResponse(mapWrapper, finalResponseConfigure)
-	response.SetHeaderResponse(resultWrapper.Response.Header, c)
-	return util.ResponseWriter(resultWrapper, c)
+	var wrapper model.Wrapper
+	if tmp, ok := mapWrapper.Get(alias); ok {
+		wrapper = tmp.(model.Wrapper)
+	}
+
+	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure)
+	tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
+
+	return util.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 }

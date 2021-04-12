@@ -6,7 +6,6 @@ import (
 	"github.com/clbanning/mxj/j2x"
 	"github.com/clbanning/mxj/x2j"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/url"
 	"strings"
@@ -40,6 +39,7 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 			return nil, err
 		}
 		body = bytes.NewBuffer(resultTransformByte)
+
 		return body, err
 	}
 
@@ -53,16 +53,16 @@ func TransformToFormUrl(myMap map[string]interface{}) url.Values {
 func ToXml(myMap map[string]interface{}) ([]byte, error) {
 	xmlByte, err := x2j.MapToXml(myMap)
 	if err != nil {
-		logrus.Warn("Error convert map to xml")
-		logrus.Warn(err.Error())
+		log.Error("Error convert map to xml")
+		log.Error(err.Error())
 		return nil, err
 	}
 
 	//*format xml
 	xmlBeautifulByte, err := mxj.BeautifyXml(xmlByte, " ", " ")
 	if err != nil {
-		logrus.Warn("Error beautify  xml")
-		logrus.Warn(err.Error())
+		log.Error("Error beautify  xml")
+		log.Error(err.Error())
 		return nil, err
 	}
 
@@ -73,8 +73,8 @@ func ToJson(myMap map[string]interface{}) ([]byte, error) {
 	jsonByte, err := j2x.MapToJson(myMap)
 
 	if err != nil {
-		logrus.Warn("Error convert map to JSON")
-		logrus.Warn(err.Error())
+		log.Error("Error convert map to JSON")
+		log.Error(err.Error())
 		return nil, err
 	}
 	return jsonByte, nil

@@ -10,27 +10,42 @@ import (
 	"strings"
 )
 
-func Receiver(configure model.Configure, res *http.Response, requestFromUserResponse *model.Fields) (*model.Fields, error) {
+var log = logrus.New()
+
+func init() {
+	//* init logger with timestamp
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	log.SetFormatter(customFormatter)
+	customFormatter.FullTimestamp = true
+	log.Level = logrus.ErrorLevel
+}
+
+func Receiver(configure model.Configure, res *http.Response) (map[string]interface{}, error) {
+	tmpStatusCode := ""
+	tmpBody := make(map[string]interface{})
+	tmpHeader := make(map[string]interface{})
 
 	//*read response body as byte
 	responseByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		logrus.Warn("Error read body")
-		logrus.Info(err.Error())
+		logrus.Error("Error read body")
+		logrus.Error(err.Error())
 		return nil, err
 	}
 
 	// status code
-	requestFromUserResponse.StatusCode = strconv.Itoa(res.StatusCode)
+	tmpStatusCode = strconv.Itoa(res.StatusCode)
 
 	//*get response content type
 	contentType := res.Header.Get("Content-Type")
+
 	//* get transform command
 	transform := configure.Response.Transform
 
 	//*set header value for response
 	for key, _ := range res.Header {
-		requestFromUserResponse.Header[key] = res.Header.Get(key)
+		tmpHeader[key] = res.Header.Get(key)
 	}
 
 	//switch case transform
@@ -40,26 +55,39 @@ func Receiver(configure model.Configure, res *http.Response, requestFromUserResp
 		if len(contentType) > 0 {
 			//* if content type contain application/json
 			if strings.Contains(contentType, "application/json") {
-
 				//* assign map resMap with response []byte based on response content type
-				requestFromUserResponse.Body, _ = service.FromJson(responseByte)
+				tmpBody, _ = service.FromJson(responseByte)
 
 			} else if strings.Contains(contentType, "application/xml") {
 
 				//* assign map resMap with response []byte based on response content type
-				requestFromUserResponse.Body, _ = service.FromXmL(responseByte)
+				tmpBody, _ = service.FromXmL(responseByte)
 
 			} else if strings.Contains(contentType, "text/plain") {
 				//* if content type contain text/plain
-				requestFromUserResponse.Body["message"] = string(responseByte)
+				tmpBody["response"] = string(responseByte)
 			} else {
 				//* panic  if content type unknown
 			}
-			return requestFromUserResponse, nil
+			return map[string]interface{}{
+				"statusCode": tmpStatusCode,
+				"header":     tmpHeader,
+				"body":       tmpBody,
+			}, nil
 		}
-		return nil, nil
+		tmpBody, _ = service.FromJson(responseByte)
+		return map[string]interface{}{
+			"statusCode": tmpStatusCode,
+			"header":     tmpHeader,
+			"body":       tmpBody,
+		}, nil
 	default:
-		return nil, nil
+		tmpBody, _ = service.FromJson(responseByte)
+		return map[string]interface{}{
+			"statusCode": tmpStatusCode,
+			"header":     tmpHeader,
+			"body":       tmpBody,
+		}, nil
 	}
 
 }

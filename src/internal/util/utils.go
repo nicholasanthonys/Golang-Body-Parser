@@ -77,17 +77,18 @@ func ReadJsonFile(path string) []byte {
 }
 
 //*ResponseWriter is a function that will return response
-func ResponseWriter(wrapper model.Wrapper, c echo.Context) error {
-	statusCode, _ := strconv.Atoi(wrapper.Response.StatusCode)
-	switch strings.ToLower(wrapper.Configure.Response.Transform) {
+func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo.Context) error {
+	var statusCode int
+	statusCode, _ = strconv.Atoi(mapResponse["statusCode"].(string))
+	responseBody := mapResponse["body"].(map[string]interface{})
+	switch strings.ToLower(transform) {
 	case strings.ToLower("ToJson"):
-
-		return c.JSON(statusCode, wrapper.Response.Body)
+		return c.JSON(statusCode, responseBody)
 	case strings.ToLower("ToXml"):
-		resByte, _ := x2j.MapToXml(wrapper.Response.Body)
+		resByte, _ := x2j.MapToXml(responseBody)
 		return c.XMLBlob(statusCode, resByte)
 	default:
-		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(wrapper.Configure.Response.Transform))
+		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
 		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
 	}
 }
@@ -208,8 +209,7 @@ func DoLogging(logValue interface{}, event string, identifier string, isRequest 
 	} else {
 		sentence += "after modify for " + identifier + " : "
 	}
-	logrus.Info(sentence)
-	logrus.Info(logValue)
+
 }
 
 func IsFileNameJson(filename string) bool {

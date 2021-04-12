@@ -2,15 +2,26 @@ package request
 
 import (
 	"errors"
-	"github.com/jinzhu/copier"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )
+
+var log = logrus.New()
+
+func init() {
+	//* init logger with timestamp
+	customFormatter := new(logrus.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	log.SetFormatter(customFormatter)
+	customFormatter.FullTimestamp = true
+	log.Level = logrus.ErrorLevel
+}
 
 func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[string]interface{}, int, error) {
 	var err error
@@ -46,7 +57,7 @@ func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 }
 
 // ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func ProcessingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper, mapWrapper map[string]model.Wrapper, reqByte []byte, loopIndex int) (*model.Wrapper, int, error) {
+func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, mapWrapper cmap.ConcurrentMap, reqByte []byte, loopIndex int) (*model.Wrapper, int, error) {
 	//*check the content type user request
 	var contentType string
 	var err error
@@ -60,28 +71,37 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 
 	//*convert request to map string interface based on the content type
-	wrapper.Request.Body, status, err = ParseRequestBody(c, contentType, reqByte)
+	var tmpRequestBody map[string]interface{}
+	tmpRequestBody, status, err = ParseRequestBody(c, contentType, reqByte)
 
 	if err != nil {
 		return nil, status, err
 	}
 
 	//*set header value
+	tmpRequestHeader := make(map[string]interface{})
 	for key := range c.Request().Header {
 
-		wrapper.Request.Header[key] = c.Request().Header.Get(key)
+		tmpRequestHeader[key] = c.Request().Header.Get(key)
 	}
 
 	//*set query value
+	tmpRequestQuery := make(map[string]interface{})
 	for key := range c.QueryParams() {
-		wrapper.Request.Query[key] = c.QueryParam(key)
+		tmpRequestQuery[key] = c.QueryParam(key)
 	}
 
 	//*set param value
+	tmpRequestParam := make(map[string]interface{})
 	for _, value := range c.ParamNames() {
-
-		wrapper.Request.Param[value] = c.Param(value)
+		tmpRequestParam[value] = c.Param(value)
 	}
+
+	// write
+	wrapper.Request.Set("param", tmpRequestParam)
+	wrapper.Request.Set("header", tmpRequestHeader)
+	wrapper.Request.Set("body", tmpRequestBody)
+	wrapper.Request.Set("query", tmpRequestQuery)
 
 	//* In case user want to log before modify/changing request
 	if len(wrapper.Configure.Request.LogBeforeModify) > 0 {
@@ -90,26 +110,28 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 
 	//*assign first before do any add,modification,delete in case value want reference each other
-	mapWrapper[aliasName] = *wrapper
-
-	// copy wrapper
-	tempWrapper := model.Wrapper{}
-	copier.Copy(&tempWrapper, &wrapper)
+	//mapWrapper[aliasName] = *wrapper
+	mapWrapper.Set(aliasName, wrapper)
 
 	//* Do the Map Modification
-	tempWrapper.Request = service.DoAddModifyDelete(tempWrapper.Configure.Request, tempWrapper.Request, mapWrapper, loopIndex)
+	tmpMapRequest := service.DoAddModifyDelete(wrapper.Configure.Request, wrapper.Request, mapWrapper, loopIndex)
+
+	//write
+	wrapper.Request.Set("header", tmpMapRequest["header"])
+	wrapper.Request.Set("body", tmpMapRequest["body"])
+	wrapper.Request.Set("query", tmpMapRequest["query"])
 
 	//*get the destinationPath value before sending request
-	tempWrapper.Configure.Request.DestinationPath = service.ModifyPath(tempWrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
+	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
-	if len(tempWrapper.Configure.Request.LogAfterModify) > 0 {
-		logValue = service.RetrieveValue(tempWrapper.Configure.Request.LogAfterModify, tempWrapper.Request, loopIndex)
+	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
+		logValue = service.RetrieveValue(wrapper.Configure.Request.LogAfterModify, wrapper.Request, loopIndex)
 		util.DoLogging(logValue, "after", aliasName, true)
 	}
 
 	//*send to destination url
-	response, err := service.Send(wrapper)
+	response, err := service.Send(&wrapper)
 
 	if err != nil {
 		logrus.Error("Error send : ", err.Error())
@@ -117,7 +139,12 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
-	_, err = responseEntity.Receiver(tempWrapper.Configure, response, &wrapper.Response)
+	var tmpResponse map[string]interface{}
+	tmpResponse, err = responseEntity.Receiver(wrapper.Configure, response)
+
+	wrapper.Response.Set("statusCode", tmpResponse["statusCode"])
+	wrapper.Response.Set("header", tmpResponse["header"])
+	wrapper.Response.Set("body", tmpResponse["body"])
 
 	//*close http
 	defer response.Body.Close()
@@ -126,18 +153,20 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper *model.Wrapper,
 	}
 
 	//* In case user want to log before modify/changing request
-	if len(tempWrapper.Configure.Response.LogBeforeModify) > 0 {
-		logValue = service.RetrieveValue(tempWrapper.Configure.Response.LogBeforeModify, tempWrapper.Response, loopIndex)
-		util.DoLogging(tempWrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
+	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
+		logValue = service.RetrieveValue(wrapper.Configure.Response.LogBeforeModify, wrapper.Response, loopIndex)
+		util.DoLogging(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
-	tempWrapper.Response = service.DoAddModifyDelete(tempWrapper.Configure.Response, tempWrapper.Response, mapWrapper, loopIndex)
+	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, wrapper.Response, mapWrapper, loopIndex)
+	wrapper.Response.Set("header", tmpMapResponseModified["header"])
+	wrapper.Response.Set("body", tmpMapResponseModified["body"])
 
 	//* In case user want to log after modify/changing request
-	if len(tempWrapper.Configure.Response.LogAfterModify) > 0 {
-		logValue = service.RetrieveValue(tempWrapper.Configure.Response.LogAfterModify, tempWrapper.Response, loopIndex)
+	if len(wrapper.Configure.Response.LogAfterModify) > 0 {
+		logValue = service.RetrieveValue(wrapper.Configure.Response.LogAfterModify, wrapper.Response, loopIndex)
 		util.DoLogging(logValue, "after", aliasName, false)
 	}
-	return wrapper, http.StatusOK, nil
+	return &wrapper, http.StatusOK, nil
 }

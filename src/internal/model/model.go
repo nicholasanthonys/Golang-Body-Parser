@@ -1,5 +1,9 @@
 package model
 
+import (
+	cmap "github.com/orcaman/concurrent-map"
+)
+
 type (
 	CLogicItem struct {
 		Rule        interface{} `json:"rule"`
@@ -57,8 +61,8 @@ type (
 
 	Wrapper struct {
 		Configure Configure
-		Request   Fields
-		Response  Fields
+		Request   cmap.ConcurrentMap
+		Response  cmap.ConcurrentMap
 	}
 
 	Fields struct {
