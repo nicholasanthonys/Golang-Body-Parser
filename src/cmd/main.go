@@ -15,8 +15,7 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	log.SetFormatter(customFormatter)
 	customFormatter.FullTimestamp = true
-	log.Level = logrus.DebugLevel
-
+	log.Level = logrus.ErrorLevel
 }
 
 func main() {
