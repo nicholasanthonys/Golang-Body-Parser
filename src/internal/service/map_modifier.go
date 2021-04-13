@@ -299,17 +299,16 @@ func ModifyPath(path string, separator string, takeFrom cmap.ConcurrentMap, loop
 			//* if value has prefix $configure
 			if strings.HasPrefix(fmt.Sprintf("%v", removedBracket), "$configure") {
 				splittedValue := strings.Split(fmt.Sprintf("%v", removedBracket), separator) //$configure1.json, $request, $body[user][name]
-
 				//remove dollar sign
-				splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 				var wrapper model.Wrapper
 				if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
 					wrapper = tmp.(model.Wrapper)
+				} else {
+					return ""
 				}
 				if splittedValue[1] == "$request" {
 					//* get the request from fields
 					realValue = RetrieveValue(splittedValue[2], wrapper.Request, loopIndex)
-
 				} else {
 					//* get the response from fields
 					realValue = RetrieveValue(splittedValue[2], wrapper.Response, loopIndex)
