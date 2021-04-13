@@ -70,8 +70,12 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[str
 
 	//*In case user want to log final response
 	if len(resultWrapper.Configure.Response.LogAfterModify) > 0 {
-		logValue := service.RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, 0)
-		util.DoLogging(logValue, "after", "final response", false)
+		logValue := make(map[string]interface{}) // v
+		for key, val := range resultWrapper.Configure.Response.LogAfterModify {
+			logValue[key] = service.RetrieveValue(val, resultWrapper.Response, 0)
+		}
+		//logValue := service.RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, 0)
+		util.DoLoggingJson(logValue, "after", "final response", false)
 	}
 
 	var statusCode int

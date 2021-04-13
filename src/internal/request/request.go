@@ -62,7 +62,6 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	var contentType string
 	var err error
 	var status int
-	var logValue interface{} // value to be logged
 
 	if c.Request().Header["Content-Type"] != nil {
 		contentType = c.Request().Header["Content-Type"][0]
@@ -105,8 +104,12 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//* In case user want to log before modify/changing request
 	if len(wrapper.Configure.Request.LogBeforeModify) > 0 {
-		logValue = service.RetrieveValue(wrapper.Configure.Request.LogBeforeModify, wrapper.Request, loopIndex)
-		util.DoLogging(logValue, "before", aliasName, true)
+		logValue := make(map[string]interface{}) // value to be logged
+		for key, val := range wrapper.Configure.Request.LogBeforeModify {
+			logValue[key] = service.RetrieveValue(val, wrapper.Request, loopIndex)
+		}
+		//logValue = service.RetrieveValue(wrapper.Configure.Request.LogBeforeModify, wrapper.Request, loopIndex)
+		util.DoLoggingJson(logValue, "before", aliasName, true)
 	}
 
 	//*assign first before do any add,modification,delete in case value want reference each other
@@ -128,8 +131,11 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//* In case user want to log after modify/changing request
 	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
-		logValue = service.RetrieveValue(wrapper.Configure.Request.LogAfterModify, wrapper.Request, loopIndex)
-		util.DoLogging(logValue, "after", aliasName, true)
+		logValue := make(map[string]interface{}) // value to be logged
+		for key, val := range wrapper.Configure.Request.LogAfterModify {
+			logValue[key] = service.RetrieveValue(val, wrapper.Request, loopIndex)
+		}
+		util.DoLoggingJson(logValue, "after", aliasName, true)
 	}
 
 	//*send to destination url
@@ -156,8 +162,11 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//* In case user want to log before modify/changing request
 	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
-		logValue = service.RetrieveValue(wrapper.Configure.Response.LogBeforeModify, wrapper.Response, loopIndex)
-		util.DoLogging(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
+		logValue := make(map[string]interface{}) // value to be logged
+		for key, val := range wrapper.Configure.Response.LogBeforeModify {
+			logValue[key] = service.RetrieveValue(val, wrapper.Response, loopIndex)
+		}
+		util.DoLoggingJson(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
@@ -167,8 +176,11 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//* In case user want to log after modify/changing request
 	if len(wrapper.Configure.Response.LogAfterModify) > 0 {
-		logValue = service.RetrieveValue(wrapper.Configure.Response.LogAfterModify, wrapper.Response, loopIndex)
-		util.DoLogging(logValue, "after", aliasName, false)
+		logValue := make(map[string]interface{}) // value to be logged
+		for key, val := range wrapper.Configure.Response.LogAfterModify {
+			logValue[key] = service.RetrieveValue(val, wrapper.Response, loopIndex)
+		}
+		util.DoLoggingJson(logValue, "after", aliasName, false)
 	}
 	return &wrapper, http.StatusOK, nil
 }
