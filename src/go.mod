@@ -5,13 +5,14 @@ go 1.15
 require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/diegoholiveira/jsonlogic v2.3.1+incompatible
+	github.com/diegoholiveira/jsonlogic v2.3.1+incompatible // indirect
 	github.com/diegoholiveira/jsonlogic/v3 v3.0.1
 	github.com/jinzhu/copier v0.2.8
 	github.com/joho/godotenv v1.3.0
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/gommon v0.3.0
 	github.com/mattn/go-colorable v0.1.8 // indirect
+	github.com/orcaman/concurrent-map v0.0.0-20210106121528-16402b402231
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/valyala/fasttemplate v1.2.1 // indirect
