@@ -6,6 +6,8 @@
       "next_failure" : {
         "status_code" : 500,
         "transform" : "ToJson",
+        "log_before_modify" : {},
+        "log_after_modify" : {},
         "adds" : {
           "body" : {
             "error_message" : "Failure happen at request $configure_first_configure",
@@ -30,6 +32,8 @@
       "next_failure" : {
         "status_code" : 500,
         "transform" : "ToJson",
+        "log_before_modify" : {},
+        "log_after_modify" : {},
         "adds" : {
           "body" : {
             "error_message" : "Failure happen at $configure_second_configure",
@@ -50,7 +54,8 @@
           "response" : {
             "status_code" : 200,
             "transform": "ToJson",
-            "log_after_modify" : "",
+            "log_before_modify" : {},
+            "log_after_modify" : {},
             "adds": {
               "header": {
                 "key" : "123",

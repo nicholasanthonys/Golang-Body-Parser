@@ -1,6 +1,6 @@
 {
   "request": {
-    "loop" : "1",
+    "loop" : "4",
     "destination_url": "http://mockbin.org/bin/2b22ba0a-3f88-4602-a53d-35af3fb49621",
     "destination_path": "",
     "method": "POST",
