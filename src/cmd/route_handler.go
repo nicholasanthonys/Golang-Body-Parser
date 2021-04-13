@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -118,13 +119,54 @@ func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {
 
 // parallelRouteHandler execute every configure in parallel-way.
 func parallelRouteHandler(c echo.Context) error {
+	baseProject, err := readBaseFile(fullProjectDirectory)
+	if err != nil {
+		response := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(500, response)
+	}
 	mapWrapper := cmap.New()
-	return request.DoParallel(c, fullProjectDirectory, mapWrapper, 0)
+	return request.DoParallel(c, baseProject, fullProjectDirectory, mapWrapper, 0)
 }
 
 // serialRouteHandler process configure in serial-way.
 func serialRouteHandler(c echo.Context) error {
+	baseProject, err := readBaseFile(fullProjectDirectory)
+	if err != nil {
+		response := map[string]interface{}{
+			"message": err.Error(),
+		}
+		return c.JSON(500, response)
+	}
 	mapWrapper := cmap.New()
-	return request.DoSerial(c, fullProjectDirectory, mapWrapper, 0)
+	return request.DoSerial(c, baseProject, fullProjectDirectory, mapWrapper, 0)
 
+}
+
+func readBaseFile(fullProjectDirectory string) (model.Base, error) {
+	var baseProject model.Base
+
+	// Read base.json
+	baseByte := util.ReadJsonFile(fullProjectDirectory + "/base.json")
+	err := json.Unmarshal(baseByte, &baseProject)
+	if err != nil {
+
+		log.Error(err.Error())
+		return baseProject, err
+	}
+
+	// load env max circular
+	envMaxCircularString := os.Getenv("MAX_CIRCULAR")
+	envMaxCircular, err := strconv.Atoi(envMaxCircularString)
+	if err != nil {
+		return baseProject, err
+	}
+
+	if baseProject.MaxCircular > envMaxCircular {
+		log.Warn("project.MaxCircular > envMaxCircular")
+		log.Warn("set baseProject.MaxCircular = ", envMaxCircular)
+		baseProject.MaxCircular = envMaxCircular
+	}
+	return baseProject, err
 }
