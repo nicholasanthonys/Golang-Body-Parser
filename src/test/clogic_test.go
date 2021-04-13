@@ -7,6 +7,7 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -31,7 +32,7 @@ func TestReadWithoutConfigure(t *testing.T) {
 	if err != nil {
 		logrus.Error(err.Error())
 	}
-	cLogicModified := service.InterfaceDirectModifier(project.Configures[0].CLogics[0], map[string]model.Wrapper{}, "--").(model.CLogicItem)
+	cLogicModified := service.InterfaceDirectModifier(project.Configures[0].CLogics[0], cmap.New(), "--").(model.CLogicItem)
 
 	expected := project.Configures[0].CLogics[0]
 	assert.Equal(t, expected, cLogicModified)
@@ -67,31 +68,36 @@ func TestReadWithConfigure(t *testing.T) {
 	}
 
 	//prepare map model wrapper
-	mapWrapper := make(map[string]model.Wrapper)
+	mapWrapper := cmap.New()
 	for _, configureItem := range project.Configures {
 		var configure model.Configure
 		requestFromUser := model.Wrapper{
 			Configure: configure,
-			Request: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
-			Response: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
+			Request:   cmap.New(),
+			Response:  cmap.New(),
 		}
+
+		requestFromUser.Request.Set("param", make(map[string]interface{}))
+		requestFromUser.Request.Set("header", make(map[string]interface{}))
+		requestFromUser.Request.Set("body", make(map[string]interface{}))
+		requestFromUser.Request.Set("query", make(map[string]interface{}))
+
+		requestFromUser.Response.Set("statusCode", make(map[string]interface{}))
+		requestFromUser.Response.Set("header", make(map[string]interface{}))
+		requestFromUser.Response.Set("body", make(map[string]interface{}))
+
 		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
 		//* assign configure byte to configure
 		_ = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
-		mapWrapper[configureItem.Alias] = requestFromUser
+		mapWrapper.Set(configureItem.Alias, requestFromUser)
+		// mapWrapper[configureItem.Alias] = requestFromUser
 
-		requestFromUser.Request = service.DoAddModifyDelete(requestFromUser.Configure.Request, requestFromUser.Request, mapWrapper, 0)
+		tmpRequest := service.DoAddModifyDelete(requestFromUser.Configure.Request, requestFromUser.Request, mapWrapper, 0)
+
+		requestFromUser.Request.Set("header", tmpRequest["header"])
+		requestFromUser.Request.Set("body", tmpRequest["body"])
+		requestFromUser.Request.Set("query", tmpRequest["query"])
 	}
 
 	var tempMap map[string]interface{}
@@ -102,9 +108,6 @@ func TestReadWithConfigure(t *testing.T) {
 	if err != nil {
 		assert.Error(t, err, "Error unmarshalling CLogicBefore to tempMap ")
 	}
-
-	logrus.Info("temp map is ")
-	logrus.Info(tempMap)
 
 	clogicModified := model.CLogicItem{
 		Rule:        service.InterfaceDirectModifier(tempMap["rule"], mapWrapper, "--"),
