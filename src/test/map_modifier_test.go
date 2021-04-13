@@ -6,12 +6,13 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
+	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-var mapWrapper map[string]model.Wrapper
+var mapWrapper cmap.ConcurrentMap
 var requestFromUser model.Wrapper
 var routes model.Routes
 
@@ -24,7 +25,7 @@ func init() {
 	//* let's use email otp project for testing
 	fullProjectDir := configureDir + "/" + "emailotp"
 
-	mapWrapper = make(map[string]model.Wrapper)
+	mapWrapper = cmap.New()
 
 	var project model.Serial
 	projectByte := util.ReadJsonFile(fullProjectDir + "/" + "serial.json")
@@ -39,38 +40,46 @@ func init() {
 		var configure model.Configure
 		requestFromUser = model.Wrapper{
 			Configure: configure,
-			Request: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
-			Response: model.Fields{
-				Param:  make(map[string]interface{}),
-				Header: make(map[string]interface{}),
-				Body:   make(map[string]interface{}),
-				Query:  make(map[string]interface{}),
-			},
+			Request:   cmap.New(),
+			Response:  cmap.New(),
 		}
+		requestFromUser.Request.Set("param", make(map[string]interface{}))
+		requestFromUser.Request.Set("header", make(map[string]interface{}))
+		requestFromUser.Request.Set("body", make(map[string]interface{}))
+		requestFromUser.Request.Set("query", make(map[string]interface{}))
+
+		requestFromUser.Response.Set("statusCode", make(map[string]interface{}))
+		requestFromUser.Response.Set("header", make(map[string]interface{}))
+		requestFromUser.Response.Set("body", make(map[string]interface{}))
+
 		configByte := util.ReadJsonFile(fullProjectDir + "/" + configureItem.FileName)
 		//* assign configure byte to configure
 		err = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
 
 		//*save to map
-		mapWrapper[configureItem.Alias] = requestFromUser
+		//mapWrapper[configureItem.Alias] = requestFromUser
+		mapWrapper.Set(configureItem.Alias, requestFromUser)
 	}
 }
 
 //* add to body
 func TestMapModifierBody(t *testing.T) {
 	//Add Body
-	wrapperConfigure1 := mapWrapper["$configure_second_configure"]
+	var wrapperConfigure1 model.Wrapper
+	if tmp, ok := mapWrapper.Get("$configure_second_configure"); ok {
+		wrapperConfigure1 = tmp.(model.Wrapper)
+	}
+	//wrapperConfigure1 := mapWrapper["$configure_second_configure"]
 
 	//take configure index
-	requestFromUser.Request.Body = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", requestFromUser.Request.Body, mapWrapper, 0)
+	tmpBody := make(map[string]interface{})
+	if tmp, ok := requestFromUser.Request.Get("body"); ok {
+		tmpBody = tmp.(map[string]interface{})
+	}
+	tmpBody = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", tmpBody, mapWrapper, 0)
+	stream, err := service.Transform(wrapperConfigure1.Configure, tmpBody)
 
-	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -92,8 +101,8 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//*Modify Body
-	requestFromUser.Request.Body = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", requestFromUser.Request.Body, mapWrapper, 0)
-	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
+	tmpBody = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", tmpBody, mapWrapper, 0)
+	stream, err = service.Transform(wrapperConfigure1.Configure, tmpBody)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -113,8 +122,8 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//* Deletion Body
-	requestFromUser.Request.Body = service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, requestFromUser.Request.Body)
-	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Body)
+	tmpBody = service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, tmpBody)
+	stream, err = service.Transform(wrapperConfigure1.Configure, tmpBody)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -137,10 +146,18 @@ func TestMapModifierBody(t *testing.T) {
 //* Test Add to Header
 func TestMapModifierHeader(t *testing.T) {
 	//* Add Header
-	wrapperConfigure1 := mapWrapper["$configure_second_configure"]
-	requestFromUser.Request.Header = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", requestFromUser.Request.Header, mapWrapper, 0)
+	var wrapperConfigure1 model.Wrapper
+	if tmp, ok := mapWrapper.Get("$configure_second_configure"); ok {
+		wrapperConfigure1 = tmp.(model.Wrapper)
+	}
+	//wrapperConfigure1 := mapWrapper["$configure_second_configure"]
+	tmpHeader := make(map[string]interface{})
+	if tmp, ok := requestFromUser.Request.Get("header"); ok {
+		tmpHeader = tmp.(map[string]interface{})
+	}
+	tmpHeader = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", tmpHeader, mapWrapper, 0)
 
-	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Header)
+	stream, err := service.Transform(wrapperConfigure1.Configure, tmpHeader)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
 	}
@@ -161,9 +178,9 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 
 	//*Modify Header
-	requestFromUser.Request.Header = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", requestFromUser.Request.Header, mapWrapper, 0)
+	tmpHeader = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", tmpHeader, mapWrapper, 0)
 
-	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Header)
+	stream, err = service.Transform(wrapperConfigure1.Configure, tmpHeader)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
 	}
@@ -184,8 +201,8 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 
 	//*Deletion Header
-	requestFromUser.Request.Header = service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Header, requestFromUser.Request.Header)
-	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Header)
+	tmpHeader = service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Header, tmpHeader)
+	stream, err = service.Transform(wrapperConfigure1.Configure, tmpHeader)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
 	}
@@ -211,10 +228,18 @@ func TestMapModifierHeader(t *testing.T) {
 
 func TestMapModifierQuery(t *testing.T) {
 	//* Add Query
-	wrapperConfigure1 := mapWrapper["$configure_second_configure"]
-	requestFromUser.Request.Query = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", requestFromUser.Request.Query, mapWrapper, 0)
+	//wrapperConfigure1 := mapWrapper["$configure_second_configure"]
+	var wrapperConfigure1 model.Wrapper
+	if tmp, ok := mapWrapper.Get("$configure_second_configure"); ok {
+		wrapperConfigure1 = tmp.(model.Wrapper)
+	}
+	tmpQuery := make(map[string]interface{})
+	if tmp, ok := requestFromUser.Request.Get("query"); ok {
+		tmpQuery = tmp.(map[string]interface{})
+	}
+	tmpQuery = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", tmpQuery, mapWrapper, 0)
 
-	stream, err := service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Query)
+	stream, err := service.Transform(wrapperConfigure1.Configure, tmpQuery)
 	if err != nil {
 		assert.Error(t, err, "error performing transform query")
 	}
@@ -235,9 +260,9 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 
 	//*Modify query
-	requestFromUser.Request.Query = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", requestFromUser.Request.Query, mapWrapper, 0)
+	tmpQuery = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", tmpQuery, mapWrapper, 0)
 
-	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Query)
+	stream, err = service.Transform(wrapperConfigure1.Configure, tmpQuery)
 	if err != nil {
 		assert.Error(t, err, "error performing transform query")
 	}
@@ -258,8 +283,8 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 
 	//*Deletion Query
-	service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Query, requestFromUser.Request.Query)
-	stream, err = service.Transform(wrapperConfigure1.Configure, requestFromUser.Request.Query)
+	service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Query, tmpQuery)
+	stream, err = service.Transform(wrapperConfigure1.Configure, tmpQuery)
 	if err != nil {
 		assert.Error(t, err, "error performing transform query")
 	}
