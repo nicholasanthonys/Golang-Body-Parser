@@ -45,18 +45,18 @@ type (
 	}
 
 	Command struct {
-		StatusCode      int          `json:"status_code"`
-		Loop            string       `json:"loop"`
-		DestinationPath string       `json:"destination_path"`
-		DestinationUrl  string       `json:"destination_url"`
-		Method          string       `json:"method"`
-		Transform       string       `json:"transform"`
-		LogBeforeModify string       `json:"log_before_modify"`
-		LogAfterModify  string       `json:"log_after_modify"`
-		Adds            Fields       `json:"adds"`
-		Deletes         DeleteFields `json:"deletes"`
-		Modifies        Fields       `json:"modifies"`
-		CLogics         []CLogicItem `json:"c_logics"`
+		StatusCode      int                    `json:"status_code"`
+		Loop            string                 `json:"loop"`
+		DestinationPath string                 `json:"destination_path"`
+		DestinationUrl  string                 `json:"destination_url"`
+		Method          string                 `json:"method"`
+		Transform       string                 `json:"transform"`
+		LogBeforeModify map[string]interface{} `json:"log_before_modify"`
+		LogAfterModify  map[string]interface{} `json:"log_after_modify"`
+		Adds            Fields                 `json:"adds"`
+		Deletes         DeleteFields           `json:"deletes"`
+		Modifies        Fields                 `json:"modifies"`
+		CLogics         []CLogicItem           `json:"c_logics"`
 	}
 
 	Wrapper struct {
