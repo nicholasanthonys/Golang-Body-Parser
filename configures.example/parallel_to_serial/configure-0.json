@@ -1,11 +1,13 @@
 {
   "request": {
-    "loop" : "1",
+    "loop" : "2",
     "destination_url": "http://mockbin.org/bin/0147b6a5-9669-4eba-a52a-aa3578d1a34b",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
-    "log_before_modify": "$body",
+    "log_before_modify": {
+      "phone_number" : "$response--$body[phone_number]"
+    },
     "log_after_modify": "",
     "adds": {
       "header": {
@@ -48,7 +50,10 @@
   },
   "response": {
     "transform": "ToJson",
-    "log_before_modify": "",
+    "log_before_modify": {
+
+      "phone_numbers" : "$response--$body[phone_numbers]"
+    },
     "log_after_modify": "",
     "adds": {
       "header": {

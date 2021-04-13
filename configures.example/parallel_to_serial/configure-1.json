@@ -1,11 +1,11 @@
 {
   "request": {
-    "loop": "1",
-    "destination_url": "http://mockbin.org/bin/2eb28d6e-9c49-4b38-a738-e34341ba46f6",
+    "loop": "2",
+    "destination_url": "http://mockbin.org/bin/e6879258-5681-4706-b008-09b78e091ad9",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
-    "log_before_modify": "$body",
+    "log_before_modify": "",
     "log_after_modify": "",
     "adds": {
       "header": {
@@ -68,12 +68,13 @@
   "response": {
     "transform": "ToJson",
     "log_before_modify": "",
-    "log_after_modify": "",
+    "log_after_modify": "$body",
     "adds": {
       "header": {
       },
       "body": {
-        "test": "test key From add response configure-2.json"
+        "test": "test key From add response configure-2.json",
+        "status_code" : "$configure_first_configure--$response--$status_code"
       },
       "query": {
       }

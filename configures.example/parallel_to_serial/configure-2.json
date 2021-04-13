@@ -1,6 +1,6 @@
 {
   "request": {
-    "destination_url": "http://mockbin.org/bin/c860647b-d2a9-4663-b5e8-e8f05680738a",
+    "destination_url": "http://mockbin.org/bin/6e4c1c8d-2be4-47b5-9567-b801aff878d2",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
