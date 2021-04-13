@@ -15,7 +15,8 @@
     "adds" : {
       "body" : {
         "error_message" : "all logics is fail",
-        "response_second_configure" : "$configure_zero_configure--$response--$status_code"
+        "response_second_configure" : "$configure_second_configure--$response--$status_code",
+        "error" : "$configure_second_configure-$response--$body"
       }
     }
   },
@@ -47,7 +48,7 @@
         ]
       },
       "data": null,
-      "next_success": null,
+      "next_success":null,
       "response": {
         "status_code" : 200,
         "transform": "ToJson",
@@ -74,7 +75,6 @@
           ]
         }
       }
-
     }
   ]
 }
