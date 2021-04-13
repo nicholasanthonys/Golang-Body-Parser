@@ -20,7 +20,7 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	log.SetFormatter(customFormatter)
 	customFormatter.FullTimestamp = true
-	log.Level = logrus.ErrorLevel
+	log.Level = util.GetLogLevelFromEnv()
 }
 
 // AddRecursive is a function that do the add key-value based on the listTraverse
