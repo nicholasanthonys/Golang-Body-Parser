@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
-	if counter == 10 {
+func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
+	if counter == baseProject.MaxCircular {
 		resMap := make(map[string]string)
 		resMap["message"] = "Circular Serial-Parallel"
 		return c.JSON(http.StatusInternalServerError, resMap)
@@ -73,7 +73,6 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper cmap.Concu
 
 		// store map wrapper
 		mapWrapper.Set(configureItem.Alias, requestFromUser)
-		//mapWrapper[configureItem.Alias] = requestFromUser
 
 	}
 
@@ -116,7 +115,7 @@ func DoSerial(c echo.Context, fullProjectDirectory string, mapWrapper cmap.Concu
 		// update alias
 		if len(strings.Trim(nextSuccess, " ")) > 0 {
 			if nextSuccess == "parallel.json" {
-				return DoParallel(c, fullProjectDirectory, mapWrapper, counter+1)
+				return DoParallel(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
 			}
 			alias = nextSuccess
 		}
