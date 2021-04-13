@@ -226,3 +226,30 @@ func IsFileNameJson(filename string) bool {
 	extension := string(r[len(filename)-5:])
 	return extension == ".json"
 }
+
+func GetLogLevelFromEnv() logrus.Level {
+	levelString := os.Getenv("LOG_LEVEL")
+	if strings.ToLower(levelString) == "panic" {
+		return logrus.PanicLevel
+	}
+	if strings.ToLower(levelString) == "fatal" {
+		return logrus.FatalLevel
+	}
+	if strings.ToLower(levelString) == "error" {
+		return logrus.ErrorLevel
+	}
+	if strings.ToLower(levelString) == "warn" {
+		return logrus.WarnLevel
+	}
+	if strings.ToLower(levelString) == "debug" {
+		return logrus.DebugLevel
+	}
+
+	if strings.ToLower(levelString) == "trace" {
+		return logrus.TraceLevel
+	}
+
+	// default
+	return logrus.InfoLevel
+
+}

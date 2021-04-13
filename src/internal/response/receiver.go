@@ -3,6 +3,7 @@ package response
 import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -18,7 +19,7 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	log.SetFormatter(customFormatter)
 	customFormatter.FullTimestamp = true
-	log.Level = logrus.ErrorLevel
+	log.Level = util.GetLogLevelFromEnv()
 }
 
 func Receiver(configure model.Configure, res *http.Response) (map[string]interface{}, error) {

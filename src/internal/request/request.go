@@ -20,7 +20,7 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	log.SetFormatter(customFormatter)
 	customFormatter.FullTimestamp = true
-	log.Level = logrus.ErrorLevel
+	log.Level = util.GetLogLevelFromEnv()
 }
 
 func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[string]interface{}, int, error) {

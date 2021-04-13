@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
-
 	"github.com/joho/godotenv"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
+	"os"
 )
 
 var log = logrus.New()
@@ -15,7 +15,7 @@ func init() {
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	log.SetFormatter(customFormatter)
 	customFormatter.FullTimestamp = true
-	log.Level = logrus.ErrorLevel
+	log.Level = util.GetLogLevelFromEnv()
 }
 
 func main() {
