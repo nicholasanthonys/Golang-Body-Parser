@@ -19,6 +19,10 @@ type (
 		Method           string `json:"method"`
 	}
 
+	Base struct {
+		MaxCircular int `json:"project_max_circular"`
+	}
+
 	Routes []Route
 
 	Configure struct {
@@ -66,11 +70,10 @@ type (
 	}
 
 	Fields struct {
-		StatusCode string
-		Param      map[string]interface{}
-		Header     map[string]interface{} `json:"header"`
-		Body       map[string]interface{} `json:"body"`
-		Query      map[string]interface{} `json:"query"`
+		Param  map[string]interface{}
+		Header map[string]interface{} `json:"header"`
+		Body   map[string]interface{} `json:"body"`
+		Query  map[string]interface{} `json:"query"`
 	}
 
 	DeleteFields struct {
