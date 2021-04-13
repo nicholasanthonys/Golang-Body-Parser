@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	cmap "github.com/orcaman/concurrent-map"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -31,7 +32,7 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	//*get url and append it with destination path
 	url := requestFromUser.Configure.Request.DestinationUrl + requestFromUser.Configure.Request.DestinationPath
 
-	log.Info("sending request to url :  ", url)
+	logrus.Info("sending request to url :  ", url)
 
 	//*declare request
 	var req *http.Request
