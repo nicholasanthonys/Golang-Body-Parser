@@ -195,8 +195,8 @@ func JSONBytesEqual(a, b []byte) (bool, error) {
 	return reflect.DeepEqual(j2, j), nil
 }
 
-// DoLogging will print logValue in a formatted log.
-func DoLogging(logValue interface{}, event string, identifier string, isRequest bool) {
+// DoLoggingJson will print logValue in a formatted log.
+func DoLoggingJson(logValue map[string]interface{}, event string, identifier string, isRequest bool) {
 	sentence := "logging "
 	if isRequest {
 		sentence += "response "
@@ -210,6 +210,13 @@ func DoLogging(logValue interface{}, event string, identifier string, isRequest 
 		sentence += "after modify for " + identifier + " : "
 	}
 
+	jsonBytes, err := json.MarshalIndent(logValue, "", "\t")
+	if err != nil {
+		logrus.Error("error converting logValue to jsonbytes :")
+		logrus.Error(err.Error())
+		return
+	}
+	logrus.Info(string(jsonBytes))
 }
 
 func IsFileNameJson(filename string) bool {
