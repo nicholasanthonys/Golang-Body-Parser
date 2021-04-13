@@ -121,6 +121,8 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	wrapper.Request.Set("body", tmpMapRequest["body"])
 	wrapper.Request.Set("query", tmpMapRequest["query"])
 
+	mapWrapper.Set(aliasName, wrapper)
+
 	//*get the destinationPath value before sending request
 	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
 
