@@ -20,7 +20,8 @@ type (
 	}
 
 	Base struct {
-		MaxCircular int `json:"project_max_circular"`
+		MaxCircular      int     `json:"project_max_circular"`
+		CircularResponse Command `json:"circular_response"`
 	}
 
 	Routes []Route
