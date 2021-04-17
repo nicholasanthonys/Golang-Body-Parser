@@ -19,9 +19,14 @@ import (
 func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
 
 	if counter == baseProject.MaxCircular {
-		resMap := make(map[string]string)
-		resMap["message"] = "Circular Serial-Parallel"
-		return c.JSON(http.StatusInternalServerError, resMap)
+		if &baseProject.CircularResponse != nil {
+			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse)
+			return response.ResponseWriter(resMap, baseProject.CircularResponse.Transform, c)
+		}
+		resMap := make(map[string]interface{})
+		resMap["message"] = "Circular Request detected"
+		return c.JSON(http.StatusLoopDetected, resMap)
+
 	}
 
 	// Read parallel.json
@@ -119,19 +124,14 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 			log.Error(err)
 			tmpMapResponse := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
 
-			tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
-
-			//// write  to concurent map
-			//resultWrapper.Response.Set("header", tempHeader)
-
-			return util.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, c)
 		}
 
 		if cLogicItemTrue == nil {
 			resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
 
-			resultWrapper["header"] = response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), c)
-			return util.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, c)
+			c = response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), c)
+			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, c)
 		}
 
 		// update next_success
@@ -140,6 +140,11 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 		if len(strings.Trim(nextSuccess, " ")) > 0 {
 			if nextSuccess == "serial.json" {
 				return DoSerial(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
+			}
+
+			// reference to itself
+			if nextSuccess == "parallel.json" {
+				return DoParallel(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
 			}
 		}
 		if len(strings.Trim(nextSuccess, " ")) == 0 {
@@ -151,8 +156,7 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 
 	resultWrapper := response.ParseResponse(mapWrapper, finalResponseConfigure)
 
-	resultWrapper["header"] = response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), c)
-	return util.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, c)
+	return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, c)
 
 }
 

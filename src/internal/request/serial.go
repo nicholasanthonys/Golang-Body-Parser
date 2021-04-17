@@ -14,10 +14,16 @@ import (
 )
 
 func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
+
 	if counter == baseProject.MaxCircular {
-		resMap := make(map[string]string)
-		resMap["message"] = "Circular Serial-Parallel"
-		return c.JSON(http.StatusInternalServerError, resMap)
+		if &baseProject.CircularResponse != nil {
+			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse)
+			return response.ResponseWriter(resMap, baseProject.CircularResponse.Transform, c)
+		}
+		resMap := make(map[string]interface{})
+		resMap["message"] = "Circular Request detected"
+		return c.JSON(http.StatusLoopDetected, resMap)
+
 	}
 
 	var SerialProject model.Serial
@@ -94,9 +100,8 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		if err != nil {
 			// next failure
 			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
-			tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
 
-			return util.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 		}
 
 		mapWrapper.Set(alias, wrapper)
@@ -105,17 +110,23 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		if err != nil || cLogicItemTrue == nil {
 			log.Error(err)
 			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
-			tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
 
-			return util.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 		}
 
 		// update next_success
 		nextSuccess = cLogicItemTrue.NextSuccess
 		// update alias
 		if len(strings.Trim(nextSuccess, " ")) > 0 {
+
+			// reference to parallel request
 			if nextSuccess == "parallel.json" {
 				return DoParallel(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
+			}
+
+			// reference to itself
+			if nextSuccess == "serial.json" {
+				return DoSerial(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
 			}
 			alias = nextSuccess
 		}
@@ -132,7 +143,5 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 	}
 
 	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure)
-	tmpMapResponse["header"] = response.SetHeaderResponse(tmpMapResponse["header"].(map[string]interface{}), c)
-
-	return util.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
+	return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 }
