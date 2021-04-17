@@ -1,17 +1,20 @@
 package response
 
 import (
+	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // setHeaderResponse set custom key-value pair for header, except Content-Length and Content-type
-func SetHeaderResponse(header map[string]interface{}, c echo.Context) map[string]interface{} {
+func SetHeaderResponse(header map[string]interface{}, c echo.Context) echo.Context {
 	for key, val := range header {
 		rt := reflect.TypeOf(val)
 		//* only add if interface type is string
@@ -23,7 +26,7 @@ func SetHeaderResponse(header map[string]interface{}, c echo.Context) map[string
 		}
 	}
 
-	return header
+	return c
 
 }
 
@@ -92,5 +95,25 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[str
 		"statusCode": statusCodeString,
 		"header":     tmpHeader,
 		"body":       tmpBody,
+	}
+}
+
+//*ResponseWriter is a function that will return response
+func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo.Context) error {
+	var statusCode int
+	statusCode, _ = strconv.Atoi(mapResponse["statusCode"].(string))
+	responseBody := mapResponse["body"].(map[string]interface{})
+	responseHeader := mapResponse["header"].(map[string]interface{})
+	c = SetHeaderResponse(responseHeader, c)
+
+	switch strings.ToLower(transform) {
+	case strings.ToLower("ToJson"):
+		return c.JSON(statusCode, responseBody)
+	case strings.ToLower("ToXml"):
+		resByte, _ := x2j.MapToXml(responseBody)
+		return c.XMLBlob(statusCode, resByte)
+	default:
+		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
+		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
 	}
 }
