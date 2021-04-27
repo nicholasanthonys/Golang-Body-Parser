@@ -10,6 +10,7 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"reflect"
 )
 
 var log = logrus.New()
@@ -57,7 +58,7 @@ func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 }
 
 // ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, mapWrapper cmap.ConcurrentMap, reqByte []byte, loopIndex int) (*model.Wrapper, int, error) {
+func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, mapWrapper cmap.ConcurrentMap, reqByte []byte, loopIndex int) (*model.Wrapper, int, map[string]interface{}, error) {
 	//*check the content type user request
 	var contentType string
 	var err error
@@ -74,7 +75,7 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	tmpRequestBody, status, err = ParseRequestBody(c, contentType, reqByte)
 
 	if err != nil {
-		return nil, status, err
+		return nil, status, nil, err
 	}
 
 	//*set header value
@@ -143,8 +144,10 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	if err != nil {
 		logrus.Error("Error send : ", err.Error())
-		return nil, http.StatusInternalServerError, err
+		return nil, http.StatusInternalServerError, nil, err
 	}
+	//*close http
+	defer response.Body.Close()
 
 	//*Modify responseByte in Receiver and get  byte from response that has been modified
 	var tmpResponse map[string]interface{}
@@ -152,12 +155,13 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	wrapper.Response.Set("statusCode", tmpResponse["statusCode"])
 	wrapper.Response.Set("header", tmpResponse["header"])
-	wrapper.Response.Set("body", tmpResponse["body"])
 
-	//*close http
-	defer response.Body.Close()
+	if !reflect.ValueOf(tmpResponse["body"]).IsNil() {
+		wrapper.Response.Set("body", tmpResponse["body"])
+	}
+
 	if err != nil {
-		return nil, http.StatusInternalServerError, err
+		return nil, http.StatusInternalServerError, nil, err
 	}
 
 	//* In case user want to log before modify/changing request
@@ -171,6 +175,12 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//* Do Command Add, Modify, Deletion for response again
 	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, wrapper.Response, mapWrapper, loopIndex)
+	if wrapper.Configure.Request.StatusCode > 0 {
+		tmpMapResponseModified["statusCode"] = wrapper.Configure.Response.StatusCode
+	} else {
+		tmpMapResponseModified["statusCode"] = response.StatusCode
+	}
+
 	wrapper.Response.Set("header", tmpMapResponseModified["header"])
 	wrapper.Response.Set("body", tmpMapResponseModified["body"])
 
@@ -182,5 +192,5 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 		}
 		util.DoLoggingJson(logValue, "after", aliasName, false)
 	}
-	return &wrapper, http.StatusOK, nil
+	return &wrapper, http.StatusOK, tmpMapResponseModified, nil
 }
