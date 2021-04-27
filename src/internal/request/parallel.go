@@ -163,7 +163,7 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
 func worker(wg *sync.WaitGroup, mapKeyName string, c echo.Context, mapWrapper cmap.ConcurrentMap, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
 	defer wg.Done()
-	_, status, err := ProcessingRequest(mapKeyName, c, requestFromUser, mapWrapper, requestBody, loopIndex)
+	_, status, _, err := ProcessingRequest(mapKeyName, c, requestFromUser, mapWrapper, requestBody, loopIndex)
 	if err != nil {
 		log.Error("Go Worker - Error Process")
 		log.Error(err.Error())
