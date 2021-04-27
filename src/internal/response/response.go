@@ -105,7 +105,9 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo
 	responseBody := mapResponse["body"].(map[string]interface{})
 	responseHeader := mapResponse["header"].(map[string]interface{})
 	c = SetHeaderResponse(responseHeader, c)
-
+	if statusCode == 0 {
+		statusCode = 200
+	}
 	switch strings.ToLower(transform) {
 	case strings.ToLower("ToJson"):
 		return c.JSON(statusCode, responseBody)
