@@ -64,7 +64,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		requestFromUser.Request.Set("body", make(map[string]interface{}))
 		requestFromUser.Request.Set("query", make(map[string]interface{}))
 
-		requestFromUser.Response.Set("statusCode", "")
+		requestFromUser.Response.Set("statusCode", 0)
 		requestFromUser.Response.Set("header", make(map[string]interface{}))
 		requestFromUser.Response.Set("body", make(map[string]interface{}))
 
@@ -82,9 +82,25 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 
 	}
 
+	alias := SerialProject.Configures[0].Alias
+	if len(SerialProject.Configures[0].CLogics) == 0 {
+		var wrapper model.Wrapper
+		if tmp, ok := mapWrapper.Get(alias); ok {
+			wrapper = tmp.(model.Wrapper)
+		}
+		_, _, mapResponse, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
+		mapWrapper.Set(alias, wrapper)
+		if err != nil {
+			// next failure
+			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, c)
+		}
+		return response.ResponseWriter(mapResponse, wrapper.Configure.Response.Transform, c)
+
+	}
+
 	// assumption :  the first configure to be processed is configures at index 0 from SerialProject.configures
 	nextSuccess := SerialProject.Configures[0].CLogics[0].NextSuccess
-	alias := SerialProject.Configures[0].Alias
 	finalResponseConfigure := model.Command{}
 
 	for {
@@ -96,12 +112,12 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 			wrapper = tmp.(model.Wrapper)
 		}
 		// Loop only available for parallel request, therefore, set loopIndex to 0
-		_, _, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
+		_, _, _, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
 		if err != nil {
 			// next failure
 			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
 
-			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, c)
 		}
 
 		mapWrapper.Set(alias, wrapper)
@@ -137,11 +153,11 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 
 	}
 
-	var wrapper model.Wrapper
-	if tmp, ok := mapWrapper.Get(alias); ok {
-		wrapper = tmp.(model.Wrapper)
-	}
+	//var wrapper model.Wrapper
+	//if tmp, ok := mapWrapper.Get(alias); ok {
+	//	wrapper = tmp.(model.Wrapper)
+	//}
 
 	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure)
-	return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
+	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, c)
 }
