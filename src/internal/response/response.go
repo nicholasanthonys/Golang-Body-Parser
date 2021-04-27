@@ -1,7 +1,6 @@
 package response
 
 import (
-	"github.com/clbanning/mxj/x2j"
 	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
@@ -40,7 +39,7 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[str
 		Response: cmap.New(),
 	}
 
-	resultWrapper.Response.Set("statusCode", "")
+	resultWrapper.Response.Set("statusCode", 0)
 	resultWrapper.Response.Set("header", make(map[string]interface{}))
 	resultWrapper.Response.Set("body", make(map[string]interface{}))
 
@@ -91,17 +90,18 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[str
 
 	statusCodeString := strconv.Itoa(statusCode)
 
-	return map[string]interface{}{
+	response := map[string]interface{}{
 		"statusCode": statusCodeString,
 		"header":     tmpHeader,
 		"body":       tmpBody,
 	}
+	return response
 }
 
 //*ResponseWriter is a function that will return response
 func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo.Context) error {
 	var statusCode int
-	statusCode, _ = strconv.Atoi(mapResponse["statusCode"].(string))
+	statusCode, _ = mapResponse["statusCode"].(int)
 	responseBody := mapResponse["body"].(map[string]interface{})
 	responseHeader := mapResponse["header"].(map[string]interface{})
 	c = SetHeaderResponse(responseHeader, c)
@@ -110,8 +110,16 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo
 	case strings.ToLower("ToJson"):
 		return c.JSON(statusCode, responseBody)
 	case strings.ToLower("ToXml"):
-		resByte, _ := x2j.MapToXml(responseBody)
-		return c.XMLBlob(statusCode, resByte)
+
+		resByte, err := service.ToXml(responseBody)
+
+		if err != nil {
+			log.Error(err.Error())
+			res := make(map[string]interface{})
+			res["message"] = err.Error()
+			return c.XML(500, res)
+		}
+		return c.XML(statusCode, resByte)
 	default:
 		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
 		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
