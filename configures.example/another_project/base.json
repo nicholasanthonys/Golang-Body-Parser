@@ -1,3 +1,18 @@
 {
-  "project_max_circular" : 10
+  "project_max_circular": 10,
+  "circular_response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+        "key": "123",
+        "userID": "userid"
+      },
+      "body": {
+        "user.anime": "$configure_second_configure--$request--$body[user][favorite_anime]",
+        "user.cars": "$configure_second_configure--$request--$body[user][favorite_cars]",
+        "user.favorite_cars": "$configure_second_configure--$request--$body[user][favorite_cars][0]"
+      }
+    }
+  }
 }

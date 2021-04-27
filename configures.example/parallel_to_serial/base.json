@@ -1,3 +1,19 @@
 {
-  "project_max_circular" : 10
+  "project_max_circular" : 10,
+  "circular_response" : {
+    "status_code" : 200,
+    "transform" : "ToJson",
+    "adds" : {
+      "body" : {
+        "message" : "Circular Response",
+        "numbers" : "$configure_second_configure--$request--$body[numbers]",
+        "content_0" : "$configure_zero_configure--$request--$body[content]",
+        "content_1" : "$configure_first_configure--$request--$body[content]",
+        "test" : "$configure_first_configure--$response--$body[test]"
+      },
+      "header" : {
+        "tes" : "hello"
+      }
+    }
+  }
 }
