@@ -5,11 +5,25 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
+	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 )
+
+var netTransport = &http.Transport{
+	Dial: (&net.Dialer{
+		Timeout: 5 * time.Second,
+	}).Dial,
+	TLSHandshakeTimeout: 5 * time.Second,
+}
+var netClient = &http.Client{
+	Timeout:   time.Second * 10,
+	Transport: netTransport,
+}
 
 func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 
@@ -21,21 +35,28 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	if tmp, ok := requestFromUser.Request.Get("body"); ok {
 		tmpBody = tmp.(map[string]interface{})
 	}
-	body, err := Transform(requestFromUser.Configure, tmpBody)
+	var body io.Reader = nil
+	var err error
 
-	if err != nil {
-		log.Error("error constructing body to send")
-		log.Error(err.Error())
-		return nil, err
+	if len(tmpBody) > 0 {
+		body, err = Transform(requestFromUser.Configure, tmpBody)
+		if err != nil {
+			log.Error("error constructing body to send")
+			log.Error(err.Error())
+			return nil, err
+		}
 	}
 
 	//*get url and append it with destination path
 	url := requestFromUser.Configure.Request.DestinationUrl + requestFromUser.Configure.Request.DestinationPath
 
-	logrus.Info("sending request to url :  ", url)
-
 	//*declare request
 	var req *http.Request
+
+	if strings.ToLower(requestFromUser.Configure.Request.Method) == "get" {
+		url = setQueryGet(requestFromUser.Request, url)
+		return doGetRequest(url)
+	}
 
 	//*constructing request
 	req, _ = http.NewRequest(requestFromUser.Configure.Request.Method, url, body)
@@ -53,17 +74,34 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	setContentTypeHeader(transformRequest, &req.Header)
 
 	return doRequest(req)
+
+}
+
+func doGetRequest(url string) (*http.Response, error) {
+	logrus.Info("sending request to url :  ", url)
+	resp, err := netClient.Get(url)
+	if err != nil {
+		log.Fatalln(err)
+		return nil, err
+	}
+	return resp, nil
 }
 
 func doRequest(req *http.Request) (*http.Response, error) {
+
 	//* do request
-	client := http.Client{}
-	res, err := client.Do(req)
+	logrus.Info("sending request to url :  ", req.URL)
+	res, err := netClient.Do(req)
 	if err != nil {
 		log.Error("Error response")
 		log.Error(err.Error())
 		return nil, err
 	}
+
+	logrus.Info("header accept")
+
+	logrus.Info(req.Header.Get("Accept"))
+
 	return res, nil
 }
 
@@ -71,9 +109,9 @@ func setContentTypeHeader(transformRequest string, header *http.Header) {
 	//*set content type header based on transformRequest
 	switch strings.ToLower(transformRequest) {
 	case strings.ToLower("ToJson"):
-		header.Add("Content-Type", "application/json")
+		header.Add("Content-Type", "application/json; charset=utf-8")
 	case strings.ToLower("ToXml"):
-		header.Add("Content-Type", "application/xml")
+		header.Add("Content-Type", "application/xml; charset=utf-8")
 	case strings.ToLower("ToForm"):
 		header.Add("Content-Type", "application/x-www-form-urlencoded")
 	}
@@ -96,12 +134,15 @@ func SetHeader(mapRequest cmap.ConcurrentMap, header *http.Header) {
 		}
 
 	}
+	header.Set("Accept", "application/json")
+	header.Set("Accept-Charset", "utf-8")
+
 }
 
 func setQuery(mapRequest cmap.ConcurrentMap, q *url.Values) {
 	//* Add
 	tmpQuery := make(map[string]interface{})
-	if tmp, ok := mapRequest.Get("header"); ok {
+	if tmp, ok := mapRequest.Get("query"); ok {
 		tmpQuery = tmp.(map[string]interface{})
 	}
 	for key, value := range tmpQuery {
@@ -110,4 +151,25 @@ func setQuery(mapRequest cmap.ConcurrentMap, q *url.Values) {
 			q.Set(key, fmt.Sprintf("%v", value))
 		}
 	}
+}
+
+func setQueryGet(mapRequest cmap.ConcurrentMap, url string) string {
+	//* Add
+	tmpQuery := make(map[string]interface{})
+	if tmp, ok := mapRequest.Get("query"); ok {
+		tmpQuery = tmp.(map[string]interface{})
+	}
+
+	if len(tmpQuery) > 0 {
+		url += "?"
+	}
+
+	for key, value := range tmpQuery {
+		vt := reflect.TypeOf(value).Kind()
+		if vt == reflect.String {
+			url += key + "=" + value.(string)
+		}
+	}
+
+	return url
 }
