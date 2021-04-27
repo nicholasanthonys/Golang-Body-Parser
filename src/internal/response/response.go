@@ -119,7 +119,7 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo
 			res["message"] = err.Error()
 			return c.XML(500, res)
 		}
-		return c.XML(statusCode, resByte)
+		return c.XMLBlob(statusCode, resByte)
 	default:
 		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
 		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
