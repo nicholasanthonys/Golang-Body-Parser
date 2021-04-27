@@ -56,13 +56,21 @@ func Receiver(configure model.Configure, res *http.Response) (map[string]interfa
 		if len(contentType) > 0 {
 			//* if content type contain application/json
 			if strings.Contains(contentType, "application/json") {
-				//* assign map resMap with response []byte based on response content type
-				tmpBody, _ = service.FromJson(responseByte)
+
+				tmpBody, err = service.FromJson(responseByte)
+				if err != nil {
+					log.Error("error convert response byte to json body")
+					log.Error(err.Error())
+				}
 
 			} else if strings.Contains(contentType, "application/xml") {
 
 				//* assign map resMap with response []byte based on response content type
-				tmpBody, _ = service.FromXmL(responseByte)
+				tmpBody, err = service.FromXmL(responseByte)
+				if err != nil {
+					log.Error("error convert response byte to xml body")
+					log.Error(err.Error())
+				}
 
 			} else if strings.Contains(contentType, "text/plain") {
 				//* if content type contain text/plain
