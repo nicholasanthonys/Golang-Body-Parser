@@ -50,7 +50,7 @@
             ]
           },
           "data" : null,
-          "next_success" : null,
+          "next_success" : "serial.json",
           "response" : {
             "status_code" : 200,
             "transform": "ToJson",

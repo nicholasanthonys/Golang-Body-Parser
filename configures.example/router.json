@@ -22,5 +22,11 @@
     "project_directory" : "parallel_to_serial",
     "type" : "parallel",
     "method" : "POST"
+  },
+  {
+    "path" : "/imdb",
+    "project_directory" : "imdb",
+    "type" : "serial",
+    "method" : "GET"
   }
 ]

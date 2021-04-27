@@ -82,11 +82,10 @@
             ]
           },
           "data": null,
-          "next_success": "",
+          "next_success": null,
           "response": {
             "status_code" : 200,
             "transform": "ToJson",
-            "log_after_modify" : "",
             "adds": {
               "header": {
                 "key" : "123",
