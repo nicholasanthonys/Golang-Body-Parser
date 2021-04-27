@@ -1,19 +1,22 @@
-version: '3.4'
+version: '3.9'
 services:
-  body-parser:
+  single-middleware:
+    networks: 
+      proxy_middleware_net:  
     build: .
-    image: go-body-parser:1.0
-    container_name : container-body-parser
+    image: go-single-middleware:1.0
+    container_name: container-single-middleware
     volumes:
       - type: bind
-        source: ${CONFIGURES_DIRECTORY}
+        source: ../configures
         target: /app/configures
     # ports:
     #   - "5000:${APP_PORT}"
-    expose  :
+    expose:
       - "80"
+  
     
 networks: 
-  site1 : 
-    external: 
-      name : proxy_middleware_net
+  default:
+  proxy_middleware_net:
+    external: true
