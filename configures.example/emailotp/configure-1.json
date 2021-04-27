@@ -4,8 +4,8 @@
     "destination_path": "",
     "method": "PUT",
     "transform": "ToJson",
-    "log_before_modify": "$body",
-    "log_after_modify": "",
+    "log_before_modify": {},
+    "log_after_modify": {},
     "adds": {
       "header": {
         "odd_number": "1357",
@@ -51,8 +51,8 @@
   },
   "response": {
     "transform": "ToJson",
-    "log_before_modify": "",
-    "log_after_modify": "",
+    "log_before_modify": {},
+    "log_after_modify": {},
     "adds": {
       "header": {
       },

@@ -5,8 +5,10 @@
     "destination_path": "/user",
     "method" : "POST",
     "transform": "ToJson",
-    "log_before_modify" : "",
-    "log_after_modify" : "",
+    "log_before_modify" : {
+      "request_from_user" : "$body[content]"
+    },
+    "log_after_modify" : {},
     "adds": {
       "header": {
 

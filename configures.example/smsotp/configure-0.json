@@ -5,8 +5,8 @@
     "destination_path": "/user",
     "method" : "POST",
     "transform": "ToJson",
-    "log_before_modify" : "",
-    "log_after_modify" : "",
+    "log_before_modify" : {},
+    "log_after_modify" : {},
     "adds": {
       "header": {
 
@@ -41,8 +41,8 @@
   },
   "response": {
     "transform": "ToJson",
-    "log_before_modify" : "",
-    "log_after_modify" : "",
+    "log_before_modify" : {},
+    "log_after_modify" : {},
     "adds": {
       "header": {
       },

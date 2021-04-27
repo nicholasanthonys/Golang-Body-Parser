@@ -6,9 +6,9 @@
     "method": "POST",
     "transform": "ToJson",
     "log_before_modify": {
-      "phone_number" : "$response--$body[phone_number]"
+      "phone_number" : "$request--$body[phone_numbers]"
     },
-    "log_after_modify": "",
+    "log_after_modify": {},
     "adds": {
       "header": {
       },
@@ -54,7 +54,7 @@
 
       "phone_numbers" : "$response--$body[phone_numbers]"
     },
-    "log_after_modify": "",
+    "log_after_modify": {},
     "adds": {
       "header": {
       },
