@@ -25,7 +25,7 @@ func FromJson(byteVal []byte) (map[string]interface{}, error) {
 
 	myMap, err := mxj.NewMapJson(byteVal)
 	if err != nil {
-		log.Error("error")
+		log.Error("error to_map.go From Json")
 		log.Error(err.Error())
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func FromJson(byteVal []byte) (map[string]interface{}, error) {
 func FromXmL(byteVal []byte) (map[string]interface{}, error) {
 	myMap, err := mxj.NewMapXml(byteVal)
 	if err != nil {
-		log.Error("error")
+		log.Error("error to_map.go FromXML")
 		log.Error(err.Error())
 		return nil, err
 	}
