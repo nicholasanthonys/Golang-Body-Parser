@@ -27,6 +27,9 @@
             "status_code" : 200,
             "transform" : "ToJson",
             "adds" : {
+              "header" : {
+               "status_code_configure_zero" : "$configure_zero_configure--$response--$status_code"
+              },
               "body" : {
                 "numbers" : "$configure_second_configure--$request--$body[numbers]",
                 "content_0" : "$configure_zero_configure--$request--$body[content]",

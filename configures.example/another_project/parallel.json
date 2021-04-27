@@ -29,7 +29,7 @@
         ]
       },
       "data": null,
-      "next_success" : null,
+      "next_success" : "parallel.json",
       "response": {
         "status_code" : 400,
         "transform" : "ToJson",
@@ -48,11 +48,10 @@
         ]
       },
       "data": null,
-      "next_success":null,
+      "next_success":"parallel.json",
       "response": {
         "status_code" : 200,
         "transform": "ToJson",
-        "log_after_modify" : "",
         "adds": {
           "header": {
             "key" : "123",
