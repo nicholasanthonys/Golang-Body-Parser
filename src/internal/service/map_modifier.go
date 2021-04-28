@@ -139,7 +139,11 @@ func RetrieveValue(value interface{}, takeFrom cmap.ConcurrentMap, loopIndex int
 					tmpMap := tmp.(map[string]interface{})
 					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
 				} else {
-					tmpMap := tmp.(string)
+					vt := reflect.TypeOf(tmp)
+					if vt.Kind() == reflect.String {
+						tmp, _ = strconv.Atoi(tmp.(string))
+					}
+					tmpMap := tmp.(int)
 					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
 				}
 
