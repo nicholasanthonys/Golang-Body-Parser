@@ -98,10 +98,6 @@ func doRequest(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
-	logrus.Info("header accept")
-
-	logrus.Info(req.Header.Get("Accept"))
-
 	return res, nil
 }
 
