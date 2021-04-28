@@ -57,16 +57,16 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command, err err
 	tmpBody := make(map[string]interface{})
 
 	//*header
-	tmpHeader = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", tmpHeader, mapWrapper, 0)
+	tmpHeader = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", tmpHeader, &mapWrapper, 0)
 	//*modify header
-	tmpHeader = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", tmpHeader, mapWrapper, 0)
+	tmpHeader = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", tmpHeader, &mapWrapper, 0)
 	//*Deletion Header
 	tmpHeader = service.DeletionHeaderOrQuery(resultWrapper.Configure.Response.Deletes.Header, tmpHeader)
 
 	//*add
-	tmpBody = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", tmpBody, mapWrapper, 0)
+	tmpBody = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", tmpBody, &mapWrapper, 0)
 	//*modify
-	tmpBody = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", tmpBody, mapWrapper, 0)
+	tmpBody = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", tmpBody, &mapWrapper, 0)
 	//* delete
 	tmpBody = service.DeletionBody(resultWrapper.Configure.Response.Deletes, tmpBody)
 

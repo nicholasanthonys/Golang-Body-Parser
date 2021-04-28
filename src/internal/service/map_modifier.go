@@ -10,9 +10,12 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var log = logrus.New()
+
+var mutex = &sync.Mutex{}
 
 func init() {
 	//* init logger with timestamp
@@ -25,25 +28,31 @@ func init() {
 
 // AddRecursive is a function that do the add key-value based on the listTraverse
 func AddRecursive(listTraverse []string, value interface{}, in interface{}, index int) interface{} {
+
 	if index == len(listTraverse)-1 {
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 
 			//*only add when the value of the key is null
+			//mutex.Lock()
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
 				in.(map[string]interface{})[listTraverse[index]] = value
 			}
-
+			//mutex.Unlock()
 		}
 		return in
 	}
 
 	if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 		//* allocate new map if map[key] null
+		//mutex.Lock()
 		if in.(map[string]interface{})[listTraverse[index]] == nil {
 			in.(map[string]interface{})[listTraverse[index]] = make(map[string]interface{})
 		}
+		//mutex.Unlock()
+
 		//* recursively traverse the map
 		in.(map[string]interface{})[listTraverse[index]] = AddRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
+
 		return in.(map[string]interface{})
 	}
 
@@ -136,15 +145,19 @@ func RetrieveValue(value interface{}, takeFrom cmap.ConcurrentMap, loopIndex int
 			}
 			if tmp, ok := takeFrom.Get(key); ok {
 				if key != "statusCode" {
+					mutex.Lock()
 					tmpMap := tmp.(map[string]interface{})
 					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
+					mutex.Unlock()
 				} else {
+					mutex.Lock()
 					vt := reflect.TypeOf(tmp)
 					if vt.Kind() == reflect.String {
 						tmp, _ = strconv.Atoi(tmp.(string))
 					}
 					tmpMap := tmp.(int)
 					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
+					mutex.Unlock()
 				}
 
 			}
@@ -229,8 +242,7 @@ func recursiveGetValue(listTraverse []string, in interface{}, index int, loopInd
 //*DoAddModifyDelete is a function that will do the command from configure.json for Header, Query, and Body
 //* Here, we call DoCommandConfigure for each Header, Query, and Body
 //* fields is field that want to be modify
-func DoAddModifyDelete(command model.Command, fields cmap.ConcurrentMap, takeFrom cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
-
+func DoAddModifyDelete(command model.Command, fields *cmap.ConcurrentMap, takeFrom *cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
 	tmpHeader := make(map[string]interface{})
 	tmpBody := make(map[string]interface{})
 	tmpQuery := make(map[string]interface{})
@@ -238,6 +250,7 @@ func DoAddModifyDelete(command model.Command, fields cmap.ConcurrentMap, takeFro
 	//*header
 	if tmp, ok := fields.Get("header"); ok {
 		fieldHeader := tmp.(map[string]interface{})
+
 		tmpHeader = AddToWrapper(command.Adds.Header, "--", fieldHeader, takeFrom, loopIndex)
 		//*modify header
 		tmpHeader = ModifyWrapper(command.Modifies.Header, "--", fieldHeader, takeFrom, loopIndex)
@@ -264,7 +277,6 @@ func DoAddModifyDelete(command model.Command, fields cmap.ConcurrentMap, takeFro
 		//*deletion to body
 		tmpBody = DeletionBody(command.Deletes, fieldBody)
 	}
-
 	return map[string]interface{}{
 		"header": tmpHeader,
 		"body":   tmpBody,
@@ -276,7 +288,9 @@ func DeletionBody(deleteField model.DeleteFields, mapKeyToBeRemoved map[string]i
 	//* Do Deletion
 	for _, key := range deleteField.Body {
 		listTraverse := strings.Split(key, ".")
+		mutex.Lock()
 		DeleteRecursive(listTraverse, mapKeyToBeRemoved, 0)
+		mutex.Unlock()
 	}
 	return mapKeyToBeRemoved
 }
@@ -289,7 +303,7 @@ func DeletionHeaderOrQuery(deleteField []string, mapToBeDeleted map[string]inter
 	return mapToBeDeleted
 }
 
-func ModifyPath(path string, separator string, takeFrom cmap.ConcurrentMap, loopIndex int) string {
+func ModifyPath(path string, separator string, takeFrom *cmap.ConcurrentMap, loopIndex int) string {
 	//*example, what we got here is like this
 	//* /person/{{$configure1.json--$request--$body[user][name]/transaction/{{$configure1.json--$request--$body[user][name]}}
 	//* we need to split based from separator /, and looping and find if there is {{ }}
@@ -341,7 +355,7 @@ func ModifyPath(path string, separator string, takeFrom cmap.ConcurrentMap, loop
 }
 
 //*AddToWrapper is a function that will add value to the specified key to a map
-func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
+func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdded map[string]interface{}, takeFrom *cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
 	//* Add key
 	for key, value := range commands {
 		//*get the value
@@ -369,13 +383,15 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		}
 		listTraverseKey := strings.Split(key, ".")
 
+		mutex.Lock()
 		AddRecursive(listTraverseKey, realValue, mapToBeAdded, 0)
+		mutex.Unlock()
 	}
 	return mapToBeAdded
 }
 
 //*ModifyWrapper is a function that will modify value based from specific key
-func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
+func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom *cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
 	for key, value := range commands {
 
 		var realValue interface{}
@@ -404,7 +420,9 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 		}
 
 		listTraverseKey := strings.Split(key, ".")
+		mutex.Lock()
 		ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
+		mutex.Unlock()
 	}
 	return mapToBeModified
 }

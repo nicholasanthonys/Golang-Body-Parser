@@ -118,8 +118,10 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	mapWrapper.Set(aliasName, wrapper)
 
 	//* Do the Map Modification
-	tmpMapRequest := service.DoAddModifyDelete(wrapper.Configure.Request, wrapper.Request, mapWrapper, loopIndex)
-
+	//var mutex = &sync.Mutex{}
+	//mutex.Lock()
+	tmpMapRequest := service.DoAddModifyDelete(wrapper.Configure.Request, &wrapper.Request, &mapWrapper, loopIndex)
+	// mutex.Unlock()
 	//write
 	wrapper.Request.Set("header", tmpMapRequest["header"])
 	wrapper.Request.Set("body", tmpMapRequest["body"])
@@ -128,7 +130,7 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	mapWrapper.Set(aliasName, wrapper)
 
 	//*get the destinationPath value before sending request
-	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", mapWrapper, loopIndex)
+	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", &mapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
 	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
@@ -174,7 +176,7 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
-	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, wrapper.Response, mapWrapper, loopIndex)
+	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, &wrapper.Response, &mapWrapper, loopIndex)
 	if wrapper.Configure.Request.StatusCode > 0 {
 		tmpMapResponseModified["statusCode"] = wrapper.Configure.Response.StatusCode
 	} else {

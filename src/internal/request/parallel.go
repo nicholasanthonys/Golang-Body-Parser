@@ -160,6 +160,8 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 
 }
 
+var mutex sync.Mutex
+
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
 func worker(wg *sync.WaitGroup, mapKeyName string, c echo.Context, mapWrapper cmap.ConcurrentMap, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
 	defer wg.Done()
