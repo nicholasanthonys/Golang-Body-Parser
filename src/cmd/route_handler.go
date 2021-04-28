@@ -22,7 +22,7 @@ var fullProjectDirectory string
 //SetRouteHandler called by main.go. This function set route based on router.json
 func SetRouteHandler() *echo.Echo {
 	//* get configures Directory
-	configureDir = os.Getenv("CONFIGURES_DIRECTORY")
+	configureDir = os.Getenv("CONFIGURES_DIRECTORY_NAME")
 
 	// Echo instance
 	e := echo.New()
