@@ -30,7 +30,7 @@ func SetHeaderResponse(header map[string]interface{}, c echo.Context) echo.Conte
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
-func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[string]interface{} {
+func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command, err error) map[string]interface{} {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{
@@ -94,6 +94,7 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command) map[str
 		"statusCode": statusCodeString,
 		"header":     tmpHeader,
 		"body":       tmpBody,
+		"error":      err,
 	}
 	return response
 }
@@ -104,10 +105,16 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo
 	statusCode, _ = mapResponse["statusCode"].(int)
 	responseBody := mapResponse["body"].(map[string]interface{})
 	responseHeader := mapResponse["header"].(map[string]interface{})
+
+	if mapResponse["error"] != nil {
+		responseBody["error"] = mapResponse["error"].(error).Error()
+	}
+
 	c = SetHeaderResponse(responseHeader, c)
 	if statusCode == 0 {
 		statusCode = 200
 	}
+
 	switch strings.ToLower(transform) {
 	case strings.ToLower("ToJson"):
 		return c.JSON(statusCode, responseBody)
