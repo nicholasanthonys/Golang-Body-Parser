@@ -20,7 +20,7 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 
 	if counter == baseProject.MaxCircular {
 		if &baseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse)
+			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse, nil)
 			return response.ResponseWriter(resMap, baseProject.CircularResponse.Transform, c)
 		}
 		resMap := make(map[string]interface{})
@@ -68,7 +68,7 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 		requestFromUser.Request.Set("body", make(map[string]interface{}))
 		requestFromUser.Request.Set("query", make(map[string]interface{}))
 
-		requestFromUser.Response.Set("statusCode", "")
+		requestFromUser.Response.Set("statusCode", 0)
 		requestFromUser.Response.Set("header", make(map[string]interface{}))
 		requestFromUser.Response.Set("body", make(map[string]interface{}))
 
@@ -122,13 +122,13 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, mapWrapper)
 		if err != nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
+			tmpMapResponse := response.ParseResponse(mapWrapper, ParallelProject.NextFailure, err)
 
 			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, c)
 		}
 
 		if cLogicItemTrue == nil {
-			resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure)
+			resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure, nil)
 
 			c = response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), c)
 			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, c)
@@ -154,7 +154,7 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 
 	}
 
-	resultWrapper := response.ParseResponse(mapWrapper, finalResponseConfigure)
+	resultWrapper := response.ParseResponse(mapWrapper, finalResponseConfigure, nil)
 
 	return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, c)
 

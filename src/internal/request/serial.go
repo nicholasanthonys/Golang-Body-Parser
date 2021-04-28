@@ -17,7 +17,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 
 	if counter == baseProject.MaxCircular {
 		if &baseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse)
+			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse, nil)
 			return response.ResponseWriter(resMap, baseProject.CircularResponse.Transform, c)
 		}
 		resMap := make(map[string]interface{})
@@ -92,7 +92,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		mapWrapper.Set(alias, wrapper)
 		if err != nil {
 			// next failure
-			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
 			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, c)
 		}
 		return response.ResponseWriter(mapResponse, wrapper.Configure.Response.Transform, c)
@@ -115,7 +115,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		_, _, _, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
 		if err != nil {
 			// next failure
-			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
 
 			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, c)
 		}
@@ -125,7 +125,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 
 		if err != nil || cLogicItemTrue == nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure)
+			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
 
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
 		}
@@ -158,6 +158,6 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 	//	wrapper = tmp.(model.Wrapper)
 	//}
 
-	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure)
+	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure, err)
 	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, c)
 }
