@@ -22,5 +22,9 @@ ENV APP_PORT=80
 
 # Expose application port
 EXPOSE $APP_PORT/tcp
+
+# Expose SSH PORT
+EXPOSE 22
+
 ## Run build
-CMD ["./build/go-single-middleware"]
+ENTRYPOINT ["./build/go-single-middleware"]
