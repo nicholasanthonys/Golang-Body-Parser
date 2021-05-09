@@ -93,7 +93,7 @@ func TestReadWithConfigure(t *testing.T) {
 		mapWrapper.Set(configureItem.Alias, requestFromUser)
 		// mapWrapper[configureItem.Alias] = requestFromUser
 
-		tmpRequest := service.DoAddModifyDelete(requestFromUser.Configure.Request, requestFromUser.Request, mapWrapper, 0)
+		tmpRequest := service.DoAddModifyDelete(requestFromUser.Configure.Request, &requestFromUser.Request, &mapWrapper, 0)
 
 		requestFromUser.Request.Set("header", tmpRequest["header"])
 		requestFromUser.Request.Set("body", tmpRequest["body"])

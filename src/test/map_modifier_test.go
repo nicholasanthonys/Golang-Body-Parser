@@ -77,7 +77,7 @@ func TestMapModifierBody(t *testing.T) {
 	if tmp, ok := requestFromUser.Request.Get("body"); ok {
 		tmpBody = tmp.(map[string]interface{})
 	}
-	tmpBody = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", tmpBody, mapWrapper, 0)
+	tmpBody = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", tmpBody, &mapWrapper, 0)
 	stream, err := service.Transform(wrapperConfigure1.Configure, tmpBody)
 
 	if err != nil {
@@ -101,7 +101,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	//*Modify Body
-	tmpBody = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", tmpBody, mapWrapper, 0)
+	tmpBody = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", tmpBody, &mapWrapper, 0)
 	stream, err = service.Transform(wrapperConfigure1.Configure, tmpBody)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
@@ -155,7 +155,7 @@ func TestMapModifierHeader(t *testing.T) {
 	if tmp, ok := requestFromUser.Request.Get("header"); ok {
 		tmpHeader = tmp.(map[string]interface{})
 	}
-	tmpHeader = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", tmpHeader, mapWrapper, 0)
+	tmpHeader = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", tmpHeader, &mapWrapper, 0)
 
 	stream, err := service.Transform(wrapperConfigure1.Configure, tmpHeader)
 	if err != nil {
@@ -178,7 +178,7 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 
 	//*Modify Header
-	tmpHeader = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", tmpHeader, mapWrapper, 0)
+	tmpHeader = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", tmpHeader, &mapWrapper, 0)
 
 	stream, err = service.Transform(wrapperConfigure1.Configure, tmpHeader)
 	if err != nil {
@@ -237,7 +237,7 @@ func TestMapModifierQuery(t *testing.T) {
 	if tmp, ok := requestFromUser.Request.Get("query"); ok {
 		tmpQuery = tmp.(map[string]interface{})
 	}
-	tmpQuery = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", tmpQuery, mapWrapper, 0)
+	tmpQuery = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", tmpQuery, &mapWrapper, 0)
 
 	stream, err := service.Transform(wrapperConfigure1.Configure, tmpQuery)
 	if err != nil {
@@ -260,7 +260,7 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 
 	//*Modify query
-	tmpQuery = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", tmpQuery, mapWrapper, 0)
+	tmpQuery = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", tmpQuery, &mapWrapper, 0)
 
 	stream, err = service.Transform(wrapperConfigure1.Configure, tmpQuery)
 	if err != nil {
