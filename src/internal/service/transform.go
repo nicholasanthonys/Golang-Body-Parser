@@ -18,6 +18,7 @@ func Transform(configure model.Configure, requestFromUser map[string]interface{}
 	case strings.ToLower("ToJson"):
 		resultTransformByte, err := ToJson(requestFromUser)
 		if err != nil {
+			log.Error("error")
 			return nil, err
 		}
 		body = bytes.NewBuffer(resultTransformByte)
