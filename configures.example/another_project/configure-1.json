@@ -1,7 +1,7 @@
 {
   "request": {
     "loop": "$configure_zero_configure---$response--$body[DummyObject][loop]",
-    "destination_url": "http://mockbin.org/bin/d53f6eca-b100-44cd-8994-6aa2e4bddded",
+    "destination_url": "http://mockbin.org/bin/e06c56a2-fa0a-401e-bf3b-9e8d9a866d3b",
     "destination_path": "",
     "method": "POST",
     "transform": "ToJson",
@@ -11,7 +11,8 @@
       "header": {
       },
       "body": {
-        "hello": "hai"
+        "hello": "hai",
+        "first_configure_body" : "$configure_zero_configure--$request--$body"
       },
       "query": {
         "foo": "tes"
@@ -21,6 +22,7 @@
       "header": {
       },
       "body": {
+        "phone_numbers.0": "10000000"
       },
       "query": {
       }

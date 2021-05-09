@@ -60,7 +60,8 @@
           "body": {
             "user.anime": "$configure_second_configure--$request--$body[user][favorite_anime]",
             "user.cars": "$configure_second_configure--$request--$body[user][favorite_cars]",
-            "user.favorite_cars": "$configure_second_configure--$request--$body[user][favorite_cars][0]"
+            "user.favorite_cars": "$configure_second_configure--$request--$body[user][favorite_cars][0]",
+            "tes" : "$configure_first_configure--$request--$body"
           }
         },
         "modifies": {

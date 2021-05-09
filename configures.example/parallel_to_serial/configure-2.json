@@ -10,7 +10,6 @@
       "header": {
       },
       "body": {
-        "numbers" : "$configure_zero_configure--$request--$body[numbers]"
       },
       "query": {
         "foo" : "tes"

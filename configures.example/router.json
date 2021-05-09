@@ -28,5 +28,18 @@
     "project_directory" : "imdb",
     "type" : "serial",
     "method" : "GET"
+  },
+  {
+    "type": "serial",
+    "path": "/tes/:smsId",
+    "project_id": "608d199c29223ebe6736cd5d",
+    "project_directory": "608d199c29223ebe6736cd5d",
+    "method": "POST"
+  },
+  {
+    "path" : "/tes-parallel-serial",
+    "project_directory" : "608eae8d369e38296a9b3a28",
+    "type" : "parallel",
+    "method" : "POST"
   }
 ]

@@ -10,7 +10,7 @@
       "header": {
       },
       "body": {
-        "number" : "$configure_zero_configure--$request--$body[phone_numbers][loop]",
+        "number" : "$configure_zero_configure--$request--$body[phone_numbers]",
         "content" : "$configure_zero_configure--$request--$body[content]",
         "user.favorite_cars": [
           "honda",
