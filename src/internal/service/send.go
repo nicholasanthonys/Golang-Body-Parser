@@ -58,6 +58,8 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 		return doGetRequest(url)
 	}
 
+	logrus.Info("url is ")
+	logrus.Info(url)
 	//*constructing request
 	req, _ = http.NewRequest(requestFromUser.Configure.Request.Method, url, body)
 
@@ -69,7 +71,6 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	//*set query
 	setQuery(requestFromUser.Request, &q)
 	req.URL.RawQuery = q.Encode()
-
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
 
