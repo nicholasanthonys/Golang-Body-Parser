@@ -85,7 +85,6 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 			loop, err = strconv.Atoi(loopIn.(string))
 			if err != nil {
 				log.Error(err)
-				log.Info("set loop to 1 ")
 			}
 		}
 
@@ -97,7 +96,11 @@ func DoParallel(c echo.Context, baseProject model.Base, fullProjectDirectory str
 			loop = int(loopIn.(float64))
 		}
 
-		for i := 0; i < loop; i++ {
+		if loop == 0 {
+			log.Info("set loop to 1 ")
+			loop = 1
+		}
+		for i := 0; i < 1; i++ {
 			if len(requestFromUser.Configure.Request.CLogics) > 0 {
 				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, mapWrapper)
 				if cLogicItem != nil {
