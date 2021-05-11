@@ -12,11 +12,11 @@ import (
 	"strings"
 )
 
-func DoSerial(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter int) error {
+func DoSerial(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(mapWrapper, cc.BaseProject.CircularResponse, nil)
+			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil)
 			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
 		}
 		resMap := make(map[string]interface{})
@@ -77,21 +77,21 @@ func DoSerial(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter in
 		mapConfigures[configureItem.Alias] = configureItem
 
 		// store map wrapper
-		mapWrapper.Set(configureItem.Alias, requestFromUser)
+		cc.MapWrapper.Set(configureItem.Alias, requestFromUser)
 
 	}
 
 	alias := SerialProject.Configures[0].Alias
 	if len(SerialProject.Configures[0].CLogics) == 0 {
 		var wrapper model.Wrapper
-		if tmp, ok := mapWrapper.Get(alias); ok {
+		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(model.Wrapper)
 		}
-		_, _, mapResponse, err := ProcessingRequest(alias, cc, wrapper, mapWrapper, reqByte, 0)
-		mapWrapper.Set(alias, wrapper)
+		_, _, mapResponse, err := ProcessingRequest(alias, cc, wrapper, reqByte, 0)
+		cc.MapWrapper.Set(alias, wrapper)
 		if err != nil {
 			// next failure
-			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err)
 			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
 		}
 		return response.ResponseWriter(mapResponse, wrapper.Configure.Response.Transform, cc)
@@ -107,24 +107,24 @@ func DoSerial(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter in
 
 		// Retrieve item from map.
 		var wrapper model.Wrapper
-		if tmp, ok := mapWrapper.Get(alias); ok {
+		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(model.Wrapper)
 		}
 		// Loop only available for parallel request, therefore, set loopIndex to 0
-		_, _, _, err := ProcessingRequest(alias, cc, wrapper, mapWrapper, reqByte, 0)
+		_, _, _, err := ProcessingRequest(alias, cc, wrapper, reqByte, 0)
 		if err != nil {
 			// next failure
-			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err)
 
 			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
 		}
 
-		mapWrapper.Set(alias, wrapper)
-		cLogicItemTrue, err := service.CLogicsChecker(mapConfigures[alias].CLogics, mapWrapper)
+		cc.MapWrapper.Set(alias, wrapper)
+		cLogicItemTrue, err := service.CLogicsChecker(mapConfigures[alias].CLogics, cc.MapWrapper)
 
 		if err != nil || cLogicItemTrue == nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err)
 
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
@@ -136,12 +136,12 @@ func DoSerial(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter in
 
 			// reference to parallel request
 			if nextSuccess == "parallel.json" {
-				return DoParallel(cc, mapWrapper, counter+1)
+				return DoParallel(cc, counter+1)
 			}
 
 			// reference to itself
 			if nextSuccess == "serial.json" {
-				return DoSerial(cc, mapWrapper, counter+1)
+				return DoSerial(cc, counter+1)
 			}
 			alias = nextSuccess
 		}
@@ -153,10 +153,10 @@ func DoSerial(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter in
 	}
 
 	//var wrapper model.Wrapper
-	//if tmp, ok := mapWrapper.Get(alias); ok {
+	//if tmp, ok := cc.MapWrapper.Get(alias); ok {
 	//	wrapper = tmp.(model.Wrapper)
 	//}
 
-	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure, err)
+	tmpMapResponse := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, err)
 	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, cc)
 }

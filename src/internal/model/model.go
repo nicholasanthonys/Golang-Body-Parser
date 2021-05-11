@@ -11,6 +11,7 @@ type (
 		DefinedRoute         *Route
 		FullProjectDirectory string
 		BaseProject          Base
+		MapWrapper           *cmap.ConcurrentMap
 	}
 
 	CLogicItem struct {

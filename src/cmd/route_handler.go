@@ -141,7 +141,8 @@ func parallelRouteHandler(c echo.Context) error {
 	}
 	cc.BaseProject = baseProject
 	mapWrapper := cmap.New()
-	return request.DoParallel(cc, mapWrapper, 0)
+	cc.MapWrapper = &mapWrapper
+	return request.DoParallel(cc, 0)
 }
 
 // serialRouteHandler process configure in serial-way.
@@ -156,7 +157,8 @@ func serialRouteHandler(c echo.Context) error {
 	}
 	cc.BaseProject = baseProject
 	mapWrapper := cmap.New()
-	return request.DoSerial(cc, mapWrapper, 0)
+	cc.MapWrapper = &mapWrapper
+	return request.DoSerial(cc, 0)
 
 }
 

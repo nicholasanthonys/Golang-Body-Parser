@@ -15,11 +15,11 @@ import (
 	"sync"
 )
 
-func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter int) error {
+func DoParallel(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(mapWrapper, cc.BaseProject.CircularResponse, nil)
+			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil)
 			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
 		}
 		resMap := make(map[string]interface{})
@@ -77,7 +77,7 @@ func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter 
 		requestFromUser.Configure = configure
 		mapConfigures[configureItem.Alias] = configureItem
 
-		loopIn := service.InterfaceDirectModifier(requestFromUser.Configure.Request.Loop, mapWrapper, "--")
+		loopIn := service.InterfaceDirectModifier(requestFromUser.Configure.Request.Loop, cc.MapWrapper, "--")
 		lt := reflect.TypeOf(loopIn)
 		var loop int
 		if lt.Kind() == reflect.String {
@@ -101,15 +101,15 @@ func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter 
 		}
 		for i := 0; i < 1; i++ {
 			if len(requestFromUser.Configure.Request.CLogics) > 0 {
-				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, mapWrapper)
+				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, cc.MapWrapper)
 				if cLogicItem != nil {
 					wg.Add(1)
-					go worker(&wg, configureItem.Alias, cc, mapWrapper, requestFromUser, reqByte, i)
+					go worker(&wg, configureItem.Alias, cc, requestFromUser, reqByte, i)
 				}
 			} else {
 				// no clogics
 				wg.Add(1)
-				go worker(&wg, configureItem.Alias, cc, mapWrapper, requestFromUser, reqByte, i)
+				go worker(&wg, configureItem.Alias, cc, requestFromUser, reqByte, i)
 			}
 
 		}
@@ -121,16 +121,16 @@ func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter 
 	finalResponseConfigure := model.Command{}
 	for {
 
-		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, mapWrapper)
+		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, cc.MapWrapper)
 		if err != nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(mapWrapper, ParallelProject.NextFailure, err)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, err)
 
 			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, cc)
 		}
 
 		if cLogicItemTrue == nil {
-			resultWrapper := response.ParseResponse(mapWrapper, ParallelProject.NextFailure, nil)
+			resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, nil)
 
 			response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), cc)
 			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, cc)
@@ -141,12 +141,12 @@ func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter 
 		// update alias
 		if len(strings.Trim(nextSuccess, " ")) > 0 {
 			if nextSuccess == "serial.json" {
-				return DoSerial(cc, mapWrapper, counter+1)
+				return DoSerial(cc, counter+1)
 			}
 
 			// reference to itself
 			if nextSuccess == "parallel.json" {
-				return DoParallel(cc, mapWrapper, counter+1)
+				return DoParallel(cc, counter+1)
 			}
 		}
 		if len(strings.Trim(nextSuccess, " ")) == 0 {
@@ -156,7 +156,7 @@ func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter 
 
 	}
 
-	resultWrapper := response.ParseResponse(mapWrapper, finalResponseConfigure, nil)
+	resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil)
 
 	return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, cc)
 
@@ -165,15 +165,15 @@ func DoParallel(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter 
 var mutex sync.Mutex
 
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
-func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
+func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
 	defer wg.Done()
-	_, status, _, err := ProcessingRequest(mapKeyName, cc, requestFromUser, mapWrapper, requestBody, loopIndex)
+	_, status, _, err := ProcessingRequest(mapKeyName, cc, requestFromUser, requestBody, loopIndex)
 	if err != nil {
 		log.Error("Go Worker - Error Process")
 		log.Error(err.Error())
 		log.Error("status : ", status)
 	}
-	//mapWrapper[mapKeyName] = requestFromUser
+	//cc.MapWrapper[mapKeyName] = requestFromUser
 
-	mapWrapper.Set(mapKeyName, requestFromUser)
+	cc.MapWrapper.Set(mapKeyName, requestFromUser)
 }

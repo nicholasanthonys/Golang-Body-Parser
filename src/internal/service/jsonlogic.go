@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func InterfaceDirectModifier(in interface{}, mapWrapper cmap.ConcurrentMap, separator string) interface{} {
+func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, separator string) interface{} {
 
 	if in == nil {
 		return nil
@@ -57,7 +57,7 @@ func InterfaceDirectModifier(in interface{}, mapWrapper cmap.ConcurrentMap, sepa
 
 }
 
-func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper cmap.ConcurrentMap) (*model.CLogicItem, error) {
+func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (*model.CLogicItem, error) {
 	for _, cLogicItem := range cLogics {
 		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
