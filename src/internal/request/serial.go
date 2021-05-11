@@ -2,7 +2,6 @@ package request
 
 import (
 	"encoding/json"
-	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
@@ -13,37 +12,37 @@ import (
 	"strings"
 )
 
-func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory string, mapWrapper cmap.ConcurrentMap, counter int) error {
+func DoSerial(cc *model.CustomContext, mapWrapper cmap.ConcurrentMap, counter int) error {
 
-	if counter == baseProject.MaxCircular {
-		if &baseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(mapWrapper, baseProject.CircularResponse, nil)
-			return response.ResponseWriter(resMap, baseProject.CircularResponse.Transform, c)
+	if counter == cc.BaseProject.MaxCircular {
+		if &cc.BaseProject.CircularResponse != nil {
+			resMap := response.ParseResponse(mapWrapper, cc.BaseProject.CircularResponse, nil)
+			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
 		}
 		resMap := make(map[string]interface{})
 		resMap["message"] = "Circular Request detected"
-		return c.JSON(http.StatusLoopDetected, resMap)
+		return cc.JSON(http.StatusLoopDetected, resMap)
 
 	}
 
 	var SerialProject model.Serial
 	SerialProject = model.Serial{}
 	// Read SerialProject .json
-	serialByte := util.ReadJsonFile(fullProjectDirectory + "/" + "serial.json")
+	serialByte := util.ReadJsonFile(cc.FullProjectDirectory + "/" + "serial.json")
 	err := json.Unmarshal(serialByte, &SerialProject)
 
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In unmarshaling File serial.json. "
 		resMap["error"] = err.Error()
-		return c.JSON(http.StatusInternalServerError, resMap)
+		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
-	reqByte, err := ioutil.ReadAll(c.Request().Body)
+	reqByte, err := ioutil.ReadAll(cc.Request().Body)
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
-		return c.JSON(http.StatusInternalServerError, resMap)
+		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
 	//*Read file ConfigureBased
@@ -68,7 +67,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		requestFromUser.Response.Set("header", make(map[string]interface{}))
 		requestFromUser.Response.Set("body", make(map[string]interface{}))
 
-		configByte := util.ReadJsonFile(fullProjectDirectory + "/" + configureItem.FileName)
+		configByte := util.ReadJsonFile(cc.FullProjectDirectory + "/" + configureItem.FileName)
 
 		//* assign configure byte to configure
 		_ = json.Unmarshal(configByte, &configure)
@@ -88,14 +87,14 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 		if tmp, ok := mapWrapper.Get(alias); ok {
 			wrapper = tmp.(model.Wrapper)
 		}
-		_, _, mapResponse, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
+		_, _, mapResponse, err := ProcessingRequest(alias, cc, wrapper, mapWrapper, reqByte, 0)
 		mapWrapper.Set(alias, wrapper)
 		if err != nil {
 			// next failure
 			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
-			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
 		}
-		return response.ResponseWriter(mapResponse, wrapper.Configure.Response.Transform, c)
+		return response.ResponseWriter(mapResponse, wrapper.Configure.Response.Transform, cc)
 
 	}
 
@@ -112,12 +111,12 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 			wrapper = tmp.(model.Wrapper)
 		}
 		// Loop only available for parallel request, therefore, set loopIndex to 0
-		_, _, _, err := ProcessingRequest(alias, c, wrapper, mapWrapper, reqByte, 0)
+		_, _, _, err := ProcessingRequest(alias, cc, wrapper, mapWrapper, reqByte, 0)
 		if err != nil {
 			// next failure
 			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
 
-			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
 		}
 
 		mapWrapper.Set(alias, wrapper)
@@ -127,7 +126,7 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 			log.Error(err)
 			tmpMapResponse := response.ParseResponse(mapWrapper, mapConfigures[alias].NextFailure, err)
 
-			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, c)
+			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
 
 		// update next_success
@@ -137,12 +136,12 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 
 			// reference to parallel request
 			if nextSuccess == "parallel.json" {
-				return DoParallel(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
+				return DoParallel(cc, mapWrapper, counter+1)
 			}
 
 			// reference to itself
 			if nextSuccess == "serial.json" {
-				return DoSerial(c, baseProject, fullProjectDirectory, mapWrapper, counter+1)
+				return DoSerial(cc, mapWrapper, counter+1)
 			}
 			alias = nextSuccess
 		}
@@ -159,5 +158,5 @@ func DoSerial(c echo.Context, baseProject model.Base, fullProjectDirectory strin
 	//}
 
 	tmpMapResponse := response.ParseResponse(mapWrapper, finalResponseConfigure, err)
-	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, c)
+	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, cc)
 }

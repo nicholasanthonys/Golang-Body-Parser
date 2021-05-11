@@ -40,6 +40,8 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 
 	if len(tmpBody) > 0 {
 		body, err = Transform(requestFromUser.Configure, tmpBody)
+		logrus.Info("tmpBody is ")
+		logrus.Info(tmpBody)
 		if err != nil {
 			log.Error("error constructing body to send")
 			log.Error(err.Error())

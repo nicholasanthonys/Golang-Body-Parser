@@ -3,7 +3,6 @@ package util
 import (
 	"encoding/json"
 	"github.com/clbanning/mxj/x2j"
-	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -32,14 +31,14 @@ func FindInSliceOfInt(slice []int, val int) (int, bool) {
 	return -1, false
 }
 
-//* FindRouteIndex is a function that return index of a certain route given a path example : /serial/smsotp/generate
-func FindRouteIndex(routes []model.Route, path string) int {
-	for index, route := range routes {
-		if strings.Contains(path, route.Path) {
-			return index
+//* FindRoute is a function that return index of a certain route given a path example : /serial/smsotp/generate
+func FindRoute(routes []model.Route, path string, method string) *model.Route {
+	for _, route := range routes {
+		if path == route.Path && method == route.Method {
+			return &route
 		}
 	}
-	return -1
+	return nil
 }
 
 func GetListFolder(dirname string) ([]os.FileInfo, error) {
@@ -76,18 +75,18 @@ func ReadJsonFile(path string) []byte {
 }
 
 //*ErrorWriter is a function that will return Error Response
-func ErrorWriter(c echo.Context, configure model.Configure, err error, status int) error {
+func ErrorWriter(cc *model.CustomContext, configure model.Configure, err error, status int) error {
 	responseMap := make(map[string]interface{})
 	responseMap["message"] = err.Error()
 	switch configure.Response.Transform {
 	case "ToXml":
 		logrus.Warn(err.Error())
 		xmlByte, _ := x2j.MapToXml(responseMap)
-		return c.XMLBlob(status, xmlByte)
+		return cc.XMLBlob(status, xmlByte)
 
 	default:
 		logrus.Warn(err.Error())
-		return c.JSON(status, responseMap)
+		return cc.JSON(status, responseMap)
 	}
 }
 

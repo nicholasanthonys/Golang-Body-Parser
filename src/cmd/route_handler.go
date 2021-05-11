@@ -16,8 +16,7 @@ import (
 )
 
 var configureDir string
-var routes model.Routes
-var fullProjectDirectory string
+var routes []model.Route
 
 //SetRouteHandler called by main.go. This function set route based on router.json
 func SetRouteHandler() *echo.Echo {
@@ -28,6 +27,12 @@ func SetRouteHandler() *echo.Echo {
 	e := echo.New()
 
 	// Middleware
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			cc := &model.CustomContext{Context: c}
+			return next(cc)
+		}
+	})
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -38,8 +43,9 @@ func SetRouteHandler() *echo.Echo {
 		logrus.Error(err.Error())
 	} else {
 		//*add index route
-		e.GET("/", func(c echo.Context) error {
-			return c.String(http.StatusOK, "Golang-Body-Parser Active")
+		e.GET("/:id", func(c echo.Context) error {
+			cc := c.(*model.CustomContext)
+			return cc.String(http.StatusOK, "Golang-Body-Parser Active")
 		})
 
 		//*set path based from configure
@@ -88,59 +94,69 @@ func SetRouteHandler() *echo.Echo {
 // prepareSerialRoute middleware that find defined route in route.json and read SerialProject.json
 func prepareSerialRoute(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		index := util.FindRouteIndex(routes, c.Path())
-		if index < 0 {
-			return c.JSON(404, "Cannot FindInSliceOfString Route "+c.Path())
+		route := util.FindRoute(routes, c.Path(), c.Request().Method)
+		if route == nil {
+			return c.JSON(404, "Cannot FindInSliceOfString DefinedRoute "+c.Path())
 		}
-		route := routes[index]
-		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
-		logrus.Info("full SerialProject directory is")
-		logrus.Info(fullProjectDirectory)
 
-		return next(c)
+		cc := c.(*model.CustomContext)
+		cc.DefinedRoute = route
+		cc.FullProjectDirectory = configureDir + "/" + route.ProjectDirectory
+
+		logrus.Info("full SerialProject directory is")
+		logrus.Info(cc.FullProjectDirectory)
+
+		logrus.Info("defined Route is")
+		logrus.Info(cc.DefinedRoute)
+
+		return next(cc)
 	}
 }
 
 // prepareSerialRoute middleware that find defined route in route.json and read SerialProject.json
 func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		index := util.FindRouteIndex(routes, c.Path())
-		if index < 0 {
-			return c.JSON(404, "Cannot FindInSliceOfString Route "+c.Path())
-		}
-		route := routes[index]
-		fullProjectDirectory = configureDir + "/" + route.ProjectDirectory
-		logrus.Info("full SerialProject directory is")
-		logrus.Info(fullProjectDirectory)
+		route := util.FindRoute(routes, c.Path(), c.Request().Method)
+		cc := &model.CustomContext{Context: c}
+		cc.DefinedRoute = route
+		cc.FullProjectDirectory = configureDir + "/" + route.ProjectDirectory
 
-		return next(c)
+		logrus.Info("full SerialProject directory is")
+		logrus.Info(cc.FullProjectDirectory)
+
+		return next(cc)
 	}
 }
 
 // parallelRouteHandler execute every configure in parallel-way.
 func parallelRouteHandler(c echo.Context) error {
-	baseProject, err := readBaseFile(fullProjectDirectory)
+	cc := c.(*model.CustomContext)
+	baseProject, err := readBaseFile(cc.FullProjectDirectory)
+
 	if err != nil {
 		response := map[string]interface{}{
 			"message": err.Error(),
 		}
 		return c.JSON(500, response)
 	}
+	cc.BaseProject = baseProject
 	mapWrapper := cmap.New()
-	return request.DoParallel(c, baseProject, fullProjectDirectory, mapWrapper, 0)
+	return request.DoParallel(cc, mapWrapper, 0)
 }
 
 // serialRouteHandler process configure in serial-way.
 func serialRouteHandler(c echo.Context) error {
-	baseProject, err := readBaseFile(fullProjectDirectory)
+	cc := c.(*model.CustomContext)
+	baseProject, err := readBaseFile(cc.FullProjectDirectory)
 	if err != nil {
 		response := map[string]interface{}{
 			"message": err.Error(),
 		}
-		return c.JSON(500, response)
+		return cc.JSON(500, response)
 	}
+	cc.BaseProject = baseProject
 	mapWrapper := cmap.New()
-	return request.DoSerial(c, baseProject, fullProjectDirectory, mapWrapper, 0)
+	return request.DoSerial(cc, mapWrapper, 0)
 
 }
 
