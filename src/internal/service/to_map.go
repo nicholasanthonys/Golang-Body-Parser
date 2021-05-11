@@ -3,19 +3,19 @@ package service
 import (
 	"fmt"
 	"github.com/clbanning/mxj"
-	"github.com/labstack/echo"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"net/url"
 )
 
 // FromFormUrl is a function that transform formUrl into map string interface
-func FromFormUrl(c echo.Context) map[string]interface{} {
+func FromFormUrl(cc *model.CustomContext) map[string]interface{} {
 	myMap := make(map[string]interface{})
-	c.Request().ParseForm()
-	for key, value := range c.Request().Form { // range over map
+	cc.Request().ParseForm()
+	for key, value := range cc.Request().Form { // range over map
 		if len(value) > 1 {
 			myMap[key] = value
 		} else {
-			myMap[key] = c.FormValue(key)
+			myMap[key] = cc.FormValue(key)
 		}
 	}
 	return myMap

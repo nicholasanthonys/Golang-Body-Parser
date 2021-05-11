@@ -1,7 +1,6 @@
 package response
 
 import (
-	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
@@ -13,24 +12,24 @@ import (
 )
 
 // setHeaderResponse set custom key-value pair for header, except Content-Length and Content-type
-func SetHeaderResponse(header map[string]interface{}, c echo.Context) echo.Context {
+func SetHeaderResponse(header map[string]interface{}, cc *model.CustomContext) *model.CustomContext {
 	for key, val := range header {
 		rt := reflect.TypeOf(val)
 		//* only add if interface type is string
 		if rt.Kind() == reflect.String {
 			if key != "Content-Length" && key != "Content-Type" {
-				c.Response().Header().Set(key, val.(string))
+				cc.Response().Header().Set(key, val.(string))
 			}
 
 		}
 	}
 
-	return c
+	return cc
 
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
-func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command, err error) map[string]interface{} {
+func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err error) map[string]interface{} {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{
@@ -57,16 +56,16 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command, err err
 	tmpBody := make(map[string]interface{})
 
 	//*header
-	tmpHeader = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", tmpHeader, &mapWrapper, 0)
+	tmpHeader = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", tmpHeader, mapWrapper, 0)
 	//*modify header
-	tmpHeader = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", tmpHeader, &mapWrapper, 0)
+	tmpHeader = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Header, "--", tmpHeader, mapWrapper, 0)
 	//*Deletion Header
 	tmpHeader = service.DeletionHeaderOrQuery(resultWrapper.Configure.Response.Deletes.Header, tmpHeader)
 
 	//*add
-	tmpBody = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", tmpBody, &mapWrapper, 0)
+	tmpBody = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Body, "--", tmpBody, mapWrapper, 0)
 	//*modify
-	tmpBody = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", tmpBody, &mapWrapper, 0)
+	tmpBody = service.ModifyWrapper(resultWrapper.Configure.Response.Modifies.Body, "--", tmpBody, mapWrapper, 0)
 	//* delete
 	tmpBody = service.DeletionBody(resultWrapper.Configure.Response.Deletes, tmpBody)
 
@@ -100,7 +99,7 @@ func ParseResponse(mapWrapper cmap.ConcurrentMap, command model.Command, err err
 }
 
 //*ResponseWriter is a function that will return response
-func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo.Context) error {
+func ResponseWriter(mapResponse map[string]interface{}, transform string, cc *model.CustomContext) error {
 	var statusCode int
 	statusCode, _ = mapResponse["statusCode"].(int)
 	responseBody := mapResponse["body"].(map[string]interface{})
@@ -110,14 +109,14 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo
 		responseBody["error"] = mapResponse["error"].(error).Error()
 	}
 
-	c = SetHeaderResponse(responseHeader, c)
+	SetHeaderResponse(responseHeader, cc)
 	if statusCode == 0 {
 		statusCode = 200
 	}
 
 	switch strings.ToLower(transform) {
 	case strings.ToLower("ToJson"):
-		return c.JSON(statusCode, responseBody)
+		return cc.JSON(statusCode, responseBody)
 	case strings.ToLower("ToXml"):
 
 		resByte, err := service.ToXml(responseBody)
@@ -126,11 +125,11 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, c echo
 			log.Error(err.Error())
 			res := make(map[string]interface{})
 			res["message"] = err.Error()
-			return c.XML(500, res)
+			return cc.XML(500, res)
 		}
-		return c.XMLBlob(statusCode, resByte)
+		return cc.XMLBlob(statusCode, resByte)
 	default:
 		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
-		return c.JSON(404, "Type Not Supported. only support ToJson and ToXml")
+		return cc.JSON(404, "Type Not Supported. only support ToJson and ToXml")
 	}
 }

@@ -7,11 +7,12 @@ import (
 	"github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	cmap "github.com/orcaman/concurrent-map"
+	"github.com/sirupsen/logrus"
 	"reflect"
 	"strings"
 )
 
-func InterfaceDirectModifier(in interface{}, mapWrapper cmap.ConcurrentMap, separator string) interface{} {
+func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, separator string) interface{} {
 
 	if in == nil {
 		return nil
@@ -56,10 +57,14 @@ func InterfaceDirectModifier(in interface{}, mapWrapper cmap.ConcurrentMap, sepa
 
 }
 
-func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper cmap.ConcurrentMap) (*model.CLogicItem, error) {
+func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (*model.CLogicItem, error) {
 	for _, cLogicItem := range cLogics {
 		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
+		logrus.Info("data is")
+		logrus.Info(cLogicItem.Data)
+		logrus.Info("rule is")
+		logrus.Info(cLogicItem.Rule)
 
 		ruleByte, err := json.Marshal(cLogicItem.Rule)
 		if err != nil {

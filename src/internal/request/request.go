@@ -2,12 +2,10 @@ package request
 
 import (
 	"errors"
-	"github.com/labstack/echo"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"reflect"
@@ -24,7 +22,7 @@ func init() {
 	log.Level = util.GetLogLevelFromEnv()
 }
 
-func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[string]interface{}, int, error) {
+func ParseRequestBody(cc *model.CustomContext, contentType string, reqByte []byte) (map[string]interface{}, int, error) {
 	var err error
 	var result = make(map[string]interface{})
 	switch contentType {
@@ -39,7 +37,7 @@ func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 
 	case "application/x-www-form-urlencoded":
 		//*transform x www form url encoded request user to map request from user
-		result = service.FromFormUrl(c)
+		result = service.FromFormUrl(cc)
 	case "application/xml":
 
 		//*transform xml request user to map request from user
@@ -58,21 +56,21 @@ func ParseRequestBody(c echo.Context, contentType string, reqByte []byte) (map[s
 }
 
 // ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, mapWrapper cmap.ConcurrentMap, reqByte []byte, loopIndex int) (*model.Wrapper, int, map[string]interface{}, error) {
+func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.Wrapper, reqByte []byte, loopIndex int) (*model.Wrapper, int, map[string]interface{}, error) {
 	//*check the content type user request
 	var contentType string
 	var err error
 	var status int
 
-	if c.Request().Header["Content-Type"] != nil {
-		contentType = c.Request().Header["Content-Type"][0]
+	if cc.Request().Header["Content-Type"] != nil {
+		contentType = cc.Request().Header["Content-Type"][0]
 	} else {
 		contentType = "application/json"
 	}
 
 	//*convert request to map string interface based on the content type
 	var tmpRequestBody map[string]interface{}
-	tmpRequestBody, status, err = ParseRequestBody(c, contentType, reqByte)
+	tmpRequestBody, status, err = ParseRequestBody(cc, contentType, reqByte)
 
 	if err != nil {
 		return nil, status, nil, err
@@ -80,21 +78,21 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//*set header value
 	tmpRequestHeader := make(map[string]interface{})
-	for key := range c.Request().Header {
+	for key := range cc.Request().Header {
 
-		tmpRequestHeader[key] = c.Request().Header.Get(key)
+		tmpRequestHeader[key] = cc.Request().Header.Get(key)
 	}
 
 	//*set query value
 	tmpRequestQuery := make(map[string]interface{})
-	for key := range c.QueryParams() {
-		tmpRequestQuery[key] = c.QueryParam(key)
+	for key := range cc.QueryParams() {
+		tmpRequestQuery[key] = cc.QueryParam(key)
 	}
 
 	//*set param value
 	tmpRequestParam := make(map[string]interface{})
-	for _, value := range c.ParamNames() {
-		tmpRequestParam[value] = c.Param(value)
+	for _, value := range cc.ParamNames() {
+		tmpRequestParam[value] = cc.Param(value)
 	}
 
 	// write
@@ -115,22 +113,22 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 
 	//*assign first before do any add,modification,delete in case value want reference each other
 	//mapWrapper[aliasName] = *wrapper
-	mapWrapper.Set(aliasName, wrapper)
+	cc.MapWrapper.Set(aliasName, wrapper)
 
 	//* Do the Map Modification
 	//var mutex = &sync.Mutex{}
 	//mutex.Lock()
-	tmpMapRequest := service.DoAddModifyDelete(wrapper.Configure.Request, &wrapper.Request, &mapWrapper, loopIndex)
+	tmpMapRequest := service.DoAddModifyDelete(wrapper.Configure.Request, &wrapper.Request, cc.MapWrapper, loopIndex)
 	// mutex.Unlock()
 	//write
 	wrapper.Request.Set("header", tmpMapRequest["header"])
 	wrapper.Request.Set("body", tmpMapRequest["body"])
 	wrapper.Request.Set("query", tmpMapRequest["query"])
 
-	mapWrapper.Set(aliasName, wrapper)
+	cc.MapWrapper.Set(aliasName, wrapper)
 
 	//*get the destinationPath value before sending request
-	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", &mapWrapper, loopIndex)
+	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", cc.MapWrapper, loopIndex)
 
 	//* In case user want to log after modify/changing request
 	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
@@ -176,7 +174,7 @@ func ProcessingRequest(aliasName string, c echo.Context, wrapper model.Wrapper, 
 	}
 
 	//* Do Command Add, Modify, Deletion for response again
-	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, &wrapper.Response, &mapWrapper, loopIndex)
+	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, &wrapper.Response, cc.MapWrapper, loopIndex)
 	if wrapper.Configure.Request.StatusCode > 0 {
 		tmpMapResponseModified["statusCode"] = wrapper.Configure.Response.StatusCode
 	} else {

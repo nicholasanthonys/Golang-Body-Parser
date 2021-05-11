@@ -1,10 +1,19 @@
 package model
 
 import (
+	"github.com/labstack/echo"
 	cmap "github.com/orcaman/concurrent-map"
 )
 
 type (
+	CustomContext struct {
+		echo.Context
+		DefinedRoute         *Route
+		FullProjectDirectory string
+		BaseProject          Base
+		MapWrapper           *cmap.ConcurrentMap
+	}
+
 	CLogicItem struct {
 		Rule        interface{} `json:"rule"`
 		Data        interface{} `json:"data"`
@@ -23,8 +32,6 @@ type (
 		MaxCircular      int     `json:"project_max_circular"`
 		CircularResponse Command `json:"circular_response"`
 	}
-
-	Routes []Route
 
 	Configure struct {
 		ListStatusCodeSuccess []int   `json:"list_status_code_success"`
