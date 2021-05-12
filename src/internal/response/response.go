@@ -7,7 +7,6 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -81,16 +80,15 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 
 	var statusCode int
 	if resultWrapper.Configure.Response.StatusCode == 0 {
+		log.Warn("status code is not defined, set status code to 400")
 		// default
 		statusCode = 400
 	} else {
 		statusCode = resultWrapper.Configure.Response.StatusCode
 	}
 
-	statusCodeString := strconv.Itoa(statusCode)
-
 	response := map[string]interface{}{
-		"statusCode": statusCodeString,
+		"statusCode": statusCode,
 		"header":     tmpHeader,
 		"body":       tmpBody,
 		"error":      err,
@@ -101,7 +99,8 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 //*ResponseWriter is a function that will return response
 func ResponseWriter(mapResponse map[string]interface{}, transform string, cc *model.CustomContext) error {
 	var statusCode int
-	statusCode, _ = mapResponse["statusCode"].(int)
+	statusCode = mapResponse["statusCode"].(int)
+
 	responseBody := mapResponse["body"].(map[string]interface{})
 	responseHeader := mapResponse["header"].(map[string]interface{})
 
@@ -111,7 +110,8 @@ func ResponseWriter(mapResponse map[string]interface{}, transform string, cc *mo
 
 	SetHeaderResponse(responseHeader, cc)
 	if statusCode == 0 {
-		statusCode = 200
+		log.Warn("Status Code is not defined, set Status code to 4000")
+		statusCode = 400
 	}
 
 	switch strings.ToLower(transform) {

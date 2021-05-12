@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -23,7 +22,7 @@ func init() {
 }
 
 func Receiver(configure model.Configure, res *http.Response) (map[string]interface{}, error) {
-	tmpStatusCode := ""
+	tmpStatusCode := 0
 	tmpBody := make(map[string]interface{})
 	tmpHeader := make(map[string]interface{})
 
@@ -36,7 +35,7 @@ func Receiver(configure model.Configure, res *http.Response) (map[string]interfa
 	}
 
 	// status code
-	tmpStatusCode = strconv.Itoa(res.StatusCode)
+	tmpStatusCode = res.StatusCode
 
 	//*get response content type
 	contentType := res.Header.Get("Content-Type")
