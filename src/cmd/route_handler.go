@@ -103,11 +103,8 @@ func prepareSerialRoute(next echo.HandlerFunc) echo.HandlerFunc {
 		cc.DefinedRoute = route
 		cc.FullProjectDirectory = configureDir + "/" + route.ProjectDirectory
 
-		logrus.Info("full SerialProject directory is")
-		logrus.Info(cc.FullProjectDirectory)
-
-		logrus.Info("defined Route is")
-		logrus.Info(cc.DefinedRoute)
+		log.Info("full SerialProject directory is")
+		log.Info(cc.FullProjectDirectory)
 
 		return next(cc)
 	}
