@@ -6,7 +6,6 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/openpgp/errors"
 	"reflect"
 	"strconv"
 	"strings"
@@ -126,6 +125,12 @@ func RetrieveValue(value interface{}, takeFrom cmap.ConcurrentMap, loopIndex int
 	if reflect.String == vt {
 		//* We Call Sanitizevalue to clear the value from the square bracket and the Dollar Sign
 		listTraverseVal, destination := util.SanitizeValue(fmt.Sprintf("%v", value))
+		if len(destination) == 0 {
+			log.Info("destination not found, returning : ", realValue)
+
+			// return empty realvalue
+			return realValue
+		}
 		if listTraverseVal != nil {
 			var key string
 			if destination == "body" {
@@ -202,7 +207,6 @@ func recursiveGetValue(listTraverse []string, in interface{}, index int, loopInd
 
 				if err != nil {
 					log.Error("error converting string to integer")
-					log.Error(errors.ErrKeyIncorrect)
 					return nil
 				}
 
@@ -317,6 +321,12 @@ func ModifyPath(path string, separator string, takeFrom *cmap.ConcurrentMap, loo
 			//* if value has prefix $configure
 			if strings.HasPrefix(fmt.Sprintf("%v", removedBracket), "$configure") {
 				splittedValue := strings.Split(fmt.Sprintf("%v", removedBracket), separator) //$configure1.json, $request, $body[user][name]
+				if len(splittedValue) != 3 {
+					log.Error("referenced syntax wrong for : ", removedBracket)
+					log.Error(splittedValue)
+					return ""
+				}
+
 				//remove dollar sign
 				var wrapper model.Wrapper
 				if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
@@ -364,6 +374,12 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		//* if value has prefix $configure
 		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
+			if len(splittedValue) != 3 {
+				log.Error("referenced syntax wrong for : ", value)
+				log.Error(splittedValue)
+				return mapToBeAdded
+			}
+
 			//remove dollar sign
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 			var wrapper model.Wrapper
@@ -400,7 +416,11 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			//* split : $configure1.json-$request-$body[user]
 			//* into $configure1.json, $request, $body[user]
 			splittedValue := strings.Split(fmt.Sprintf("%v", value), separator) //$configure1.json, $request, $body[user][name]
-
+			if len(splittedValue) != 3 {
+				log.Error("referenced syntax wrong for : ", value)
+				log.Error(splittedValue)
+				return mapToBeModified
+			}
 			////remove dollar sign from $configure
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
 			var wrapper model.Wrapper
