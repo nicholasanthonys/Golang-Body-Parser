@@ -28,7 +28,7 @@ func SetHeaderResponse(header map[string]interface{}, cc *model.CustomContext) *
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
-func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err error) map[string]interface{} {
+func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err error, wrapper *model.Wrapper) model.CustomResponse {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{
@@ -42,17 +42,18 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 	resultWrapper.Response.Set("body", make(map[string]interface{}))
 
 	//* now we will set the response body based from configurex.json if there is $configure value in configureBased.
-	//keyConfigure := util.RemoveCharacters(resultWrapper.Configure.ConfigureBased, "$")
-	//if strings.HasPrefix(resultWrapper.Configure.ConfigureBased, "$configure") {
-	//
-	//	//*check if key exist in the map
-	//	if _, ok := mapWrapper[keyConfigure]; ok {
-	//		//* get configureX.json from map wrapper
-	//		resultWrapper.Response = mapWrapper[keyConfigure].Response
-	//	}
-	//}
+
 	tmpHeader := make(map[string]interface{})
 	tmpBody := make(map[string]interface{})
+	if wrapper != nil {
+		if tmp, ok := wrapper.Response.Get("header"); ok {
+			tmpHeader = tmp.(map[string]interface{})
+		}
+
+		if tmp, ok := wrapper.Response.Get("body"); ok {
+			tmpBody = tmp.(map[string]interface{})
+		}
+	}
 
 	//*header
 	tmpHeader = service.AddToWrapper(resultWrapper.Configure.Response.Adds.Header, "--", tmpHeader, mapWrapper, 0)
@@ -87,25 +88,26 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 		statusCode = resultWrapper.Configure.Response.StatusCode
 	}
 
-	response := map[string]interface{}{
-		"statusCode": statusCode,
-		"header":     tmpHeader,
-		"body":       tmpBody,
-		"error":      err,
+	response := model.CustomResponse{
+		StatusCode: statusCode,
+		Header:     tmpHeader,
+		Body:       tmpBody,
+		Error:      err,
 	}
+
 	return response
 }
 
 //*ResponseWriter is a function that will return response
-func ResponseWriter(mapResponse map[string]interface{}, transform string, cc *model.CustomContext) error {
+func ResponseWriter(customResponse model.CustomResponse, transform string, cc *model.CustomContext) error {
 	var statusCode int
-	statusCode = mapResponse["statusCode"].(int)
+	statusCode = customResponse.StatusCode
 
-	responseBody := mapResponse["body"].(map[string]interface{})
-	responseHeader := mapResponse["header"].(map[string]interface{})
+	responseBody := customResponse.Body
+	responseHeader := customResponse.Header
 
-	if mapResponse["error"] != nil {
-		responseBody["error"] = mapResponse["error"].(error).Error()
+	if customResponse.Error != nil {
+		responseBody["error"] = customResponse.Error.Error()
 	}
 
 	SetHeaderResponse(responseHeader, cc)

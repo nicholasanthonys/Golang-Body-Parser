@@ -247,44 +247,48 @@ func recursiveGetValue(listTraverse []string, in interface{}, index int, loopInd
 //* Here, we call DoCommandConfigure for each Header, Query, and Body
 //* fields is field that want to be modify
 func DoAddModifyDelete(command model.Command, fields *cmap.ConcurrentMap, takeFrom *cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
-	tmpHeader := make(map[string]interface{})
-	tmpBody := make(map[string]interface{})
-	tmpQuery := make(map[string]interface{})
+	//tmpHeader := make(map[string]interface{})
+	//tmpBody := make(map[string]interface{})
+	//tmpQuery := make(map[string]interface{})
+	var fieldHeader map[string]interface{}
+	var fieldQuery map[string]interface{}
+	var fieldBody map[string]interface{}
 
 	//*header
 	if tmp, ok := fields.Get("header"); ok {
-		fieldHeader := tmp.(map[string]interface{})
+		fieldHeader = tmp.(map[string]interface{})
 
-		tmpHeader = AddToWrapper(command.Adds.Header, "--", fieldHeader, takeFrom, loopIndex)
+		fieldHeader = AddToWrapper(command.Adds.Header, "--", fieldHeader, takeFrom, loopIndex)
 		//*modify header
-		tmpHeader = ModifyWrapper(command.Modifies.Header, "--", fieldHeader, takeFrom, loopIndex)
+		fieldHeader = ModifyWrapper(command.Modifies.Header, "--", fieldHeader, takeFrom, loopIndex)
 		//*Deletion Header
-		tmpHeader = DeletionHeaderOrQuery(command.Deletes.Header, fieldHeader)
+		fieldHeader = DeletionHeaderOrQuery(command.Deletes.Header, fieldHeader)
 	}
 
 	if tmp, ok := fields.Get("query"); ok {
-		fieldQuery := tmp.(map[string]interface{})
+		fieldQuery = tmp.(map[string]interface{})
 		//* Add Query
-		tmpQuery = AddToWrapper(command.Adds.Query, "--", fieldQuery, takeFrom, loopIndex)
+		fieldQuery = AddToWrapper(command.Adds.Query, "--", fieldQuery, takeFrom, loopIndex)
 		//*modify Query
-		tmpQuery = ModifyWrapper(command.Modifies.Query, "--", fieldQuery, takeFrom, loopIndex)
+		fieldQuery = ModifyWrapper(command.Modifies.Query, "--", fieldQuery, takeFrom, loopIndex)
 		//*Deletion Query
-		tmpQuery = DeletionHeaderOrQuery(command.Deletes.Query, fieldQuery)
+		fieldQuery = DeletionHeaderOrQuery(command.Deletes.Query, fieldQuery)
 	}
 
 	if tmp, ok := fields.Get("body"); ok {
-		fieldBody := tmp.(map[string]interface{})
+		fieldBody = tmp.(map[string]interface{})
+
 		//* add body
-		tmpBody = AddToWrapper(command.Adds.Body, "--", fieldBody, takeFrom, loopIndex)
+		fieldBody = AddToWrapper(command.Adds.Body, "--", fieldBody, takeFrom, loopIndex)
 		//*modify body
-		tmpBody = ModifyWrapper(command.Modifies.Body, "--", fieldBody, takeFrom, loopIndex)
+		fieldBody = ModifyWrapper(command.Modifies.Body, "--", fieldBody, takeFrom, loopIndex)
 		//*deletion to body
-		tmpBody = DeletionBody(command.Deletes, fieldBody)
+		fieldBody = DeletionBody(command.Deletes, fieldBody)
 	}
 	return map[string]interface{}{
-		"header": tmpHeader,
-		"body":   tmpBody,
-		"query":  tmpQuery,
+		"header": fieldHeader,
+		"body":   fieldBody,
+		"query":  fieldQuery,
 	}
 }
 
@@ -328,9 +332,9 @@ func ModifyPath(path string, separator string, takeFrom *cmap.ConcurrentMap, loo
 				}
 
 				//remove dollar sign
-				var wrapper model.Wrapper
+				var wrapper *model.Wrapper
 				if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
-					wrapper = tmp.(model.Wrapper)
+					wrapper = tmp.(*model.Wrapper)
 				} else {
 					return ""
 				}
@@ -382,9 +386,9 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 
 			//remove dollar sign
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
-			var wrapper model.Wrapper
+			var wrapper *model.Wrapper
 			if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
-				wrapper = tmp.(model.Wrapper)
+				wrapper = tmp.(*model.Wrapper)
 				if splittedValue[1] == "$request" {
 					//* get the request from fields
 					realValue = RetrieveValue(splittedValue[2], wrapper.Request, loopIndex)
@@ -423,9 +427,9 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 			}
 			////remove dollar sign from $configure
 			//splittedValue[0] = util.RemoveCharacters(splittedValue[0], "$")
-			var wrapper model.Wrapper
+			var wrapper *model.Wrapper
 			if tmp, ok := takeFrom.Get(splittedValue[0]); ok {
-				wrapper = tmp.(model.Wrapper)
+				wrapper = tmp.(*model.Wrapper)
 			}
 			if splittedValue[1] == "$request" {
 				//* get the request from fields

@@ -19,7 +19,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil)
+			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil, nil)
 			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
 		}
 		resMap := make(map[string]interface{})
@@ -104,12 +104,12 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, cc.MapWrapper)
 				if cLogicItem != nil {
 					wg.Add(1)
-					go worker(&wg, configureItem.Alias, cc, requestFromUser, reqByte, i)
+					go worker(&wg, configureItem.Alias, cc, &requestFromUser, reqByte, i)
 				}
 			} else {
 				// no clogics
 				wg.Add(1)
-				go worker(&wg, configureItem.Alias, cc, requestFromUser, reqByte, i)
+				go worker(&wg, configureItem.Alias, cc, &requestFromUser, reqByte, i)
 			}
 
 		}
@@ -124,15 +124,15 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, cc.MapWrapper)
 		if err != nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, err)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, err, nil)
 
 			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, cc)
 		}
 
 		if cLogicItemTrue == nil {
-			resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, nil)
+			resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, nil, nil)
 
-			response.SetHeaderResponse(resultWrapper["header"].(map[string]interface{}), cc)
+			response.SetHeaderResponse(resultWrapper.Header, cc)
 			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, cc)
 		}
 
@@ -156,7 +156,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	}
 
-	resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil)
+	resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
 
 	return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, cc)
 
@@ -165,15 +165,13 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 var mutex sync.Mutex
 
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
-func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requestFromUser model.Wrapper, requestBody []byte, loopIndex int) {
+func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requestFromUser *model.Wrapper, requestBody []byte, loopIndex int) {
 	defer wg.Done()
-	_, status, _, err := ProcessingRequest(mapKeyName, cc, requestFromUser, requestBody, loopIndex)
+	_, status, err := ProcessingRequest(mapKeyName, cc, requestFromUser, requestBody, loopIndex)
 	if err != nil {
 		log.Error("Go Worker - Error Process")
 		log.Error(err.Error())
 		log.Error("status : ", status)
 	}
-	//cc.MapWrapper[mapKeyName] = requestFromUser
-
 	cc.MapWrapper.Set(mapKeyName, requestFromUser)
 }

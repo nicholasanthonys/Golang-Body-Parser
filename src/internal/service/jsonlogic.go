@@ -36,12 +36,15 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 		if strings.HasPrefix(fmt.Sprintf("%v", in), "$configure") {
 			splittedValue := strings.Split(fmt.Sprintf("%v", in), separator) //$configure1.json, $request, $body[user][name]
 			// Retrieve item from map.
-			var wrapper model.Wrapper
+			var wrapper *model.Wrapper
 			if tmp, ok := mapWrapper.Get(splittedValue[0]); ok {
-				wrapper = tmp.(model.Wrapper)
+				wrapper = tmp.(*model.Wrapper)
+			}
+
+			if wrapper == nil {
+				return in
 			}
 			if splittedValue[1] == "$request" {
-
 				val = RetrieveValue(splittedValue[2], wrapper.Request, 0)
 				in = val
 			} else {

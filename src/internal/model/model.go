@@ -14,6 +14,13 @@ type (
 		MapWrapper           *cmap.ConcurrentMap
 	}
 
+	CustomResponse struct {
+		StatusCode int
+		Header     map[string]interface{}
+		Body       map[string]interface{}
+		Error      error
+	}
+
 	CLogicItem struct {
 		Rule        interface{} `json:"rule"`
 		Data        interface{} `json:"data"`
