@@ -120,6 +120,19 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		}
 
 		cc.MapWrapper.Set(alias, wrapper)
+
+		// if there is no cLogics
+		if len(mapConfigures[alias].CLogics) == 0 {
+			var wrapper model.Wrapper
+			if tmp, ok := cc.MapWrapper.Get("alias"); ok {
+				wrapper = tmp.(model.Wrapper)
+				tmpMapResponse := response.ParseResponse(cc.MapWrapper, wrapper.Configure.Response, nil)
+				return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
+			}
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, nil)
+			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
+		}
+
 		cLogicItemTrue, err := service.CLogicsChecker(mapConfigures[alias].CLogics, cc.MapWrapper)
 
 		if err != nil || cLogicItemTrue == nil {
