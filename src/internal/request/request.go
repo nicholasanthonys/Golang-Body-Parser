@@ -175,7 +175,7 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.
 
 	//* Do Command Add, Modify, Deletion for response again
 	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, &wrapper.Response, cc.MapWrapper, loopIndex)
-	if wrapper.Configure.Request.StatusCode > 0 {
+	if wrapper.Configure.Response.StatusCode > 0 {
 		tmpMapResponseModified["statusCode"] = wrapper.Configure.Response.StatusCode
 	} else {
 		tmpMapResponseModified["statusCode"] = response.StatusCode
