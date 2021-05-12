@@ -131,10 +131,14 @@ func SanitizeValue(value string) ([]string, string) {
 		destination = "status_code"
 	}
 
-	sanitized = value[len(destination)+1:]
+	if len(destination) > 0 {
+		sanitized = value[len(destination)+1:]
 
-	//* We call this function to remove square bracket. ex : $body[user] will become :  body user (as a slice)
-	return RemoveSquareBracketAndConvertToSlice(sanitized, ""), destination
+		//* We call this function to remove square bracket. ex : $body[user] will become :  body user (as a slice)
+		return RemoveSquareBracketAndConvertToSlice(sanitized, ""), destination
+	}
+
+	return nil, ""
 }
 
 func RemoveCharacters(input string, characters string) string {
