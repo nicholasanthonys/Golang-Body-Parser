@@ -56,7 +56,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string, reqByte []byt
 }
 
 // ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.Wrapper, reqByte []byte, loopIndex int) (*model.Wrapper, int, map[string]interface{}, error) {
+func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, reqByte []byte, loopIndex int) (int, *model.CustomResponse, error) {
 	//*check the content type user request
 	var contentType string
 	var err error
@@ -73,7 +73,7 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.
 	tmpRequestBody, status, err = ParseRequestBody(cc, contentType, reqByte)
 
 	if err != nil {
-		return nil, status, nil, err
+		return status, nil, err
 	}
 
 	//*set header value
@@ -140,11 +140,11 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.
 	}
 
 	//*send to destination url
-	response, err := service.Send(&wrapper)
+	response, err := service.Send(wrapper)
 
 	if err != nil {
 		logrus.Error("Error send : ", err.Error())
-		return nil, http.StatusInternalServerError, nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 	//*close http
 	defer response.Body.Close()
@@ -161,7 +161,7 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.
 	}
 
 	if err != nil {
-		return nil, http.StatusInternalServerError, nil, err
+		return http.StatusInternalServerError, nil, err
 	}
 
 	//* In case user want to log before modify/changing request
@@ -175,6 +175,9 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.
 
 	//* Do Command Add, Modify, Deletion for response again
 	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, &wrapper.Response, cc.MapWrapper, loopIndex)
+	log.Info("response is")
+	log.Info(tmpMapResponseModified)
+
 	if wrapper.Configure.Response.StatusCode > 0 {
 		tmpMapResponseModified["statusCode"] = wrapper.Configure.Response.StatusCode
 	} else {
@@ -192,5 +195,14 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper model.
 		}
 		util.DoLoggingJson(logValue, "after", aliasName, false)
 	}
-	return &wrapper, http.StatusOK, tmpMapResponseModified, nil
+
+	cc.MapWrapper.Set(aliasName, wrapper)
+
+	customResponse := model.CustomResponse{
+		StatusCode: wrapper.Configure.Response.StatusCode,
+		Header:     tmpMapResponseModified["header"].(map[string]interface{}),
+		Body:       tmpMapResponseModified["body"].(map[string]interface{}),
+		Error:      nil,
+	}
+	return http.StatusOK, &customResponse, nil
 }
