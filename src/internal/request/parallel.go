@@ -131,7 +131,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 		if cLogicItemTrue == nil {
 			resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, nil, nil)
-
 			response.SetHeaderResponse(resultWrapper.Header, cc)
 			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, cc)
 		}

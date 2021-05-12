@@ -91,23 +91,25 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 	}
 
 	finalResponseConfigure := model.Command{}
+	var finalCustomResponse *model.CustomResponse
 	// Processing request
 	for {
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(*model.Wrapper)
 		}
 		// Loop only available for parallel request, therefore, set loopIndex to 0
-		_, _, err := ProcessingRequest(alias, cc, wrapper, reqByte, 0)
+		_, customResponse, err := ProcessingRequest(alias, cc, wrapper, reqByte, 0)
+		finalCustomResponse = customResponse
 		if err != nil {
 			// next failure
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, wrapper)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, customResponse)
 			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
 		}
 
 		cc.MapWrapper.Set(alias, wrapper)
 
 		if len(mapConfigures[alias].CLogics) == 0 {
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, wrapper.Configure.Response, nil, wrapper)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, wrapper.Configure.Response, nil, customResponse)
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
 
@@ -143,6 +145,6 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 	}
 
-	tmpMapResponse := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, err, wrapper)
+	tmpMapResponse := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, err, finalCustomResponse)
 	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, cc)
 }

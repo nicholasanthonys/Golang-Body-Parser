@@ -28,7 +28,7 @@ func SetHeaderResponse(header map[string]interface{}, cc *model.CustomContext) *
 }
 
 // parseResponse process response (add,modify,delete) and return map to be sent to the client
-func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err error, wrapper *model.Wrapper) model.CustomResponse {
+func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err error, customResponse *model.CustomResponse) model.CustomResponse {
 
 	resultWrapper := model.Wrapper{
 		Configure: model.Configure{
@@ -45,14 +45,25 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 
 	tmpHeader := make(map[string]interface{})
 	tmpBody := make(map[string]interface{})
-	if wrapper != nil {
-		if tmp, ok := wrapper.Response.Get("header"); ok {
-			tmpHeader = tmp.(map[string]interface{})
-		}
 
-		if tmp, ok := wrapper.Response.Get("body"); ok {
-			tmpBody = tmp.(map[string]interface{})
+	statusCode := 400
+	if customResponse != nil {
+		tmpHeader = customResponse.Header
+		tmpBody = customResponse.Body
+		if customResponse.StatusCode > 0 {
+			statusCode = customResponse.StatusCode
+
+		} else {
+			log.Warn("status code is not defined, set status code to 400")
+			// default
+			statusCode = 400
+
 		}
+	}
+
+	// if status code is specified in configure, then set status code based on configure
+	if command.StatusCode > 0 {
+		statusCode = command.StatusCode
 	}
 
 	//*header
@@ -77,15 +88,6 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 		}
 		//logValue := service.RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, 0)
 		util.DoLoggingJson(logValue, "after", "final response", false)
-	}
-
-	var statusCode int
-	if resultWrapper.Configure.Response.StatusCode == 0 {
-		log.Warn("status code is not defined, set status code to 400")
-		// default
-		statusCode = 400
-	} else {
-		statusCode = resultWrapper.Configure.Response.StatusCode
 	}
 
 	response := model.CustomResponse{

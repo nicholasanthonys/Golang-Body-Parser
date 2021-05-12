@@ -125,10 +125,10 @@ func RetrieveValue(value interface{}, takeFrom cmap.ConcurrentMap, loopIndex int
 	if reflect.String == vt {
 		//* We Call Sanitizevalue to clear the value from the square bracket and the Dollar Sign
 		listTraverseVal, destination := util.SanitizeValue(fmt.Sprintf("%v", value))
+
 		if len(destination) == 0 {
 			log.Info("destination not found, returning : ", realValue)
 
-			// return empty realvalue
 			return realValue
 		}
 		if listTraverseVal != nil {
