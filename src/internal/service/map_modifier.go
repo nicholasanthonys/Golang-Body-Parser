@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
@@ -34,10 +35,16 @@ func AddRecursive(listTraverse []string, value interface{}, in interface{}, inde
 			//*only add when the value of the key is null
 			//mutex.Lock()
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
-				in.(map[string]interface{})[listTraverse[index]] = value
+				tmpInterface := make(map[string]interface{})
+				tmp := in.(map[string]interface{})
+				copier.Copy(&tmpInterface, &tmp)
+
+				tmpInterface[listTraverse[index]] = value
+				copier.Copy(&in, &tmpInterface)
+
 			}
-			//mutex.Unlock()
 		}
+
 		return in
 	}
 
@@ -61,14 +68,19 @@ func AddRecursive(listTraverse []string, value interface{}, in interface{}, inde
 
 // ModifyRecursive is a function that do modify key-value based on listTraverse
 func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, index int) interface{} {
-
 	if index == len(listTraverse)-1 {
 
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
 				return nil
 			}
-			in.(map[string]interface{})[listTraverse[index]] = value
+			tmpInterface := make(map[string]interface{})
+			tmp := in.(map[string]interface{})
+			copier.Copy(&tmpInterface, &tmp)
+
+			tmpInterface[listTraverse[index]] = value
+			copier.Copy(&in, &tmpInterface)
+			//in.(map[string]interface{})[listTraverse[index]] = value
 		}
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "[]interface {}" {
 			realIndex, err := strconv.Atoi(listTraverse[index])
@@ -89,7 +101,7 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 		}
 	}
 
-	return nil
+	return in
 
 }
 
@@ -97,22 +109,39 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 func DeleteRecursive(listTraverse []string, in interface{}, index int) interface{} {
 	if index == len(listTraverse)-1 {
 
-		if in.(map[string]interface{})[listTraverse[index]] == nil {
-			return nil
+		t := reflect.TypeOf(in)
+		vt := t.Kind()
+		if vt == reflect.Map {
+			if in.(map[string]interface{})[listTraverse[index]] != nil {
+				delete(in.(map[string]interface{}), listTraverse[index])
+			}
 		}
 
-		//in.(map[string]interface{})[listTraverse[index]] = "deleted"
-		delete(in.(map[string]interface{}), listTraverse[index])
+		if vt == reflect.Slice {
+			deletedIndex, err := strconv.Atoi(listTraverse[index])
+			if err != nil {
+				log.Error(err.Error())
+				return in
+			}
+			mySlice := make([]interface{}, 0)
+			for index, val := range in.([]interface{}) {
+				if deletedIndex != index {
+					mySlice = append(mySlice, val)
+				}
+			}
+			in = mySlice
+			return in
+		}
 
 		return in
 	}
 
 	if in.(map[string]interface{})[listTraverse[index]] != nil {
-		DeleteRecursive(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
-		return in.(map[string]interface{})
+		in.(map[string]interface{})[listTraverse[index]] = DeleteRecursive(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
+		return in
 	}
 
-	return nil
+	return in
 }
 
 // RetrieveValue is a function that check the value type value from configure and retrieve the value from header,body, or query
@@ -152,6 +181,7 @@ func RetrieveValue(value interface{}, takeFrom cmap.ConcurrentMap, loopIndex int
 				if key != "statusCode" {
 					mutex.Lock()
 					tmpMap := tmp.(map[string]interface{})
+
 					realValue = recursiveGetValue(listTraverseVal, tmpMap, 0, loopIndex)
 					mutex.Unlock()
 				} else {
@@ -297,7 +327,7 @@ func DeletionBody(deleteField model.DeleteFields, mapKeyToBeRemoved map[string]i
 	for _, key := range deleteField.Body {
 		listTraverse := strings.Split(key, ".")
 		mutex.Lock()
-		DeleteRecursive(listTraverse, mapKeyToBeRemoved, 0)
+		mapKeyToBeRemoved = DeleteRecursive(listTraverse, mapKeyToBeRemoved, 0).(map[string]interface{})
 		mutex.Unlock()
 	}
 	return mapKeyToBeRemoved
@@ -404,7 +434,7 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 		listTraverseKey := strings.Split(key, ".")
 
 		mutex.Lock()
-		AddRecursive(listTraverseKey, realValue, mapToBeAdded, 0)
+		mapToBeAdded = AddRecursive(listTraverseKey, realValue, mapToBeAdded, 0).(map[string]interface{})
 		mutex.Unlock()
 	}
 	return mapToBeAdded
@@ -413,7 +443,6 @@ func AddToWrapper(commands map[string]interface{}, separator string, mapToBeAdde
 //*ModifyWrapper is a function that will modify value based from specific key
 func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeModified map[string]interface{}, takeFrom *cmap.ConcurrentMap, loopIndex int) map[string]interface{} {
 	for key, value := range commands {
-
 		var realValue interface{}
 		//* if value has prefix $configurex.json
 		if strings.HasPrefix(fmt.Sprintf("%v", value), "$configure") {
@@ -445,7 +474,8 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 
 		listTraverseKey := strings.Split(key, ".")
 		mutex.Lock()
-		ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
+
+		mapToBeModified = ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0).(map[string]interface{})
 		mutex.Unlock()
 	}
 	return mapToBeModified
