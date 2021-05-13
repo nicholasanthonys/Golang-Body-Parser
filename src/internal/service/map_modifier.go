@@ -113,8 +113,9 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 		vt := t.Kind()
 		if vt == reflect.Map {
 			if in.(map[string]interface{})[listTraverse[index]] != nil {
-				delete(in.(map[string]interface{}), listTraverse[index])
+				return nil
 			}
+			delete(in.(map[string]interface{}), listTraverse[index])
 		}
 
 		if vt == reflect.Slice {
@@ -327,7 +328,10 @@ func DeletionBody(deleteField model.DeleteFields, mapKeyToBeRemoved map[string]i
 	for _, key := range deleteField.Body {
 		listTraverse := strings.Split(key, ".")
 		mutex.Lock()
-		mapKeyToBeRemoved = DeleteRecursive(listTraverse, mapKeyToBeRemoved, 0).(map[string]interface{})
+		result := DeleteRecursive(listTraverse, mapKeyToBeRemoved, 0)
+		if result != nil {
+			mapKeyToBeRemoved = result.(map[string]interface{})
+		}
 		mutex.Unlock()
 	}
 	return mapKeyToBeRemoved
@@ -475,7 +479,10 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 		listTraverseKey := strings.Split(key, ".")
 		mutex.Lock()
 
-		mapToBeModified = ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0).(map[string]interface{})
+		result := ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
+		if result != nil {
+			mapToBeModified = result.(map[string]interface{})
+		}
 		mutex.Unlock()
 	}
 	return mapToBeModified
