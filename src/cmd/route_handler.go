@@ -43,7 +43,7 @@ func SetRouteHandler() *echo.Echo {
 		logrus.Error(err.Error())
 	} else {
 		//*add index route
-		e.GET("/:id", func(c echo.Context) error {
+		e.GET("/", func(c echo.Context) error {
 			cc := c.(*model.CustomContext)
 			return cc.String(http.StatusOK, "Golang-Body-Parser Active")
 		})
