@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo-contrib/prometheus"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/request"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
@@ -35,6 +36,10 @@ func SetRouteHandler() *echo.Echo {
 	})
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	// Enable metrics middleware
+	p := prometheus.NewPrometheus("echo", nil)
+	p.Use(e)
 
 	// * Read router.json
 	routesByte := util.ReadJsonFile(configureDir + "/router.json")
