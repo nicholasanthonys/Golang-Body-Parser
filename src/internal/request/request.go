@@ -101,8 +101,6 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	for _, value := range cc.ParamNames() {
 		tmpRequestParam[value] = cc.Param(value)
 	}
-	logrus.Info("tmpRequestBody is")
-	logrus.Info(tmpRequestBody)
 
 	// write
 	wrapper.Request.Set("param", tmpRequestParam)
