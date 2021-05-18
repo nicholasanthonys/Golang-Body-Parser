@@ -56,11 +56,6 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	//*declare request
 	var req *http.Request
 
-	if strings.ToLower(requestFromUser.Configure.Request.Method) == "get" {
-		url = setQueryGet(requestFromUser.Request, url)
-		return doGetRequest(url)
-	}
-
 	//*constructing request
 	req, _ = http.NewRequest(requestFromUser.Configure.Request.Method, url, body)
 
@@ -72,8 +67,16 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	//*set query
 	setQuery(requestFromUser.Request, &q)
 	req.URL.RawQuery = q.Encode()
+
 	// set content type for header
 	setContentTypeHeader(transformRequest, &req.Header)
+
+	log.Info("url is : ")
+	log.Info(req.URL.String())
+
+	if strings.ToLower(requestFromUser.Configure.Request.Method) == "get" {
+		return doGetRequest(req.URL.String())
+	}
 
 	return doRequest(req)
 
@@ -146,28 +149,8 @@ func setQuery(mapRequest cmap.ConcurrentMap, q *url.Values) {
 	for key, value := range tmpQuery {
 		vt := reflect.TypeOf(value).Kind()
 		if vt == reflect.String {
+			log.Info("set key :", key, " value : ", value)
 			q.Set(key, fmt.Sprintf("%v", value))
 		}
 	}
-}
-
-func setQueryGet(mapRequest cmap.ConcurrentMap, url string) string {
-	//* Add
-	tmpQuery := make(map[string]interface{})
-	if tmp, ok := mapRequest.Get("query"); ok {
-		tmpQuery = tmp.(map[string]interface{})
-	}
-
-	if len(tmpQuery) > 0 {
-		url += "?"
-	}
-
-	for key, value := range tmpQuery {
-		vt := reflect.TypeOf(value).Kind()
-		if vt == reflect.String {
-			url += key + "=" + value.(string)
-		}
-	}
-
-	return url
 }
