@@ -195,7 +195,7 @@ func DoLoggingJson(logValue map[string]interface{}, event string, identifier str
 		sentence += "after modify for " + identifier + " : "
 	}
 
-	jsonBytes, err := json.MarshalIndent(logValue, "", "\t")
+	jsonBytes, err := json.Marshal(logValue)
 	if err != nil {
 		logrus.Error("error converting logValue to jsonbytes :")
 		logrus.Error(err.Error())
