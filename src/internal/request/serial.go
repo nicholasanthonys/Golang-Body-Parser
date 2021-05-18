@@ -7,7 +7,6 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -35,13 +34,6 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In unmarshaling File serial.json. "
 		resMap["error"] = err.Error()
-		return cc.JSON(http.StatusInternalServerError, resMap)
-	}
-
-	reqByte, err := ioutil.ReadAll(cc.Request().Body)
-	if err != nil {
-		resMap := make(map[string]string)
-		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
@@ -97,9 +89,10 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(*model.Wrapper)
 		}
-		// Loop only available for parallel request, therefore, set loopIndex to 0
-		_, customResponse, err := ProcessingRequest(alias, cc, wrapper, reqByte, 0)
+		// Loop only available for parallel request, therefore, set loopIndex to 0\
+		_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
 		finalCustomResponse = customResponse
+
 		if err != nil {
 			// next failure
 			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, customResponse)

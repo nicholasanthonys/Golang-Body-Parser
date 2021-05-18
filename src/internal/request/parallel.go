@@ -7,7 +7,6 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -39,9 +38,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		resMap["error"] = err.Error()
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
-
-	//*read the request that will be sent from user
-	reqByte, err := ioutil.ReadAll(cc.Request().Body)
 
 	if err != nil {
 		resMap := make(map[string]string)
@@ -99,17 +95,18 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			log.Info("set loop to 1 ")
 			loop = 1
 		}
-		for i := 0; i < 1; i++ {
+
+		for i := 0; i < loop; i++ {
 			if len(requestFromUser.Configure.Request.CLogics) > 0 {
 				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, cc.MapWrapper)
 				if cLogicItem != nil {
 					wg.Add(1)
-					go worker(&wg, configureItem.Alias, cc, &requestFromUser, reqByte, i)
+					go worker(&wg, configureItem.Alias, cc, &requestFromUser, i)
 				}
 			} else {
 				// no clogics
 				wg.Add(1)
-				go worker(&wg, configureItem.Alias, cc, &requestFromUser, reqByte, i)
+				go worker(&wg, configureItem.Alias, cc, &requestFromUser, i)
 			}
 
 		}
@@ -164,9 +161,11 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 var mutex sync.Mutex
 
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
-func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requestFromUser *model.Wrapper, requestBody []byte, loopIndex int) {
+func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requestFromUser *model.Wrapper, loopIndex int) {
+
 	defer wg.Done()
-	_, status, err := ProcessingRequest(mapKeyName, cc, requestFromUser, requestBody, loopIndex)
+
+	_, status, err := ProcessingRequest(mapKeyName, cc, requestFromUser, loopIndex)
 	if err != nil {
 		log.Error("Go Worker - Error Process")
 		log.Error(err.Error())

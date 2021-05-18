@@ -1,12 +1,14 @@
 package request
 
 import (
+	"bytes"
 	"errors"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 )
@@ -56,7 +58,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string, reqByte []byt
 }
 
 // ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, reqByte []byte, loopIndex int) (int, *model.CustomResponse, error) {
+func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, loopIndex int) (int, *model.CustomResponse, error) {
 	//*check the content type user request
 	var contentType string
 	var err error
@@ -70,7 +72,13 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 
 	//*convert request to map string interface based on the content type
 	var tmpRequestBody map[string]interface{}
+	reqByte, err := ioutil.ReadAll(cc.Request().Body)
+
+	// set content back
+	cc.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
+
 	tmpRequestBody, status, err = ParseRequestBody(cc, contentType, reqByte)
+	log.Info("reqbyte body for alias ", aliasName, " \n", string(reqByte))
 
 	if err != nil {
 		return status, nil, err
@@ -79,7 +87,6 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	//*set header value
 	tmpRequestHeader := make(map[string]interface{})
 	for key := range cc.Request().Header {
-
 		tmpRequestHeader[key] = cc.Request().Header.Get(key)
 	}
 
@@ -94,6 +101,8 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	for _, value := range cc.ParamNames() {
 		tmpRequestParam[value] = cc.Param(value)
 	}
+	logrus.Info("tmpRequestBody is")
+	logrus.Info(tmpRequestBody)
 
 	// write
 	wrapper.Request.Set("param", tmpRequestParam)
