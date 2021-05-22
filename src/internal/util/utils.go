@@ -112,9 +112,9 @@ func RemoveSquareBracketAndConvertToSlice(value string, separator string) []stri
 	return listTraverse
 }
 
-// SanitizeValue is a function that will remove the dollar sign from the value in configure.json.
+// GetListTraverseAndDestination is a function that will remove the dollar sign from the value in configure.json.
 // we remove the dollar sign example :  $body[user], and only pick the rest of the word ex : body[user] */
-func SanitizeValue(value string) ([]string, string) {
+func GetListTraverseAndDestination(value string) ([]string, string) {
 	var destination string
 	var sanitized string
 	if strings.HasPrefix(value, "$body") {
@@ -126,9 +126,9 @@ func SanitizeValue(value string) ([]string, string) {
 	} else if strings.HasPrefix(value, "$response") {
 		destination = "response"
 	} else if strings.HasPrefix(value, "$path") {
-		destination = "path"
+		destination = "param"
 	} else if strings.HasPrefix(value, "$status_code") {
-		destination = "status_code"
+		destination = "statusCode"
 	}
 
 	if len(destination) > 0 {
