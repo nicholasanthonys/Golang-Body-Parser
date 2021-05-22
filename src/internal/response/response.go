@@ -13,14 +13,21 @@ import (
 // setHeaderResponse set custom key-value pair for header, except Content-Length and Content-type
 func SetHeaderResponse(header map[string]interface{}, cc *model.CustomContext) *model.CustomContext {
 	for key, val := range header {
-		rt := reflect.TypeOf(val)
-		//* only add if interface type is string
-		if rt.Kind() == reflect.String {
-			if key != "Content-Length" && key != "Content-Type" {
-				cc.Response().Header().Set(key, val.(string))
-			}
+		if val == nil {
+			log.Warn("set header response for key : ", key, " val is : ", val, " is equal to nil")
+		} else {
+			rt := reflect.TypeOf(val)
+			//* only add if interface type is string
+			if rt.Kind() == reflect.String {
+				if key != "Content-Length" && key != "Content-Type" {
+					cc.Response().Header().Set(key, val.(string))
+				}
 
+			} else {
+				log.Warn(" set header response for key ", key, " val : ", val, " is not a string")
+			}
 		}
+
 	}
 
 	return cc
@@ -84,9 +91,9 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 	if len(resultWrapper.Configure.Response.LogAfterModify) > 0 {
 		logValue := make(map[string]interface{}) // v
 		for key, val := range resultWrapper.Configure.Response.LogAfterModify {
-			logValue[key] = service.RetrieveValue(val, resultWrapper.Response, 0)
+			logValue[key] = service.GetFromHalfReferenceValue(val, resultWrapper.Response, 0)
 		}
-		//logValue := service.RetrieveValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, 0)
+		//logValue := service.GetFromHalfReferenceValue(resultWrapper.Configure.Response.LogAfterModify, resultWrapper.Response, 0)
 		util.DoLoggingJson(logValue, "after", "final response", false)
 	}
 
