@@ -45,10 +45,10 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 				return in
 			}
 			if splittedValue[1] == "$request" {
-				val = RetrieveValue(splittedValue[2], wrapper.Request, 0)
+				val = GetFromHalfReferenceValue(splittedValue[2], wrapper.Request, 0)
 				in = val
 			} else {
-				val := RetrieveValue(splittedValue[2], wrapper.Response, 0)
+				val := GetFromHalfReferenceValue(splittedValue[2], wrapper.Response, 0)
 
 				in = val
 			}
