@@ -1,14 +1,12 @@
 package request
 
 import (
-	"bytes"
 	"errors"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 )
@@ -57,12 +55,10 @@ func ParseRequestBody(cc *model.CustomContext, contentType string, reqByte []byt
 	return result, http.StatusOK, nil
 }
 
-// ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
-func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, loopIndex int) (int, *model.CustomResponse, error) {
-	//*check the content type user request
+func SetRequestToWrapper(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, reqByte []byte) error {
+
 	var contentType string
 	var err error
-	var status int
 
 	if cc.Request().Header["Content-Type"] != nil {
 		contentType = cc.Request().Header["Content-Type"][0]
@@ -72,16 +68,11 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 
 	//*convert request to map string interface based on the content type
 	var tmpRequestBody map[string]interface{}
-	reqByte, err := ioutil.ReadAll(cc.Request().Body)
 
-	// set content back
-	cc.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
-
-	tmpRequestBody, status, err = ParseRequestBody(cc, contentType, reqByte)
-	log.Info("reqbyte body for alias ", aliasName, " \n", string(reqByte))
+	tmpRequestBody, _, err = ParseRequestBody(cc, contentType, reqByte)
 
 	if err != nil {
-		return status, nil, err
+		return err
 	}
 
 	//*set header value
@@ -108,25 +99,25 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	wrapper.Request.Set("body", tmpRequestBody)
 	wrapper.Request.Set("query", tmpRequestQuery)
 
-	//* In case user want to log before modify/changing request
+	cc.MapWrapper.Set(aliasName, wrapper)
+
+	return nil
+}
+
+// ProcessingRequest is the core function to process every configure. doCommand for transformation, send and receive request happen here.
+func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, loopIndex int) (int, *model.CustomResponse, error) {
+	// In case user want to log before modify/changing request
 	if len(wrapper.Configure.Request.LogBeforeModify) > 0 {
 		logValue := make(map[string]interface{}) // value to be logged
 		for key, val := range wrapper.Configure.Request.LogBeforeModify {
-			logValue[key] = service.RetrieveValue(val, wrapper.Request, loopIndex)
+			logValue[key] = service.GetFromHalfReferenceValue(val, wrapper.Request, loopIndex)
 		}
-		//logValue = service.RetrieveValue(wrapper.Configure.Request.LogBeforeModify, wrapper.Request, loopIndex)
 		util.DoLoggingJson(logValue, "before", aliasName, true)
 	}
 
-	//*assign first before do any add,modification,delete in case value want reference each other
-	//mapWrapper[aliasName] = *wrapper
-	cc.MapWrapper.Set(aliasName, wrapper)
-
-	//* Do the Map Modification
-	//var mutex = &sync.Mutex{}
-	//mutex.Lock()
+	// Do the Map Modification
 	tmpMapRequest := service.DoAddModifyDelete(wrapper.Configure.Request, &wrapper.Request, cc.MapWrapper, loopIndex)
-	// mutex.Unlock()
+
 	//write
 	wrapper.Request.Set("header", tmpMapRequest["header"])
 	wrapper.Request.Set("body", tmpMapRequest["body"])
@@ -134,14 +125,14 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 
 	cc.MapWrapper.Set(aliasName, wrapper)
 
-	//*get the destinationPath value before sending request
+	//get the destinationPath value before sending request
 	wrapper.Configure.Request.DestinationPath = service.ModifyPath(wrapper.Configure.Request.DestinationPath, "--", cc.MapWrapper, loopIndex)
 
-	//* In case user want to log after modify/changing request
+	// In case user want to log after modify/changing request
 	if len(wrapper.Configure.Request.LogAfterModify) > 0 {
 		logValue := make(map[string]interface{}) // value to be logged
 		for key, val := range wrapper.Configure.Request.LogAfterModify {
-			logValue[key] = service.RetrieveValue(val, wrapper.Request, loopIndex)
+			logValue[key] = service.GetFromHalfReferenceValue(val, wrapper.Request, loopIndex)
 		}
 		util.DoLoggingJson(logValue, "after", aliasName, true)
 	}
@@ -153,10 +144,10 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 		logrus.Error("Error send : ", err.Error())
 		return http.StatusInternalServerError, nil, err
 	}
-	//*close http
+	// close http
 	defer response.Body.Close()
 
-	//*Modify responseByte in Receiver and get  byte from response that has been modified
+	// Modify responseByte in Receiver and get  byte from response that has been modified
 	var tmpResponse map[string]interface{}
 	tmpResponse, err = responseEntity.Receiver(wrapper.Configure, response)
 
@@ -171,16 +162,16 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 		return http.StatusInternalServerError, nil, err
 	}
 
-	//* In case user want to log before modify/changing request
+	// In case user want to log before modify/changing request
 	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
 		logValue := make(map[string]interface{}) // value to be logged
 		for key, val := range wrapper.Configure.Response.LogBeforeModify {
-			logValue[key] = service.RetrieveValue(val, wrapper.Response, loopIndex)
+			logValue[key] = service.GetFromHalfReferenceValue(val, wrapper.Response, loopIndex)
 		}
 		util.DoLoggingJson(wrapper.Configure.Response.LogBeforeModify, "before", aliasName, false)
 	}
 
-	//* Do Command Add, Modify, Deletion for response again
+	// Do Command Add, Modify, Deletion for response again
 	tmpMapResponseModified := service.DoAddModifyDelete(wrapper.Configure.Response, &wrapper.Response, cc.MapWrapper, loopIndex)
 
 	if wrapper.Configure.Response.StatusCode > 0 {
@@ -192,11 +183,11 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	wrapper.Response.Set("header", tmpMapResponseModified["header"])
 	wrapper.Response.Set("body", tmpMapResponseModified["body"])
 
-	//* In case user want to log after modify/changing request
+	// In case user want to log after modify/changing request
 	if len(wrapper.Configure.Response.LogAfterModify) > 0 {
 		logValue := make(map[string]interface{}) // value to be logged
 		for key, val := range wrapper.Configure.Response.LogAfterModify {
-			logValue[key] = service.RetrieveValue(val, wrapper.Response, loopIndex)
+			logValue[key] = service.GetFromHalfReferenceValue(val, wrapper.Response, loopIndex)
 		}
 		util.DoLoggingJson(logValue, "after", aliasName, false)
 	}
