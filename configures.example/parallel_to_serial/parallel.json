@@ -2,11 +2,13 @@
   "configures": [
     {
       "file_name": "configure-0.json",
-      "alias": "$configure_zero_configure"
+      "alias": "$configure_zero_configure",
+      "loop" : "2"
     },
     {
       "file_name": "configure-1.json",
-      "alias": "$configure_first_configure"
+      "alias": "$configure_first_configure",
+      "loop": "2"
     }
   ],
   "next_failure" : {
@@ -15,7 +17,7 @@
     "adds" : {
       "body" : {
         "error_message" : "all logics is fail",
-        "response_second_configure" : "$configure_zero_configure--$response--$status_code"
+        "response_second_configure" : "$configure_zero_configure_0--$response--$status_code"
       }
     }
   },
@@ -23,7 +25,7 @@
     {
       "rule": {
         "==": [
-          "$configure_zero_configure--$response--$status_code",
+          "$configure_zero_configure_0--$response--$status_code",
           400
         ]
       },
@@ -35,7 +37,7 @@
         "adds" : {
           "body" : {
             "message" : "configure_zero configure status code is 400",
-            "status_code" :  "$configure_zero_configure--$response--$status_code"
+            "status_code" :  "$configure_zero_configure_0--$response--$status_code"
           }
         }
       }
@@ -43,7 +45,7 @@
     {
       "rule": {
         "==": [
-          "$configure_zero_configure--$response--$status_code",
+          "$configure_zero_configure_0--$response--$status_code",
           200
         ]
       },

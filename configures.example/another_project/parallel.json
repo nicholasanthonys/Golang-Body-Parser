@@ -2,11 +2,13 @@
   "configures": [
     {
       "file_name": "configure-1.json",
-      "alias": "$configure_first_configure"
+      "alias": "$configure_first_configure",
+      "tes" : "1"
     },
     {
       "file_name": "configure-2.json",
-      "alias": "$configure_second_configure"
+      "alias": "$configure_second_configure",
+      "tes" : "1"
     }
   ],
   "next_failure" : {
@@ -15,8 +17,8 @@
     "adds" : {
       "body" : {
         "error_message" : "all logics is fail",
-        "response_second_configure" : "$configure_second_configure--$response--$status_code",
-        "error" : "$configure_second_configure-$response--$body"
+        "response_second_configure" : "$configure_second_configure_0--$response--$status_code",
+        "error" : "$configure_second_configure_0-$response--$body"
       }
     }
   },
@@ -24,12 +26,12 @@
     {
       "rule": {
         "==": [
-          "$configure_first_configure--$response--$status_code",
+          "$configure_first_configure_0--$response--$status_code",
           400
         ]
       },
       "data": null,
-      "next_success" : "parallel.json",
+      "next_success" : "",
       "response": {
         "status_code" : 400,
         "transform" : "ToJson",
@@ -43,12 +45,12 @@
     {
       "rule": {
         "==": [
-          "$configure_second_configure--$response--$status_code",
+          "$configure_second_configure_0--$response--$status_code",
           200
         ]
       },
       "data": null,
-      "next_success":"parallel.json",
+      "next_success":"",
       "response": {
         "status_code" : 200,
         "transform": "ToJson",
@@ -58,10 +60,10 @@
             "userID" : "userid"
           },
           "body": {
-            "user.anime": "$configure_second_configure--$request--$body[user][favorite_anime]",
-            "user.cars": "$configure_second_configure--$request--$body[user][favorite_cars]",
-            "user.favorite_cars": "$configure_second_configure--$request--$body[user][favorite_cars][0]",
-            "tes" : "$configure_first_configure--$request--$body"
+            "user.anime": "$configure_second_configure_0--$request--$body[user][favorite_anime]",
+            "user.cars": "$configure_second_configure_0--$request--$body[user][favorite_cars]",
+            "user.favorite_cars": "$configure_second_configure_0--$request--$body[user][favorite_cars][0]",
+            "tes" : "zzzz"
           }
         },
         "modifies": {
