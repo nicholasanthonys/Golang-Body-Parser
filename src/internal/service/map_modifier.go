@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
@@ -33,7 +34,20 @@ func AddRecursive(listTraverse []string, value interface{}, in interface{}, inde
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 			if in.(map[string]interface{})[listTraverse[index]] == nil {
 
-				in.(map[string]interface{})[listTraverse[index]] = value
+				tmpInterface := make(map[string]interface{})
+				tmp := in.(map[string]interface{})
+				err := copier.Copy(&tmpInterface, &tmp)
+				if err != nil {
+					log.Error(err.Error())
+					return nil
+				}
+
+				tmpInterface[listTraverse[index]] = value
+				err = copier.Copy(&in, &tmpInterface)
+				if err != nil {
+					log.Error(err.Error())
+					return nil
+				}
 			}
 		}
 
@@ -66,7 +80,20 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 				return nil
 			}
 
-			in.(map[string]interface{})[listTraverse[index]] = value
+			tmpInterface := make(map[string]interface{})
+			tmp := in.(map[string]interface{})
+			err := copier.Copy(&tmpInterface, &tmp)
+			if err != nil {
+				log.Error(err.Error())
+				return nil
+			}
+
+			tmpInterface[listTraverse[index]] = value
+			err = copier.Copy(&in, &tmpInterface)
+			if err != nil {
+				log.Error(err.Error())
+				return nil
+			}
 		}
 
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "[]interface {}" {
