@@ -1,12 +1,15 @@
 package request
 
 import (
+	"bytes"
 	"encoding/json"
+	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -39,16 +42,8 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
-	if err != nil {
-		resMap := make(map[string]string)
-		resMap["message"] = "Problem In Reading Request Body. " + err.Error()
-		return cc.JSON(http.StatusInternalServerError, resMap)
-	}
-
-	//* declare a WaitGroup
+	// declare a WaitGroup
 	var wg sync.WaitGroup
-
-	var mapConfigures = make(map[string]model.ConfigureItem)
 
 	for _, configureItem := range ParallelProject.Configures {
 		var configure model.Configure
@@ -68,50 +63,56 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		requestFromUser.Response.Set("body", make(map[string]interface{}))
 
 		configByte := util.ReadJsonFile(cc.FullProjectDirectory + "/" + configureItem.FileName)
-		//* assign configure byte to configure
+
+		// assign configure byte to configure
 		_ = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
-		mapConfigures[configureItem.Alias] = configureItem
 
-		loopIn := service.InterfaceDirectModifier(requestFromUser.Configure.Request.Loop, cc.MapWrapper, "--")
-		lt := reflect.TypeOf(loopIn)
-		var loop int
-		if lt.Kind() == reflect.String {
-			loop, err = strconv.Atoi(loopIn.(string))
-			if err != nil {
-				log.Error(err)
-			}
-		}
+		reqByte, _ := ioutil.ReadAll(cc.Request().Body)
+		// set content back
+		cc.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
 
-		if lt.Kind() == reflect.Int {
-			loop = loopIn.(int)
-		}
-
-		if lt.Kind() == reflect.Float64 {
-			loop = int(loopIn.(float64))
-		}
-
-		if loop == 0 {
-			log.Info("set loop to 1 ")
-			loop = 1
-		}
+		configureItem := configureItem
+		loop := DetermineLoop(cc.MapWrapper, configureItem)
 
 		for i := 0; i < loop; i++ {
-			if len(requestFromUser.Configure.Request.CLogics) > 0 {
-				cLogicItem, _ := service.CLogicsChecker(requestFromUser.Configure.Request.CLogics, cc.MapWrapper)
-				if cLogicItem != nil {
-					wg.Add(1)
-					go worker(&wg, configureItem.Alias, cc, &requestFromUser, i)
+			alias := configureItem.Alias + "_" + strconv.Itoa(i)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				err := SetRequestToWrapper(alias, cc, &requestFromUser, reqByte)
+				if err != nil {
+					log.Error(err.Error())
 				}
-			} else {
-				// no clogics
-				wg.Add(1)
-				go worker(&wg, configureItem.Alias, cc, &requestFromUser, i)
+			}()
+
+		}
+	}
+
+	wg.Wait()
+
+	for _, configureItem := range ParallelProject.Configures {
+		loop := DetermineLoop(cc.MapWrapper, configureItem)
+		for i := 0; i < loop; i++ {
+			alias := configureItem.Alias + "_" + strconv.Itoa(i)
+			if wrp, ok := cc.MapWrapper.Get(alias); ok {
+				wrapper := wrp.(*model.Wrapper)
+				if len(wrapper.Configure.Request.CLogics) > 0 {
+					cLogicItem, _ := service.CLogicsChecker(wrapper.Configure.Request.CLogics, cc.MapWrapper)
+					if cLogicItem != nil {
+						wg.Add(1)
+						go worker(&wg, alias, cc, wrapper, i)
+					}
+				} else {
+					// no clogics
+					wg.Add(1)
+					go worker(&wg, alias, cc, wrapper, i)
+				}
 			}
 
 		}
-
 	}
+
 	wg.Wait()
 
 	nextSuccess := ParallelProject.CLogics[0].NextSuccess
@@ -122,7 +123,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		if err != nil {
 			log.Error(err)
 			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, err, nil)
-
 			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, cc)
 		}
 
@@ -158,18 +158,77 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 }
 
-var mutex sync.Mutex
-
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
 func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requestFromUser *model.Wrapper, loopIndex int) {
-
 	defer wg.Done()
 
-	_, status, err := ProcessingRequest(mapKeyName, cc, requestFromUser, loopIndex)
+	configure := model.Configure{}
+	request := make(map[string]interface{})
+	res := make(map[string]interface{})
+
+	err := copier.CopyWithOption(&request, requestFromUser.Request.Items(), copier.Option{DeepCopy: true})
+	if err != nil {
+		return
+	}
+
+	err = copier.CopyWithOption(&res, requestFromUser.Response.Items(), copier.Option{DeepCopy: true})
+	if err != nil {
+		return
+	}
+
+	err = copier.CopyWithOption(&configure, requestFromUser.Configure, copier.Option{DeepCopy: true})
+	if err != nil {
+		return
+	}
+
+	tempRequestFromUser := model.Wrapper{
+		Configure: model.Configure{},
+		Request:   cmap.New(),
+		Response:  cmap.New(),
+	}
+
+	tempRequestFromUser.Request.Set("param", request["param"])
+	tempRequestFromUser.Request.Set("header", request["header"])
+	tempRequestFromUser.Request.Set("body", request["body"])
+	tempRequestFromUser.Request.Set("query", request["query"])
+
+	tempRequestFromUser.Configure = configure
+
+	_, status, err := ProcessingRequest(mapKeyName, cc, &tempRequestFromUser, loopIndex)
 	if err != nil {
 		log.Error("Go Worker - Error Process")
 		log.Error(err.Error())
 		log.Error("status : ", status)
 	}
-	cc.MapWrapper.Set(mapKeyName, requestFromUser)
+
+	cc.MapWrapper.Set(mapKeyName, &tempRequestFromUser)
+}
+
+func DetermineLoop(mapWrapper *cmap.ConcurrentMap, configure model.ConfigureItem) int {
+	loopIn := service.InterfaceDirectModifier(configure.Loop, mapWrapper, "--")
+	lt := reflect.TypeOf(loopIn)
+	var loop int
+	var err error
+
+	if lt.Kind() == reflect.String {
+		loop, err = strconv.Atoi(loopIn.(string))
+		if err != nil {
+			log.Error(err)
+		}
+	}
+
+	if lt.Kind() == reflect.Int {
+		loop = loopIn.(int)
+	}
+
+	if lt.Kind() == reflect.Float64 {
+		loop = int(loopIn.(float64))
+	}
+
+	if loop == 0 {
+		log.Warn("set loop to 1 ")
+		loop = 1
+	}
+
+	return loop
 }
