@@ -47,6 +47,7 @@ type (
 	}
 
 	ConfigureItem struct {
+		Loop        string       `json:"loop"`
 		FileName    string       `json:"file_name"`
 		Alias       string       `json:"alias"`
 		CLogics     []CLogicItem `json:"c_logics"`
@@ -65,7 +66,6 @@ type (
 
 	Command struct {
 		StatusCode      int                    `json:"status_code"`
-		Loop            string                 `json:"loop"`
 		DestinationPath string                 `json:"destination_path"`
 		DestinationUrl  string                 `json:"destination_url"`
 		Method          string                 `json:"method"`
