@@ -41,5 +41,23 @@
     "project_directory" : "608eae8d369e38296a9b3a28",
     "type" : "parallel",
     "method" : "POST"
+  },
+  {
+    "path" : "/tes-sms-otp",
+    "project_directory" : "608d199c29223ebe6736cd5d",
+    "type" : "serial",
+    "method" : "POST"
+  },
+  {
+    "path" : "/open-weather",
+    "project_directory" : "60a35c7d130aa17ab95e98ed",
+    "type" : "serial",
+    "method" : "GET"
+  },
+  {
+    "path" : "/sms-otp/parallel",
+    "project_directory" : "60a1c96aa0567f344b269080",
+    "type" : "parallel",
+    "method" : "POST"
   }
 ]

@@ -5,16 +5,14 @@ import (
 	"github.com/clbanning/mxj"
 	"github.com/clbanning/mxj/j2x"
 	"github.com/clbanning/mxj/x2j"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"io"
 	"net/url"
 	"strings"
 )
 
-func Transform(configure model.Configure, requestFromUser map[string]interface{}) (io.Reader, error) {
+func Transform(transform string, requestFromUser map[string]interface{}) (io.Reader, error) {
 	var body io.Reader
-	transformRequest := configure.Request.Transform
-	switch strings.ToLower(transformRequest) {
+	switch strings.ToLower(transform) {
 	case strings.ToLower("ToJson"):
 		resultTransformByte, err := ToJson(requestFromUser)
 		if err != nil {
