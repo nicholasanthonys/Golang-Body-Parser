@@ -7,6 +7,7 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -18,16 +19,18 @@ func SetHeaderResponse(header map[string]interface{}, cc *model.CustomContext) *
 		} else {
 			rt := reflect.TypeOf(val)
 			//* only add if interface type is string
-			if rt.Kind() == reflect.String {
-				if key != "Content-Length" && key != "Content-Type" {
+			if key != "Content-Length" && key != "Content-Type" {
+				if rt.Kind() == reflect.String {
 					cc.Response().Header().Set(key, val.(string))
-				}
 
-			} else {
-				log.Warn(" set header response for key ", key, " val : ", val, " is not a string")
+				} else if rt.Kind() == reflect.Int {
+					valString := strconv.Itoa(val.(int))
+					cc.Response().Header().Set(key, valString)
+				} else {
+					log.Warn(" set header response for key ", key, " val : ", val, " is not a string or int. type is ", rt.Kind())
+				}
 			}
 		}
-
 	}
 
 	return cc
