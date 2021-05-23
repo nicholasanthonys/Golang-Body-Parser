@@ -137,7 +137,7 @@ func SetHeader(mapRequest cmap.ConcurrentMap, header *http.Header) {
 			} else if vt == reflect.Int {
 				header.Add(key, strconv.Itoa(value.(int)))
 			} else {
-				log.Warn("cannot set key : ", key, " value ", value, " because type is not string or int. type is ", vt)
+				log.Warn("cannot set key : ", key, " value ", value, " to header because type is not string or int. type is ", vt)
 			}
 		}
 
@@ -156,8 +156,11 @@ func SetQuery(mapRequest cmap.ConcurrentMap, q *url.Values) {
 	for key, value := range tmpQuery {
 		vt := reflect.TypeOf(value).Kind()
 		if vt == reflect.String {
-			log.Info("set key :", key, " value : ", value)
 			q.Set(key, fmt.Sprintf("%v", value))
+		} else if vt == reflect.Int {
+			q.Set(key, fmt.Sprintf("%v", strconv.Itoa(value.(int))))
+		} else {
+			log.Warn("cannot set key : ", key, " value ", value, " to query because type is not string or int. type is ", vt)
 		}
 	}
 }
