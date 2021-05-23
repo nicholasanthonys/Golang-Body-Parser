@@ -94,6 +94,7 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 				log.Error(err.Error())
 				return nil
 			}
+			return tmpInterface
 		}
 
 		if fmt.Sprintf("%v", reflect.TypeOf(in)) == "[]interface {}" {
@@ -110,7 +111,7 @@ func ModifyRecursive(listTraverse []string, value interface{}, in interface{}, i
 	}
 	if fmt.Sprintf("%v", reflect.TypeOf(in)) == "map[string]interface {}" {
 		if in.(map[string]interface{})[listTraverse[index]] != nil {
-			ModifyRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
+			in.(map[string]interface{})[listTraverse[index]] = ModifyRecursive(listTraverse, value, in.(map[string]interface{})[listTraverse[index]], index+1)
 			return in.(map[string]interface{})
 		}
 	}
@@ -126,7 +127,8 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 		t := reflect.TypeOf(in)
 		vt := t.Kind()
 		if vt == reflect.Map {
-			if in.(map[string]interface{})[listTraverse[index]] != nil {
+			if in.(map[string]interface{})[listTraverse[index]] == nil {
+				log.Info(" returning nil with list traverse index ", listTraverse[index])
 				return nil
 			}
 			delete(in.(map[string]interface{}), listTraverse[index])
@@ -412,6 +414,7 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 	for key, value := range commands {
 		realValue, err := GetFromFullReferenceValue(separator, takeFrom, loopIndex, value)
 		if err != nil {
+			log.Error(" error in function ModifyWrapper : ", err.Error())
 			return mapToBeModified
 		}
 		listTraverseKey := strings.Split(key, ".")
@@ -419,6 +422,8 @@ func ModifyWrapper(commands map[string]interface{}, separator string, mapToBeMod
 		result := ModifyRecursive(listTraverseKey, realValue, mapToBeModified, 0)
 		if result != nil {
 			mapToBeModified = result.(map[string]interface{})
+		} else {
+			log.Error("result is nil for value : ", value)
 		}
 		mutex.Unlock()
 	}
