@@ -4,6 +4,7 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
 )
 
@@ -15,8 +16,8 @@ func TestFind(t *testing.T) {
 }
 
 func TestGetListFolder(t *testing.T) {
-	expected := []string{"configure-0.json", "configure-1.json", "serial.json"}
-	configureDir := "../../configures.example"
+	expected := []string{"base.json", "configure-0.json", "configure-1.json", "serial.json"}
+	configureDir := os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
 	fullProjectDir := configureDir + "/" + "emailotp"
 	files, err := util.GetListFolder(fullProjectDir)
 	results := make([]string, 0)
