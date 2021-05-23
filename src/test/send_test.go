@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
@@ -238,6 +239,55 @@ func TestDoGetRequest(t *testing.T) {
 
 	if !equal {
 		assert.Equal(t, expected, string(resByte), "should be equal")
+	}
+
+}
+
+func TestSend(t *testing.T) {
+	// setup
+	wrapper := model.Wrapper{
+		Configure: model.Configure{
+			ListStatusCodeSuccess: nil,
+			Request: model.Command{
+				DestinationUrl: "https://jsonplaceholder.typicode.com/posts",
+				Transform:      "ToJson",
+				Method:         "POST",
+			},
+			Response: model.Command{},
+		},
+		Request:  cmap.New(),
+		Response: cmap.New(),
+	}
+
+	mapBody := map[string]interface{}{
+		"title":  "foo",
+		"body":   "bar",
+		"userId": 1,
+	}
+	wrapper.Request.Set("body", mapBody)
+
+	res, err := service.Send(&wrapper)
+	if err != nil {
+		assert.Error(t, err, " error when calling Send. should not error ")
+	}
+
+	bodyByte, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		assert.Error(t, err, " error when calling read response body. should not error ")
+	}
+
+	expect := `{
+		"title": "foo",
+  		"body": "bar",
+  		"userId": 1,
+		"id": 101
+	}`
+	equal, err := util.JSONBytesEqual([]byte(expect), bodyByte)
+	if err != nil {
+		assert.Error(t, err, "error compare json byte")
+	}
+	if !equal {
+		assert.Equal(t, expect, string(bodyByte), "should be equal")
 	}
 
 }
