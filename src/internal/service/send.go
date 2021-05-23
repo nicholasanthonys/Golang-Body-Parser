@@ -65,24 +65,24 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	q := req.URL.Query()
 
 	//*set query
-	setQuery(requestFromUser.Request, &q)
+	SetQuery(requestFromUser.Request, &q)
 	req.URL.RawQuery = q.Encode()
 
 	// set content type for header
-	setContentTypeHeader(transformRequest, &req.Header)
+	SetContentTypeHeader(transformRequest, &req.Header)
 
 	log.Info("url is : ")
 	log.Info(req.URL.String())
 
 	if strings.ToLower(requestFromUser.Configure.Request.Method) == "get" {
-		return doGetRequest(req.URL.String())
+		return DoGetRequest(req.URL.String())
 	}
 
-	return doRequest(req)
+	return DoRequest(req)
 
 }
 
-func doGetRequest(url string) (*http.Response, error) {
+func DoGetRequest(url string) (*http.Response, error) {
 	logrus.Info("sending request to url :  ", url)
 	resp, err := netClient.Get(url)
 	if err != nil {
@@ -92,7 +92,7 @@ func doGetRequest(url string) (*http.Response, error) {
 	return resp, nil
 }
 
-func doRequest(req *http.Request) (*http.Response, error) {
+func DoRequest(req *http.Request) (*http.Response, error) {
 
 	//* do request
 	logrus.Info("sending request to url :  ", req.URL)
@@ -106,7 +106,7 @@ func doRequest(req *http.Request) (*http.Response, error) {
 	return res, nil
 }
 
-func setContentTypeHeader(transformRequest string, header *http.Header) {
+func SetContentTypeHeader(transformRequest string, header *http.Header) {
 	//*set content type header based on transformRequest
 	switch strings.ToLower(transformRequest) {
 	case strings.ToLower("ToJson"):
@@ -140,7 +140,7 @@ func SetHeader(mapRequest cmap.ConcurrentMap, header *http.Header) {
 
 }
 
-func setQuery(mapRequest cmap.ConcurrentMap, q *url.Values) {
+func SetQuery(mapRequest cmap.ConcurrentMap, q *url.Values) {
 	//* Add
 	tmpQuery := make(map[string]interface{})
 	if tmp, ok := mapRequest.Get("query"); ok {
