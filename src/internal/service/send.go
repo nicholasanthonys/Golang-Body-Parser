@@ -40,7 +40,7 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	var err error
 
 	if len(tmpBody) > 0 {
-		body, err = Transform(requestFromUser.Configure, tmpBody)
+		body, err = Transform(transformRequest, tmpBody)
 		log.Info("body request  is ")
 		log.Info(tmpBody)
 
