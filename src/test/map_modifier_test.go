@@ -14,7 +14,7 @@ import (
 
 var mapWrapper cmap.ConcurrentMap
 var requestFromUser model.Wrapper
-var routes model.Routes
+var routes model.Route
 
 func init() {
 	configureDir := "../../configures.example"
@@ -78,7 +78,7 @@ func TestMapModifierBody(t *testing.T) {
 		tmpBody = tmp.(map[string]interface{})
 	}
 	tmpBody = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Body, "--", tmpBody, &mapWrapper, 0)
-	stream, err := service.Transform(wrapperConfigure1.Configure, tmpBody)
+	stream, err := service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpBody)
 
 	if err != nil {
 		assert.Error(t, err, "error transform body")
@@ -102,7 +102,7 @@ func TestMapModifierBody(t *testing.T) {
 
 	//*Modify Body
 	tmpBody = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", tmpBody, &mapWrapper, 0)
-	stream, err = service.Transform(wrapperConfigure1.Configure, tmpBody)
+	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpBody)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -123,7 +123,7 @@ func TestMapModifierBody(t *testing.T) {
 
 	//* Deletion Body
 	tmpBody = service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, tmpBody)
-	stream, err = service.Transform(wrapperConfigure1.Configure, tmpBody)
+	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpBody)
 	if err != nil {
 		assert.Error(t, err, "error transform body")
 	}
@@ -157,7 +157,7 @@ func TestMapModifierHeader(t *testing.T) {
 	}
 	tmpHeader = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Header, "--", tmpHeader, &mapWrapper, 0)
 
-	stream, err := service.Transform(wrapperConfigure1.Configure, tmpHeader)
+	stream, err := service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpHeader)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
 	}
@@ -180,7 +180,7 @@ func TestMapModifierHeader(t *testing.T) {
 	//*Modify Header
 	tmpHeader = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Header, "--", tmpHeader, &mapWrapper, 0)
 
-	stream, err = service.Transform(wrapperConfigure1.Configure, tmpHeader)
+	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpHeader)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
 	}
@@ -202,7 +202,7 @@ func TestMapModifierHeader(t *testing.T) {
 
 	//*Deletion Header
 	tmpHeader = service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Header, tmpHeader)
-	stream, err = service.Transform(wrapperConfigure1.Configure, tmpHeader)
+	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpHeader)
 	if err != nil {
 		assert.Error(t, err, "error performing transform header")
 	}
@@ -239,7 +239,7 @@ func TestMapModifierQuery(t *testing.T) {
 	}
 	tmpQuery = service.AddToWrapper(wrapperConfigure1.Configure.Request.Adds.Query, "--", tmpQuery, &mapWrapper, 0)
 
-	stream, err := service.Transform(wrapperConfigure1.Configure, tmpQuery)
+	stream, err := service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpQuery)
 	if err != nil {
 		assert.Error(t, err, "error performing transform query")
 	}
@@ -262,7 +262,7 @@ func TestMapModifierQuery(t *testing.T) {
 	//*Modify query
 	tmpQuery = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Query, "--", tmpQuery, &mapWrapper, 0)
 
-	stream, err = service.Transform(wrapperConfigure1.Configure, tmpQuery)
+	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpQuery)
 	if err != nil {
 		assert.Error(t, err, "error performing transform query")
 	}
@@ -284,7 +284,7 @@ func TestMapModifierQuery(t *testing.T) {
 
 	//*Deletion Query
 	service.DeletionHeaderOrQuery(wrapperConfigure1.Configure.Request.Deletes.Query, tmpQuery)
-	stream, err = service.Transform(wrapperConfigure1.Configure, tmpQuery)
+	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpQuery)
 	if err != nil {
 		assert.Error(t, err, "error performing transform query")
 	}
