@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -110,11 +111,11 @@ func SetContentTypeHeader(transformRequest string, header *http.Header) {
 	//*set content type header based on transformRequest
 	switch strings.ToLower(transformRequest) {
 	case strings.ToLower("ToJson"):
-		header.Add("Content-Type", "application/json; charset=utf-8")
+		header.Set("Content-Type", "application/json; charset=utf-8")
 	case strings.ToLower("ToXml"):
-		header.Add("Content-Type", "application/xml; charset=utf-8")
+		header.Set("Content-Type", "application/xml; charset=utf-8")
 	case strings.ToLower("ToForm"):
-		header.Add("Content-Type", "application/x-www-form-urlencoded")
+		header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 	}
 
 }
@@ -131,6 +132,10 @@ func SetHeader(mapRequest cmap.ConcurrentMap, header *http.Header) {
 			vt := reflect.TypeOf(value).Kind()
 			if vt == reflect.String {
 				header.Add(key, fmt.Sprintf("%s", value))
+			} else if vt == reflect.Int {
+				header.Add(key, strconv.Itoa(value.(int)))
+			} else {
+				log.Warn("cannot set key : ", key, " value ", value, " because type is not string or int. type is ", vt)
 			}
 		}
 
