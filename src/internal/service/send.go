@@ -116,6 +116,8 @@ func SetContentTypeHeader(transformRequest string, header *http.Header) {
 		header.Set("Content-Type", "application/xml; charset=utf-8")
 	case strings.ToLower("ToForm"):
 		header.Set("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+	default:
+		header.Set("Content-Type", "application/json; charset=utf-8")
 	}
 
 }
