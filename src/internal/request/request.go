@@ -34,6 +34,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string) (map[string]i
 
 	err = copier.Copy(&tempCC, &cc)
 	if err != nil {
+		log.Error("error copy context in parseRequestBody. error : ", err.Error())
 		return nil, 0, err
 	}
 
