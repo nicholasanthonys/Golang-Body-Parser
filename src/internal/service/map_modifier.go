@@ -197,7 +197,7 @@ func GetFromHalfReferenceValue(value interface{}, takeFrom cmap.ConcurrentMap, l
 		}
 
 	} else {
-		log.Error("cannot get reference value destination for value ", value)
+		log.Error("cannot get reference value destination : ", destination, " for value ", value)
 	}
 
 	if realValue == nil {
