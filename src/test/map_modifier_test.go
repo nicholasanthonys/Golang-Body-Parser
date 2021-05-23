@@ -70,7 +70,6 @@ func TestMapModifierBody(t *testing.T) {
 	if tmp, ok := mapWrapper.Get("$configure_second_configure"); ok {
 		wrapperConfigure1 = tmp.(model.Wrapper)
 	}
-	//wrapperConfigure1 := mapWrapper["$configure_second_configure"]
 
 	//take configure index
 	tmpBody := make(map[string]interface{})
@@ -91,7 +90,7 @@ func TestMapModifierBody(t *testing.T) {
 	}
 
 	expected := `{"user":{"id":1,"last_name":"peter", "name":"bokir"},"from": "configure-1.json"}`
-	//
+
 	equal, err := util.JSONBytesEqual([]byte(expected), resultByte.Bytes())
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -100,7 +99,7 @@ func TestMapModifierBody(t *testing.T) {
 		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
-	//*Modify Body
+	// Modify Body
 	tmpBody = service.ModifyWrapper(wrapperConfigure1.Configure.Request.Modifies.Body, "--", tmpBody, &mapWrapper, 0)
 	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpBody)
 	if err != nil {
@@ -121,7 +120,7 @@ func TestMapModifierBody(t *testing.T) {
 		assert.Equal(t, expected, string(resultByte.Bytes()), "should be equal")
 	}
 
-	//* Deletion Body
+	// Deletion Body
 	tmpBody = service.DeletionBody(wrapperConfigure1.Configure.Request.Deletes, tmpBody)
 	stream, err = service.Transform(wrapperConfigure1.Configure.Request.Transform, tmpBody)
 	if err != nil {
