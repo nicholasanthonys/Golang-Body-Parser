@@ -1,14 +1,12 @@
 package request
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
-	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -91,13 +89,8 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(*model.Wrapper)
 		}
-		// Loop only available for parallel request, therefore, set loopIndex to 0\
-		reqByte, err := ioutil.ReadAll(cc.Request().Body)
 
-		// set content back
-		cc.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
-
-		err = SetRequestToWrapper(alias, cc, wrapper, reqByte)
+		err = SetRequestToWrapper(alias, cc, wrapper)
 		if err != nil {
 			return err
 		}

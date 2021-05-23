@@ -1,7 +1,6 @@
 package request
 
 import (
-	"bytes"
 	"encoding/json"
 	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
@@ -9,7 +8,6 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -68,10 +66,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		_ = json.Unmarshal(configByte, &configure)
 		requestFromUser.Configure = configure
 
-		reqByte, _ := ioutil.ReadAll(cc.Request().Body)
-		// set content back
-		cc.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
-
 		configureItem := configureItem
 		loop := DetermineLoop(cc.MapWrapper, configureItem)
 
@@ -80,7 +74,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				err := SetRequestToWrapper(alias, cc, &requestFromUser, reqByte)
+				err := SetRequestToWrapper(alias, cc, &requestFromUser)
 				if err != nil {
 					log.Error(err.Error())
 				}

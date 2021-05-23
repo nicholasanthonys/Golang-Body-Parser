@@ -1,12 +1,15 @@
 package request
 
 import (
+	"bytes"
 	"errors"
+	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	responseEntity "github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 )
@@ -22,9 +25,22 @@ func init() {
 	log.Level = util.GetLogLevelFromEnv()
 }
 
-func ParseRequestBody(cc *model.CustomContext, contentType string, reqByte []byte) (map[string]interface{}, int, error) {
+func ParseRequestBody(cc *model.CustomContext, contentType string) (map[string]interface{}, int, error) {
 	var err error
 	var result = make(map[string]interface{})
+
+	// init variable
+	tempCC := cc
+
+	err = copier.Copy(&tempCC, &cc)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	reqByte, _ := ioutil.ReadAll(cc.Request().Body)
+	// set content back
+	tempCC.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
+
 	switch contentType {
 	case "application/json":
 		//*transform JSON request user to map request from user
@@ -55,7 +71,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string, reqByte []byt
 	return result, http.StatusOK, nil
 }
 
-func SetRequestToWrapper(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper, reqByte []byte) error {
+func SetRequestToWrapper(aliasName string, cc *model.CustomContext, wrapper *model.Wrapper) error {
 
 	var contentType string
 	var err error
@@ -69,7 +85,7 @@ func SetRequestToWrapper(aliasName string, cc *model.CustomContext, wrapper *mod
 	//*convert request to map string interface based on the content type
 	var tmpRequestBody map[string]interface{}
 
-	tmpRequestBody, _, err = ParseRequestBody(cc, contentType, reqByte)
+	tmpRequestBody, _, err = ParseRequestBody(cc, contentType)
 
 	if err != nil {
 		return err
