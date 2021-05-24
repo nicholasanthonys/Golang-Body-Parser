@@ -32,7 +32,8 @@ func TestReadWithoutConfigure(t *testing.T) {
 	if err != nil {
 		logrus.Error(err.Error())
 	}
-	cLogicModified := service.InterfaceDirectModifier(project.Configures[0].CLogics[0], cmap.New(), "--").(model.CLogicItem)
+	emptyCMap := cmap.New()
+	cLogicModified := service.InterfaceDirectModifier(project.Configures[0].CLogics[0], &emptyCMap, "--").(model.CLogicItem)
 
 	expected := project.Configures[0].CLogics[0]
 	assert.Equal(t, expected, cLogicModified)
@@ -50,9 +51,9 @@ func TestReadWithoutConfigure(t *testing.T) {
 }
 
 func TestReadWithConfigure(t *testing.T) {
-	var project model.Serial
-	configureDir := os.Getenv("CONFIGURES_DIRECTORY")
-	fullProjectDirectory := "../" + configureDir + "/" + "emailotp"
+	project := model.Serial{}
+	configureDir := os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
+	fullProjectDirectory := configureDir + "/" + "emailotp"
 
 	jsonFile, err := os.Open(fullProjectDirectory + "/serial.json")
 	if err != nil {
@@ -101,7 +102,7 @@ func TestReadWithConfigure(t *testing.T) {
 	}
 
 	var tempMap map[string]interface{}
-
+	log.Info(project)
 	cLogicBeforeByte, _ := json.Marshal(project.Configures[0].CLogics[0])
 	err = json.Unmarshal(cLogicBeforeByte, &tempMap)
 
@@ -110,8 +111,8 @@ func TestReadWithConfigure(t *testing.T) {
 	}
 
 	clogicModified := model.CLogicItem{
-		Rule:        service.InterfaceDirectModifier(tempMap["rule"], mapWrapper, "--"),
-		Data:        service.InterfaceDirectModifier(tempMap["data"], mapWrapper, "--"),
+		Rule:        service.InterfaceDirectModifier(tempMap["rule"], &mapWrapper, "--"),
+		Data:        service.InterfaceDirectModifier(tempMap["data"], &mapWrapper, "--"),
 		NextSuccess: "",
 		Response:    model.Command{},
 	}
