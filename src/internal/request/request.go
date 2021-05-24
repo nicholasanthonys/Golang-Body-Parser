@@ -159,7 +159,11 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 
 	if err != nil {
 		logrus.Error("Error send : ", err.Error())
-		return http.StatusInternalServerError, nil, err
+		wrapper.Response.Set("statusCode", http.StatusBadRequest)
+		wrapper.Response.Set("body", map[string]interface{}{
+			"error": err.Error(),
+		})
+		return http.StatusBadRequest, nil, err
 	}
 	// close http
 	defer response.Body.Close()
@@ -176,7 +180,7 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	}
 
 	if err != nil {
-		return http.StatusInternalServerError, nil, err
+		return http.StatusBadRequest, nil, err
 	}
 
 	// In case user want to log before modify/changing request
