@@ -20,9 +20,9 @@ func init() {
 
 func main() {
 	//*load env
-	err := godotenv.Load()
+	err := godotenv.Load(".env")
 	if err != nil {
-		log.Error("Error loading .env file")
+		log.Error("Error loading .env file from main.go")
 	}
 
 	//*start Server
