@@ -7,11 +7,94 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
+
+func TestGetNetTransportFromEnv(t *testing.T) {
+	strTLSHandshakeTimeout := os.Getenv("TLS_Handshake_Timeout")
+	strResponseHeaderTimeout := os.Getenv("Response_Header_Timeout")
+	strExpectContinueTimeout := os.Getenv("Expect_Continue_Timeout")
+	strDialTimeout := os.Getenv("Dial_Timeout")
+
+	TLSHandshakeTimeout := 0
+	ResponseHeaderTimeout := 0
+	ExpectContinueTimeout := 0
+	DialTimeout := 0
+
+	if len(strTLSHandshakeTimeout) > 0 {
+		intTLSHandshakeTimeout, err := strconv.Atoi(strTLSHandshakeTimeout)
+		if err != nil {
+			assert.Error(t, err, "should not error")
+		} else {
+			TLSHandshakeTimeout = intTLSHandshakeTimeout
+		}
+
+	}
+
+	if len(strResponseHeaderTimeout) > 0 {
+		intResponseHeaderTimeout, err := strconv.Atoi(strResponseHeaderTimeout)
+		if err != nil {
+			assert.Error(t, err, "should not error")
+		} else {
+			ResponseHeaderTimeout = intResponseHeaderTimeout
+		}
+
+	}
+
+	if len(strExpectContinueTimeout) > 0 {
+		intExpectContinueTimeout, err := strconv.Atoi(strExpectContinueTimeout)
+		if err != nil {
+			assert.Error(t, err, "should not error")
+		} else {
+			ExpectContinueTimeout = intExpectContinueTimeout
+		}
+
+	}
+
+	if len(strDialTimeout) > 0 {
+		intDialTimeout, err := strconv.Atoi(strDialTimeout)
+		if err != nil {
+			assert.Error(t, err, " should not error")
+		} else {
+			DialTimeout = intDialTimeout
+		}
+	}
+
+	service.InitNet("../.env.testing")
+	netTransport := service.GetNetTransportFromEnv()
+
+	assert.Equal(t, time.Duration(TLSHandshakeTimeout)*time.Second, netTransport.TLSHandshakeTimeout)
+	assert.Equal(t, time.Duration(ResponseHeaderTimeout)*time.Second, netTransport.ResponseHeaderTimeout)
+	assert.Equal(t, time.Duration(ExpectContinueTimeout)*time.Second, netTransport.ExpectContinueTimeout)
+	assert.Equal(t, time.Duration(DialTimeout)*time.Second, (&net.Dialer{
+		Timeout: time.Duration(DialTimeout) * time.Second,
+	}).Timeout)
+}
+
+func TestGetNetClientFromEnv(t *testing.T) {
+	strTimeOut := os.Getenv("Timeout")
+	timeOut := 0
+	if len(strTimeOut) > 0 {
+		intTimeOut, err := strconv.Atoi(strTimeOut)
+		if err != nil {
+			assert.Error(t, err, "should not error")
+
+		} else {
+			timeOut = intTimeOut
+		}
+	}
+
+	service.InitNet("../.env.testing")
+	netClient := service.GetNetClientFromEnv()
+	assert.Equal(t, netClient.Timeout, time.Duration(timeOut)*time.Second)
+}
 
 func TestSetHeader(t *testing.T) {
 	// setup
