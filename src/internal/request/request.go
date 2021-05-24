@@ -179,10 +179,6 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 		wrapper.Response.Set("body", tmpResponse["body"])
 	}
 
-	if err != nil {
-		return http.StatusBadRequest, nil, err
-	}
-
 	// In case user want to log before modify/changing request
 	if len(wrapper.Configure.Response.LogBeforeModify) > 0 {
 		logValue := make(map[string]interface{}) // value to be logged
