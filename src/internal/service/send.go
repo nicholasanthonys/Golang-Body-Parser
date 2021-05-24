@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
@@ -9,21 +10,103 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
 )
 
-var netTransport = &http.Transport{
-	Dial: (&net.Dialer{
-		Timeout: 5 * time.Second,
-	}).Dial,
-	TLSHandshakeTimeout: 5 * time.Second,
+var netTransport = &http.Transport{}
+var netClient = &http.Client{}
+
+func init() {
+	InitNet(".env")
 }
-var netClient = &http.Client{
-	Timeout:   time.Second * 10,
-	Transport: netTransport,
+
+func InitNet(envFileName string) {
+	err := godotenv.Load(envFileName)
+	if err != nil {
+		log.Error("Error loading .env file from send.go")
+	}
+	netTransport = GetNetTransportFromEnv()
+	netClient = GetNetClientFromEnv()
+}
+
+func GetNetTransportFromEnv() *http.Transport {
+	strTLSHandshakeTimeout := os.Getenv("TLS_Handshake_Timeout")
+	strResponseHeaderTimeout := os.Getenv("Response_Header_Timeout")
+	strExpectContinueTimeout := os.Getenv("Expect_Continue_Timeout")
+	strDialTimeout := os.Getenv("Dial_Timeout")
+
+	TLSHandshakeTimeout := 5
+	ResponseHeaderTimeout := 5
+	ExpectContinueTimeout := 2
+	DialTimeout := 5
+
+	if len(strTLSHandshakeTimeout) > 0 {
+		intTLSHandshakeTimeout, err := strconv.Atoi(strTLSHandshakeTimeout)
+		if err != nil {
+			log.Error("error convert env variable TLS handshake timeout for net transport. set to value : ", TLSHandshakeTimeout)
+		} else {
+			TLSHandshakeTimeout = intTLSHandshakeTimeout
+		}
+
+	}
+
+	if len(strResponseHeaderTimeout) > 0 {
+		intResponseHeaderTimeout, err := strconv.Atoi(strResponseHeaderTimeout)
+		if err != nil {
+			log.Error("error convert env variable response header timeout for net transport. set to value : ", ResponseHeaderTimeout)
+		} else {
+			ResponseHeaderTimeout = intResponseHeaderTimeout
+		}
+	}
+
+	if len(strExpectContinueTimeout) > 0 {
+		intExpectContinueTimeout, err := strconv.Atoi(strExpectContinueTimeout)
+		if err != nil {
+			log.Error("error convert env variable expect continue timeout for net transport. set to value : ", ExpectContinueTimeout)
+		} else {
+			ExpectContinueTimeout = intExpectContinueTimeout
+		}
+	}
+
+	if len(strDialTimeout) > 0 {
+		intDialTimeout, err := strconv.Atoi(strDialTimeout)
+		if err != nil {
+			log.Error("error convert env variable dial timeout for net transport. set to value : ", DialTimeout)
+		} else {
+			DialTimeout = intDialTimeout
+		}
+	}
+
+	return &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout: time.Duration(DialTimeout) * time.Second,
+		}).DialContext,
+		TLSHandshakeTimeout:   time.Duration(TLSHandshakeTimeout) * time.Second,
+		ResponseHeaderTimeout: time.Duration(ResponseHeaderTimeout) * time.Second,
+		ExpectContinueTimeout: time.Duration(ExpectContinueTimeout) * time.Second,
+	}
+}
+
+func GetNetClientFromEnv() *http.Client {
+	strTimeOut := os.Getenv("Timeout")
+	timeOut := 10
+	if len(strTimeOut) > 0 {
+		intTimeOut, err := strconv.Atoi(strTimeOut)
+		if err != nil {
+			log.Error("error convert env variable timeout for net client. set to value : ", timeOut)
+		} else {
+			timeOut = intTimeOut
+		}
+	}
+
+	return &http.Client{
+		Timeout:   time.Duration(timeOut) * time.Second,
+		Transport: netTransport,
+	}
 }
 
 func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
