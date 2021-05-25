@@ -36,11 +36,12 @@ func TestWithoutBody(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected nil, received %s", err.Error())
 	}
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusLoopDetected {
 		t.Errorf("Expected %d, received %d", http.StatusOK, res.StatusCode)
 	}
 
 	expected := `{
+		"message":"Circular response",
 		"user": {
 			"configure0_query": "kopo",
 			"id": 0,
