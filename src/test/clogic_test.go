@@ -136,10 +136,9 @@ func TestReadWithConfigure(t *testing.T) {
 	assert.Equal(t, expected, clogicModified)
 
 	// Apply json logic
-	expectedLogic := true
 	result, err := jsonlogic.ApplyInterface(clogicModified.Rule, clogicModified.Data)
 	boolResult := result.(bool)
-	assert.Equal(t, expectedLogic, boolResult)
+	assert.Equal(t, true, boolResult)
 }
 
 func TestGetVarArray(t *testing.T) {
@@ -170,11 +169,19 @@ func TestGetVarArray(t *testing.T) {
 
 	var resultBuf bytes.Buffer
 
-	jsonlogic.Apply(rule, data, &resultBuf)
+	err := jsonlogic.Apply(rule, data, &resultBuf)
+	if err != nil {
+		assert.Error(t, err, " should not error")
+		return
+	}
 
 	var result interface{}
 	decoder := json.NewDecoder(&resultBuf)
-	decoder.Decode(&result)
+	err = decoder.Decode(&result)
+	if err != nil {
+		assert.Error(t, err, " should not error")
+		return
+	}
 
 	vt := reflect.TypeOf(result)
 
