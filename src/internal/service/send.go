@@ -34,10 +34,10 @@ func InitNet(envFileName string) {
 }
 
 func GetNetTransportFromEnv() *http.Transport {
-	strTLSHandshakeTimeout := os.Getenv("TLS_Handshake_Timeout")
-	strResponseHeaderTimeout := os.Getenv("Response_Header_Timeout")
-	strExpectContinueTimeout := os.Getenv("Expect_Continue_Timeout")
-	strDialTimeout := os.Getenv("Dial_Timeout")
+	strTLSHandshakeTimeout := os.Getenv("TLS_HANDSHAKE_TIMEOUT")
+	strResponseHeaderTimeout := os.Getenv("RESPONSE_HEADER_TIMEOUT")
+	strExpectContinueTimeout := os.Getenv("EXPECT_CONTINUE_TIMEOUT")
+	strDialTimeout := os.Getenv("DIAL_TIMEOUT")
 
 	TLSHandshakeTimeout := 5
 	ResponseHeaderTimeout := 5
@@ -92,7 +92,7 @@ func GetNetTransportFromEnv() *http.Transport {
 }
 
 func GetNetClientFromEnv() *http.Client {
-	strTimeOut := os.Getenv("Timeout")
+	strTimeOut := os.Getenv("TIMEOUT")
 	timeOut := 10
 	if len(strTimeOut) > 0 {
 		intTimeOut, err := strconv.Atoi(strTimeOut)

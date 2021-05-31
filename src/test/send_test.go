@@ -18,10 +18,10 @@ import (
 )
 
 func TestGetNetTransportFromEnv(t *testing.T) {
-	strTLSHandshakeTimeout := os.Getenv("TLS_Handshake_Timeout")
-	strResponseHeaderTimeout := os.Getenv("Response_Header_Timeout")
-	strExpectContinueTimeout := os.Getenv("Expect_Continue_Timeout")
-	strDialTimeout := os.Getenv("Dial_Timeout")
+	strTLSHandshakeTimeout := os.Getenv("TLS_HANDSHAKE_TIMEOUT")
+	strResponseHeaderTimeout := os.Getenv("RESPONSE_HEADER_TIMEOUT")
+	strExpectContinueTimeout := os.Getenv("EXPECT_CONTINUE_TIMEOUT")
+	strDialTimeout := os.Getenv("DIAL_TIMEOUT")
 
 	TLSHandshakeTimeout := 0
 	ResponseHeaderTimeout := 0
@@ -79,7 +79,7 @@ func TestGetNetTransportFromEnv(t *testing.T) {
 }
 
 func TestGetNetClientFromEnv(t *testing.T) {
-	strTimeOut := os.Getenv("Timeout")
+	strTimeOut := os.Getenv("TIMEOUT")
 	timeOut := 0
 	if len(strTimeOut) > 0 {
 		intTimeOut, err := strconv.Atoi(strTimeOut)
