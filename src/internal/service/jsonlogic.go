@@ -44,6 +44,7 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 			if wrapper == nil {
 				return in
 			}
+
 			if splittedValue[1] == "$request" {
 				val = GetFromHalfReferenceValue(splittedValue[2], wrapper.Request, 0)
 				in = val
@@ -59,22 +60,23 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 
 }
 
-func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (*model.CLogicItem, error) {
+func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (*model.CLogicItem, bool,
+	error) {
 	for _, cLogicItem := range cLogics {
 		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
 		if cLogicItem.Rule == nil {
-			return nil, nil
+			return nil, false, nil
 		}
 
 		ruleByte, err := json.Marshal(cLogicItem.Rule)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		dataByte, err := json.Marshal(cLogicItem.Data)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		ruleReader := bytes.NewReader(ruleByte)
 		dataReader := bytes.NewReader(dataByte)
@@ -84,25 +86,32 @@ func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) 
 		if err != nil {
 			log.Error("error is ")
 			log.Error(err.Error())
-			return nil, err
+			return nil, false, err
 		}
 
 		var result interface{}
 		decoder := json.NewDecoder(&resultBuf)
-		decoder.Decode(&result)
+
+		err = decoder.Decode(&result)
+		if err != nil {
+			log.Errorf("Error decode logic result : %v", err)
+			return nil, false, err
+		}
 
 		// get type of json logic result
 		vt := reflect.TypeOf(result)
 		if vt.Kind() == reflect.Bool {
 			if result.(bool) {
-
-				return &cLogicItem, nil
+				return &cLogicItem, true, nil
+			} else {
+				// result is false
+				return &cLogicItem, false, nil
 			}
 		} else {
-			return &cLogicItem, nil
+			return &cLogicItem, true, nil
 		}
 
 	}
-	return nil, nil
+	return nil, false, nil
 
 }
