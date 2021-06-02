@@ -30,8 +30,9 @@ func TestReadWithoutConfigure(t *testing.T) {
 	err = json.Unmarshal(byteValue, &project)
 
 	if err != nil {
-		logrus.Error(err.Error())
+		assert.Error(t, err, " should not error")
 	}
+
 	emptyCMap := cmap.New()
 	cLogicModified := service.InterfaceDirectModifier(project.Configures[0].CLogics[0], &emptyCMap, "--").(model.CLogicItem)
 
