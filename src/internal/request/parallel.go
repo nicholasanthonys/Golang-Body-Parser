@@ -92,10 +92,62 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			if wrp, ok := cc.MapWrapper.Get(alias); ok {
 				wrapper := wrp.(*model.Wrapper)
 				if len(wrapper.Configure.Request.CLogics) > 0 {
-					cLogicItem, _ := service.CLogicsChecker(wrapper.Configure.Request.CLogics, cc.MapWrapper)
+					cLogicItem, boolResult, err := service.CLogicsChecker(wrapper.Configure.Request.CLogics,
+						cc.MapWrapper)
+					if err != nil {
+						log.Errorf("Error from when checking logic %v", err)
+					}
 					if cLogicItem != nil {
-						wg.Add(1)
-						go worker(&wg, alias, cc, wrapper, i)
+						if boolResult {
+							if len(cLogicItem.NextSuccess) == 0 {
+								log.Info("CLogicItem Response is")
+
+								// if Response is empty
+								if reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
+									wg.Add(1)
+									// process current configure
+									go worker(&wg, alias, cc, wrapper, i)
+								} else {
+									resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, nil, nil)
+									response.SetHeaderResponse(resultWrapper.Header, cc)
+									return response.ResponseWriter(resultWrapper, cLogicItem.Response.Transform, cc)
+
+								}
+
+							} else {
+								wg.Add(1)
+								// process next configure
+								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextSuccess); ok {
+									newWrapper := wrp.(*model.Wrapper)
+									go worker(&wg, cLogicItem.NextSuccess, cc, newWrapper, i)
+								} else {
+									log.Errorf("cannot load ", cLogicItem.NextSuccess)
+								}
+
+							}
+						} else {
+							if len(cLogicItem.NextFailure) == 0 {
+								// response
+								resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
+								response.SetHeaderResponse(resultWrapper.Header, cc)
+								return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+
+							} else {
+								wg.Add(1)
+								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextFailure); ok {
+									newWrapper := wrp.(*model.Wrapper)
+									go worker(&wg, cLogicItem.NextFailure, cc, newWrapper, i)
+								} else {
+									log.Errorf("cannot load ", cLogicItem.NextFailure)
+								}
+								//go worker(&wg, cLogicItem.FailureResponse, cc, wrapper, i)
+							}
+						}
+
+					} else {
+						resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, nil, nil)
+						response.SetHeaderResponse(resultWrapper.Header, cc)
+						return response.ResponseWriter(resultWrapper, ParallelProject.FailureResponse.Transform, cc)
 					}
 				} else {
 					// no clogics
@@ -110,45 +162,68 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	wg.Wait()
 
 	nextSuccess := ParallelProject.CLogics[0].NextSuccess
-	finalResponseConfigure := model.Command{}
+	//finalResponseConfigure := model.Command{}
 	for {
 
-		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, cc.MapWrapper)
-		if err != nil {
+		cLogicItem, boolResult, err := service.CLogicsChecker(ParallelProject.CLogics, cc.MapWrapper)
+		if err != nil || cLogicItem == nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, err, nil)
-			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, cc)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, err, nil)
+			return response.ResponseWriter(tmpMapResponse, ParallelProject.FailureResponse.Transform, cc)
 		}
 
-		if cLogicItemTrue == nil {
-			resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, nil, nil)
-			response.SetHeaderResponse(resultWrapper.Header, cc)
-			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, cc)
-		}
+		if boolResult {
+			nextSuccess = cLogicItem.NextSuccess
+			if len(strings.Trim(nextSuccess, " ")) > 0 {
+				if nextSuccess == "serial.json" {
+					return DoSerial(cc, counter+1)
+				} else {
+					// reference to itself
+					return DoParallel(cc, counter+1)
+				}
 
-		// update next_success
-		nextSuccess = cLogicItemTrue.NextSuccess
-		// update alias
-		if len(strings.Trim(nextSuccess, " ")) > 0 {
-			if nextSuccess == "serial.json" {
-				return DoSerial(cc, counter+1)
+			} else {
+				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, nil, nil)
+				response.SetHeaderResponse(resultWrapper.Header, cc)
+				return response.ResponseWriter(resultWrapper, cLogicItem.Response.Transform, cc)
 			}
 
-			// reference to itself
-			if nextSuccess == "parallel.json" {
-				return DoParallel(cc, counter+1)
+		} else {
+			if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
+				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
+				response.SetHeaderResponse(resultWrapper.Header, cc)
+				return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+			} else {
+				resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, nil, nil)
+				response.SetHeaderResponse(resultWrapper.Header, cc)
+				return response.ResponseWriter(resultWrapper, ParallelProject.FailureResponse.Transform, cc)
 			}
+
 		}
-		if len(strings.Trim(nextSuccess, " ")) == 0 {
-			finalResponseConfigure = cLogicItemTrue.Response
-			break
-		}
+
+		//// update next_success
+		//nextSuccess = cLogicItem.NextSuccess
+		//// update alias
+		//if len(strings.Trim(nextSuccess, " ")) > 0 {
+		//	if nextSuccess == "serial.json" {
+		//		return DoSerial(cc, counter+1)
+		//	}
+		//
+		//	// reference to itself
+		//	if nextSuccess == "parallel.json" {
+		//		return DoParallel(cc, counter+1)
+		//	}
+		//}
+		//if len(strings.Trim(nextSuccess, " ")) == 0 {
+		//	finalResponseConfigure = cLogicItem.Response
+		//	break
+		//}
 
 	}
-
-	resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
-
-	return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, cc)
+	//
+	//resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
+	//
+	//return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, cc)
 
 }
 
