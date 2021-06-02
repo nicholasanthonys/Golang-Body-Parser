@@ -96,9 +96,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 							log.Errorf("Error from when checking logic %v", err)
 						}
 						if boolResult {
-							log.Info("CLogic is true for cLogic ", cLogicItem)
 							if len(strings.Trim(cLogicItem.NextSuccess, " ")) == 0 {
-								log.Info("CLogicItem Response is")
 
 								// if Response is empty
 								if reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
@@ -124,9 +122,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 							}
 						} else {
-							log.Info("cLogic is false for clogic ", cLogicItem)
 							if len(strings.Trim(cLogicItem.NextFailure, " ")) == 0 {
-								log.Info("CLogicItem NExt failure is 0, cLogicItem is ", cLogicItem)
 								if !(reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{})) {
 									// response
 									resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
@@ -167,7 +163,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	for index, cLogicItem := range ParallelProject.CLogics {
 
 		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
-		log.Info("CLogic item is ", cLogicItem, "bool result ", boolResult)
 		if err != nil {
 			log.Error(err)
 			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, err, nil)
