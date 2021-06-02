@@ -127,8 +127,8 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 							finalCustomResponse = customResponse
 							if err != nil {
 								// next failure
-								tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, customResponse)
-								return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
+								tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, customResponse)
+								return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
 							}
 						}
 					}
@@ -155,8 +155,8 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 				if err != nil {
 					log.Errorf("Error after processing request for alias %v:  %v", alias, err)
 					// next failure
-					tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, customResponse)
-					return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
+					tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, customResponse)
+					return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
 				}
 			}
 		} else {
@@ -165,8 +165,8 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 			if err != nil {
 				log.Errorf("Error after processing request for alias %v:  %v", alias, err)
 				// next failure
-				tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, customResponse)
-				return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
+				tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, customResponse)
+				return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
 			}
 		}
 
@@ -180,7 +180,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		cLogicItem, boolResult, err := service.CLogicsChecker(mapConfigures[alias].CLogics, cc.MapWrapper)
 		if err != nil || cLogicItem == nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, nil)
+			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, nil)
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
 
