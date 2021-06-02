@@ -5,7 +5,6 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
@@ -143,7 +142,6 @@ func ResponseWriter(customResponse model.CustomResponse, transform string, cc *m
 		}
 		return cc.XMLBlob(statusCode, resByte)
 	default:
-		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
-		return cc.JSON(404, "Type Not Supported. only support ToJson and ToXml")
+		return cc.JSON(statusCode, responseBody)
 	}
 }
