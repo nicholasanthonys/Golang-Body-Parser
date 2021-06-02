@@ -140,10 +140,12 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 						alias = nextSuccess
 						continue // skip loop and update alias
 					} else {
-						// next failure
-						tmpMapResponse := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse,
-							err, nil)
-						return response.ResponseWriter(tmpMapResponse, cLogicItem.FailureResponse.Transform, cc)
+						if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
+							// next failure
+							tmpMapResponse := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse,
+								err, nil)
+							return response.ResponseWriter(tmpMapResponse, cLogicItem.FailureResponse.Transform, cc)
+						}
 					}
 				}
 			}
