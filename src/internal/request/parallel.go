@@ -71,14 +71,10 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 		for i := 0; i < loop; i++ {
 			alias := configureItem.Alias + "_" + strconv.Itoa(i)
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := SetRequestToWrapper(alias, cc, &requestFromUser)
-				if err != nil {
-					log.Error(err.Error())
-				}
-			}()
+			err := SetRequestToWrapper(alias, cc, &requestFromUser)
+			if err != nil {
+				log.Error(err.Error())
+			}
 
 		}
 	}
@@ -91,15 +87,17 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			alias := configureItem.Alias + "_" + strconv.Itoa(i)
 			if wrp, ok := cc.MapWrapper.Get(alias); ok {
 				wrapper := wrp.(*model.Wrapper)
+
 				if len(wrapper.Configure.Request.CLogics) > 0 {
-					cLogicItem, boolResult, err := service.CLogicsChecker(wrapper.Configure.Request.CLogics,
-						cc.MapWrapper)
-					if err != nil {
-						log.Errorf("Error from when checking logic %v", err)
-					}
-					if cLogicItem != nil {
+					for _, cLogicItem := range wrapper.Configure.Request.CLogics {
+						boolResult, err := service.CLogicsChecker(cLogicItem,
+							cc.MapWrapper)
+						if err != nil {
+							log.Errorf("Error from when checking logic %v", err)
+						}
 						if boolResult {
-							if len(cLogicItem.NextSuccess) == 0 {
+							log.Info("CLogic is true for cLogic ", cLogicItem)
+							if len(strings.Trim(cLogicItem.NextSuccess, " ")) == 0 {
 								log.Info("CLogicItem Response is")
 
 								// if Response is empty
@@ -126,11 +124,17 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 							}
 						} else {
-							if len(cLogicItem.NextFailure) == 0 {
-								// response
-								resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
-								response.SetHeaderResponse(resultWrapper.Header, cc)
-								return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+							log.Info("cLogic is false for clogic ", cLogicItem)
+							if len(strings.Trim(cLogicItem.NextFailure, " ")) == 0 {
+								log.Info("CLogicItem NExt failure is 0, cLogicItem is ", cLogicItem)
+								if !(reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{})) {
+									// response
+									resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
+									response.SetHeaderResponse(resultWrapper.Header, cc)
+									return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+								} else {
+									continue
+								}
 
 							} else {
 								wg.Add(1)
@@ -144,11 +148,8 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 							}
 						}
 
-					} else {
-						resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, nil, nil)
-						response.SetHeaderResponse(resultWrapper.Header, cc)
-						return response.ResponseWriter(resultWrapper, ParallelProject.FailureResponse.Transform, cc)
 					}
+
 				} else {
 					// no clogics
 					wg.Add(1)
@@ -161,12 +162,13 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	wg.Wait()
 
-	nextSuccess := ParallelProject.CLogics[0].NextSuccess
+	var nextSuccess string
 	//finalResponseConfigure := model.Command{}
-	for {
+	for index, cLogicItem := range ParallelProject.CLogics {
 
-		cLogicItem, boolResult, err := service.CLogicsChecker(ParallelProject.CLogics, cc.MapWrapper)
-		if err != nil || cLogicItem == nil {
+		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+		log.Info("CLogic item is ", cLogicItem, "bool result ", boolResult)
+		if err != nil {
 			log.Error(err)
 			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, err, nil)
 			return response.ResponseWriter(tmpMapResponse, ParallelProject.FailureResponse.Transform, cc)
@@ -194,9 +196,12 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 				response.SetHeaderResponse(resultWrapper.Header, cc)
 				return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
 			} else {
-				resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, nil, nil)
-				response.SetHeaderResponse(resultWrapper.Header, cc)
-				return response.ResponseWriter(resultWrapper, ParallelProject.FailureResponse.Transform, cc)
+				if index == len(ParallelProject.CLogics)-1 {
+					resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, nil, nil)
+					response.SetHeaderResponse(resultWrapper.Header, cc)
+					return response.ResponseWriter(resultWrapper, ParallelProject.FailureResponse.Transform, cc)
+				}
+
 			}
 
 		}
@@ -220,6 +225,8 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		//}
 
 	}
+
+	return nil
 	//
 	//resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
 	//

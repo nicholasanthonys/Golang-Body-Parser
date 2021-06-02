@@ -60,58 +60,53 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 
 }
 
-func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (*model.CLogicItem, bool,
+func CLogicsChecker(cLogicItem model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (bool,
 	error) {
-	for _, cLogicItem := range cLogics {
-		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
-		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
-		if cLogicItem.Rule == nil {
-			return nil, false, nil
-		}
-
-		ruleByte, err := json.Marshal(cLogicItem.Rule)
-		if err != nil {
-			return nil, false, err
-		}
-
-		dataByte, err := json.Marshal(cLogicItem.Data)
-		if err != nil {
-			return nil, false, err
-		}
-		ruleReader := bytes.NewReader(ruleByte)
-		dataReader := bytes.NewReader(dataByte)
-		var resultBuf bytes.Buffer
-		err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
-
-		if err != nil {
-			log.Error("error is ")
-			log.Error(err.Error())
-			return nil, false, err
-		}
-
-		var result interface{}
-		decoder := json.NewDecoder(&resultBuf)
-
-		err = decoder.Decode(&result)
-		if err != nil {
-			log.Errorf("Error decode logic result : %v", err)
-			return nil, false, err
-		}
-
-		// get type of json logic result
-		vt := reflect.TypeOf(result)
-		if vt.Kind() == reflect.Bool {
-			if result.(bool) {
-				return &cLogicItem, true, nil
-			} else {
-				// result is false
-				return &cLogicItem, false, nil
-			}
-		} else {
-			return &cLogicItem, true, nil
-		}
-
+	cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
+	cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
+	if cLogicItem.Rule == nil {
+		return false, nil
 	}
-	return nil, false, nil
+
+	ruleByte, err := json.Marshal(cLogicItem.Rule)
+	if err != nil {
+		return false, err
+	}
+
+	dataByte, err := json.Marshal(cLogicItem.Data)
+	if err != nil {
+		return false, err
+	}
+	ruleReader := bytes.NewReader(ruleByte)
+	dataReader := bytes.NewReader(dataByte)
+	var resultBuf bytes.Buffer
+	err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
+
+	if err != nil {
+		log.Error("error is ")
+		log.Error(err.Error())
+		return false, err
+	}
+
+	var result interface{}
+	decoder := json.NewDecoder(&resultBuf)
+
+	err = decoder.Decode(&result)
+	if err != nil {
+		log.Errorf("Error decode logic result : %v", err)
+		return false, err
+	}
+
+	// get type of json logic result
+	vt := reflect.TypeOf(result)
+	if vt.Kind() == reflect.Bool {
+		if result.(bool) {
+			return true, nil
+		} else {
+			// result is false
+			return false, nil
+		}
+	}
+	return true, nil
 
 }

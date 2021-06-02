@@ -105,18 +105,19 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		}
 
 		if len(wrapper.Configure.Request.CLogics) > 0 {
-			cLogicItem, boolResult, err := service.CLogicsChecker(wrapper.Configure.Request.CLogics, cc.MapWrapper)
-			if err != nil {
-				log.Errorf("Error while check logic for cLogic %v : %v", cLogicItem, err)
-				return cc.JSON(http.StatusBadRequest, err)
-			}
+			for _, cLogicItem := range wrapper.Configure.Request.CLogics {
+				boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+				if err != nil {
+					log.Errorf("Error while check logic for cLogic %v : %v", cLogicItem, err)
+					return cc.JSON(http.StatusBadRequest, err)
+				}
 
-			if cLogicItem != nil {
 				if boolResult {
 					if len(strings.Trim(cLogicItem.NextSuccess, " ")) > 0 {
 						alias = nextSuccess
 						continue
 					} else {
+						// if response is not empty
 						if !reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
 							// boolean result is true and response is specified
 							tmpMapResponse := response.ParseResponse(cc.MapWrapper, cLogicItem.Response,
@@ -147,18 +148,6 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 				}
 			}
 
-			if cLogicItem == nil {
-				log.Errorf("No CLogic satisfied for alias %v", alias)
-			} else {
-				_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
-				finalCustomResponse = customResponse
-				if err != nil {
-					log.Errorf("Error after processing request for alias %v:  %v", alias, err)
-					// next failure
-					tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, customResponse)
-					return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
-				}
-			}
 		} else {
 			_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
 			finalCustomResponse = customResponse
@@ -177,42 +166,58 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
 
-		cLogicItem, boolResult, err := service.CLogicsChecker(mapConfigures[alias].CLogics, cc.MapWrapper)
-		if err != nil || cLogicItem == nil {
-			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, nil)
-			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
-		}
-
-		// if cLogicItem is not nil and error is nil
-		if boolResult {
-			nextSuccess = cLogicItem.NextSuccess
-			if len(strings.Trim(nextSuccess, " ")) > 0 {
-
-				// reference to parallel request
-				if nextSuccess == "parallel.json" {
-					return DoParallel(cc, counter+1)
-				}
-
-				// reference to itself
-				if nextSuccess == "serial.json" {
-					return DoSerial(cc, counter+1)
-				}
-
-				// update alias
-				alias = nextSuccess
-			} else {
-				tmpMapResponse := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, err, finalCustomResponse)
-				return response.ResponseWriter(tmpMapResponse, cLogicItem.Response.Transform, cc)
+		for i := 0; i < len(mapConfigures[alias].CLogics); {
+			cLogicItem := mapConfigures[alias].CLogics[i]
+			boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+			if err != nil {
+				log.Error(err)
+				tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].FailureResponse, err, nil)
+				return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 			}
-		} else {
-			if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
-				// update alias
-				alias = cLogicItem.NextFailure
+
+			// if cLogicItem is not nil and error is nil
+			if boolResult {
+				nextSuccess = cLogicItem.NextSuccess
+				if len(strings.Trim(nextSuccess, " ")) > 0 {
+
+					// reference to parallel request
+					if nextSuccess == "parallel.json" {
+						return DoParallel(cc, counter+1)
+					}
+
+					// reference to itself
+					if nextSuccess == "serial.json" {
+						return DoSerial(cc, counter+1)
+					}
+
+					// update alias
+					alias = nextSuccess
+					break
+				} else {
+					tmpMapResponse := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, err, finalCustomResponse)
+					return response.ResponseWriter(tmpMapResponse, cLogicItem.Response.Transform, cc)
+				}
 			} else {
-				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
-				response.SetHeaderResponse(resultWrapper.Header, cc)
-				return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+				if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
+					// update alias
+					alias = cLogicItem.NextFailure
+					break
+				} else {
+					if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
+						resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
+						response.SetHeaderResponse(resultWrapper.Header, cc)
+						return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+					} else {
+						if i == len(mapConfigures[alias].CLogics)-1 {
+							resultWrapper := response.ParseResponse(cc.MapWrapper,
+								mapConfigures[alias].FailureResponse, nil, nil)
+							response.SetHeaderResponse(resultWrapper.Header, cc)
+							return response.ResponseWriter(resultWrapper, mapConfigures[alias].FailureResponse.Transform, cc)
+						}
+						i++
+					}
+
+				}
 			}
 		}
 
