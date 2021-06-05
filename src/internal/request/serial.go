@@ -145,6 +145,11 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 							tmpMapResponse := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse,
 								err, nil)
 							return response.ResponseWriter(tmpMapResponse, cLogicItem.FailureResponse.Transform, cc)
+						} else {
+							tmpMapResponse := response.ParseResponse(cc.MapWrapper,
+								mapConfigures[alias].FailureResponse, err, nil)
+							return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
+
 						}
 					}
 				}
