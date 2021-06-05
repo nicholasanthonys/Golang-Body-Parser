@@ -1,0 +1,30 @@
+{
+  "configures": [
+    {
+      "file_name": "test-4.3_configure-0.json",
+      "alias": "$configure_test-4.3_0",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "all logic fail or Request Logic error or there is something error"
+          }
+        }
+      }
+    },
+    {
+      "file_name": "test-4.3_configure-1.json",
+      "alias": "$configure_test-4.3_1",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "all logic fail or Request Logic error or there is something error"
+          }
+        }
+      }
+    }
+  ]
+}
