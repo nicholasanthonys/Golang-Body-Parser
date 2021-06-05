@@ -70,7 +70,12 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		loop := DetermineLoop(cc.MapWrapper, configureItem)
 
 		for i := 0; i < loop; i++ {
-			alias := configureItem.Alias + "_" + strconv.Itoa(i)
+			var alias string
+			if loop > 1 {
+				alias = configureItem.Alias + "_" + strconv.Itoa(i)
+			} else {
+				alias = configureItem.Alias
+			}
 			err := SetRequestToWrapper(alias, cc, &requestFromUser)
 			if err != nil {
 				log.Error(err.Error())
@@ -84,7 +89,14 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	for _, configureItem := range ParallelProject.Configures {
 		loop := DetermineLoop(cc.MapWrapper, configureItem)
 		for i := 0; i < loop; i++ {
-			alias := configureItem.Alias + "_" + strconv.Itoa(i)
+
+			var alias string
+			if loop > 1 {
+				alias = configureItem.Alias + "_" + strconv.Itoa(i)
+			} else {
+				alias = configureItem.Alias
+			}
+
 			if wrp, ok := cc.MapWrapper.Get(alias); ok {
 				wrapper := wrp.(*model.Wrapper)
 
@@ -221,7 +233,10 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	}
 
-	return nil
+	log.Warn("No Response Specified, returning : ", http.StatusBadRequest)
+	return cc.JSON(400, map[string]interface{}{
+		"message": "No parallel logic to determine response to be returned",
+	})
 	//
 	//resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
 	//
