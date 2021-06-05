@@ -46,7 +46,7 @@ func TestSingleSerial_TrueLogicWithResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.1_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-3.2_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -143,7 +143,7 @@ func TestSingleSerial_FalseLogicWithoutFailureResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.1_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-3.2_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -193,7 +193,7 @@ func TestSingleSerial_FalseLogicWithFailureResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.1_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-3.2_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
