@@ -45,6 +45,12 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 				return in
 			}
 
+			if len(splittedValue) != 3 {
+				log.Error("referenced syntax wrong for : ", in)
+				log.Error(splittedValue)
+				return in
+			}
+
 			if splittedValue[1] == "$request" {
 				val = GetFromHalfReferenceValue(splittedValue[2], wrapper.Request, 0)
 				in = val
