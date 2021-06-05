@@ -211,13 +211,13 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 					break
 				} else {
 					if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
-						resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
+						resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, finalCustomResponse)
 						response.SetHeaderResponse(resultWrapper.Header, cc)
 						return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
 					} else {
 						if i == len(mapConfigures[alias].CLogics)-1 {
 							resultWrapper := response.ParseResponse(cc.MapWrapper,
-								mapConfigures[alias].FailureResponse, nil, nil)
+								mapConfigures[alias].FailureResponse, nil, finalCustomResponse)
 							response.SetHeaderResponse(resultWrapper.Header, cc)
 							return response.ResponseWriter(resultWrapper, mapConfigures[alias].FailureResponse.Transform, cc)
 						}
