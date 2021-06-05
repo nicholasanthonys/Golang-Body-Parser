@@ -88,8 +88,12 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 	var finalCustomResponse *model.CustomResponse
 
 	// Processing request
+
+ConfigureFile:
 	for {
+		log.Info("alias now : ", alias)
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
+			log.Info("ok for alias ", alias)
 			wrapper = tmp.(*model.Wrapper)
 		}
 
@@ -104,6 +108,9 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 			return err
 		}
 
+		log.Info("Len cLogics for wrapper alias ", alias)
+		log.Info(len(wrapper.Configure.Request.CLogics))
+
 		if len(wrapper.Configure.Request.CLogics) > 0 {
 			for _, cLogicItem := range wrapper.Configure.Request.CLogics {
 				boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
@@ -114,8 +121,9 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 				if boolResult {
 					if len(strings.Trim(cLogicItem.NextSuccess, " ")) > 0 {
+						nextSuccess = cLogicItem.NextSuccess
 						alias = nextSuccess
-						continue
+						continue ConfigureFile
 					} else {
 						// if response is not empty
 						if !reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
@@ -137,7 +145,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 				} else {
 					if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
 						// update alias
-						alias = nextSuccess
+						alias = cLogicItem.NextFailure
 						continue // skip loop and update alias
 					} else {
 						if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
@@ -169,6 +177,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		cc.MapWrapper.Set(alias, wrapper)
 
 		if len(mapConfigures[alias].CLogics) == 0 {
+			log.Info("return here")
 			tmpMapResponse := response.ParseResponse(cc.MapWrapper, wrapper.Configure.Response, nil, finalCustomResponse)
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
@@ -228,29 +237,6 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 			}
 		}
 
-		// update next_success
-		//nextSuccess = cLogicItem.NextSuccess
-		// update alias
-		//if len(strings.Trim(nextSuccess, " ")) > 0 {
-		//
-		//	// reference to parallel request
-		//	if nextSuccess == "parallel.json" {
-		//		return DoParallel(cc, counter+1)
-		//	}
-		//
-		//	// reference to itself
-		//	if nextSuccess == "serial.json" {
-		//		return DoSerial(cc, counter+1)
-		//	}
-		//	alias = nextSuccess
-		//}
-		//if len(strings.Trim(nextSuccess, " ")) == 0 {
-		//	finalResponseConfigure = cLogicItem.Response
-		//	break
-		//}
-
 	}
 
-	//tmpMapResponse := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, err, finalCustomResponse)
-	//return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, cc)
 }
