@@ -91,9 +91,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 ConfigureFile:
 	for {
-		log.Info("alias now : ", alias)
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
-			log.Info("ok for alias ", alias)
 			wrapper = tmp.(*model.Wrapper)
 		}
 
@@ -107,9 +105,6 @@ ConfigureFile:
 		if err != nil {
 			return err
 		}
-
-		log.Info("Len cLogics for wrapper alias ", alias)
-		log.Info(len(wrapper.Configure.Request.CLogics))
 
 		if len(wrapper.Configure.Request.CLogics) > 0 {
 			for _, cLogicItem := range wrapper.Configure.Request.CLogics {
@@ -146,7 +141,7 @@ ConfigureFile:
 					if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
 						// update alias
 						alias = cLogicItem.NextFailure
-						continue // skip loop and update alias
+						continue ConfigureFile // skip loop and update alias
 					} else {
 						if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
 							// next failure
@@ -177,7 +172,6 @@ ConfigureFile:
 		cc.MapWrapper.Set(alias, wrapper)
 
 		if len(mapConfigures[alias].CLogics) == 0 {
-			log.Info("return here")
 			tmpMapResponse := response.ParseResponse(cc.MapWrapper, wrapper.Configure.Response, nil, finalCustomResponse)
 			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
 		}
