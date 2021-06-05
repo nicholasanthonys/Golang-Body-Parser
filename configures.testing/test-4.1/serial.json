@@ -1,0 +1,46 @@
+{
+  "configures": [
+    {
+      "file_name": "test-4.1_configure-0.json",
+      "alias": "$configure_test-4_0",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "all logic fail or Request Logic error or there is something error"
+          }
+        }
+      }
+    },
+    {
+      "file_name": "test-4.1_configure-1.json",
+      "alias": "$configure_test-4_1",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "all logic fail or Request Logic error or there is something error"
+          }
+        }
+      },
+      "c_logics" : [
+        {
+          "rule" : [
+            {
+              "==" : [
+                "$configure_test-4_1--$response--$body[id]",
+                384018
+              ]
+            }
+          ],
+          "response" : {
+            "status_code": 201,
+            "transform": "ToJson"
+          }
+        }
+      ]
+    }
+  ]
+}
