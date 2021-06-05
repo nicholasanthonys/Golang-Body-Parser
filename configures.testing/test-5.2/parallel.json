@@ -1,0 +1,64 @@
+{
+  "failure_response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "adds": {
+      "body" : {
+        "message" : "all logic failed"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": []
+    }
+  },
+  "configures": [
+    {
+      "file_name": "test-5.2_configure-0.json",
+      "alias": "$configure_first_test_5.2"
+    },
+    {
+      "file_name": "test-5.2_configure-1.json",
+      "alias": "$configure_second_test_5.2"
+    }
+  ],
+  "c_logics" : [
+    {
+      "rule" : {
+        "and": [
+          {
+            "==": [
+             "$configure_first_test_5.2--$response--$body[name]",
+              "$configure_first_test_5.2--$request--$body[name]"
+            ]
+          },
+          {
+            "==": [
+              "$configure_second_test_5.2--$response--$body[name]",
+              "$configure_second_test_5.2--$request--$body[name]"
+
+            ]
+          }
+        ]
+      },
+      "response" : {
+        "status_code" : 201,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "from_configure_0" : "$configure_first_test_5.2--$response--$body",
+            "from_configure_1" : "$configure_second_test_5.2--$response--$body"
+          }
+        },
+        "modifies": {},
+        "deletes": {
+          "header": [],
+          "body": [
+
+          ]
+        }
+      }
+    }
+  ]
+}
