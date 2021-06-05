@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/test-1",
+    "project_directory": "test-1",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-2-1",
+    "project_directory": "test-2.1",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-2-2",
+    "project_directory": "test-2.2",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-2-3",
+    "project_directory": "test-2.3",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-2-4",
+    "project_directory": "test-2.4",
+    "type": "serial",
+    "method": "GET"
+  }
+]
