@@ -1,0 +1,59 @@
+{
+  "request": {
+    "destination_url": "https://jsonplaceholder.typicode.com/posts",
+    "destination_path": "",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "title": "$configure--$request--$body[title]",
+        "body": "bar",
+        "userId": 1
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "status_code": 400,
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}
