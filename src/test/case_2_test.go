@@ -4,29 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 )
 
-func init() {
-	err := godotenv.Load("../.env.testing")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	URL = "http://" + os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT")
-	logrus.Info("init triggered")
-
-	dirName = os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
-}
-
-func TestSingleSerial_TrueLogicWithResponse(t *testing.T) {
+func TestSingleSerial_True_Logic_With_Response(t *testing.T) {
 	projectDir := dirName + "/test-2.1"
 
 	req, _ := http.NewRequest("GET", URL+"/test-2-1?movie_id=550", nil)
@@ -46,7 +31,7 @@ func TestSingleSerial_TrueLogicWithResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.2_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-2.1_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -73,7 +58,7 @@ func TestSingleSerial_TrueLogicWithResponse(t *testing.T) {
 
 }
 
-func TestSingleSerial_TrueLogicWithoutResponse(t *testing.T) {
+func TestSingleSerial_True_Logic_Without_Response(t *testing.T) {
 	projectDir := dirName + "/test-2.2"
 
 	req, _ := http.NewRequest("GET", URL+"/test-2-2?movie_id=550", nil)
@@ -120,7 +105,7 @@ func TestSingleSerial_TrueLogicWithoutResponse(t *testing.T) {
 
 }
 
-func TestSingleSerial_FalseLogicWithoutFailureResponse(t *testing.T) {
+func TestSingleSerial_False_Logic_Without_Failure_Response(t *testing.T) {
 	projectDir := dirName + "/test-2.3"
 
 	req, _ := http.NewRequest("GET", URL+"/test-2-3?movie_id=550", nil)
@@ -143,7 +128,7 @@ func TestSingleSerial_FalseLogicWithoutFailureResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.2_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-2.3_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -170,7 +155,7 @@ func TestSingleSerial_FalseLogicWithoutFailureResponse(t *testing.T) {
 
 }
 
-func TestSingleSerial_FalseLogicWithFailureResponse(t *testing.T) {
+func TestSingleSerial_False_Logic_With_Failure_Response(t *testing.T) {
 	projectDir := dirName + "/test-2.4"
 
 	req, _ := http.NewRequest("GET", URL+"/test-2-4?movie_id=550", nil)
@@ -193,7 +178,7 @@ func TestSingleSerial_FalseLogicWithFailureResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.2_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-2.4_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")

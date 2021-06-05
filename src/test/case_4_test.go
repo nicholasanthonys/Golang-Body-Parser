@@ -4,27 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 )
-
-func init() {
-	err := godotenv.Load("../.env.testing")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	URL = "http://" + os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT")
-	logrus.Info("init triggered")
-
-	dirName = os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
-}
 
 func TestSingleSerial_First_Request_True_Logic_Refer_To_Second_Request(t *testing.T) {
 	projectDir := dirName + "/test-4.1"

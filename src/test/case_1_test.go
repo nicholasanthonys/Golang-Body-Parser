@@ -30,7 +30,7 @@ func init() {
 	dirName = os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
 }
 
-func TestSingleSerial_WithoutLogicRequestAndWithoutLogicFinal(t *testing.T) {
+func TestSingleSerial_Without_Logic_Request_And_Without_Logic_Final(t *testing.T) {
 	projectDir := dirName + "/test-1"
 
 	req, _ := http.NewRequest("GET", URL+"/test-1?movie_id=550", nil)

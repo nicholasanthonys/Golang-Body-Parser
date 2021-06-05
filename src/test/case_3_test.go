@@ -4,29 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 )
 
-func init() {
-	err := godotenv.Load("../.env.testing")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	URL = "http://" + os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT")
-	logrus.Info("init triggered")
-
-	dirName = os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
-}
-
-func TestSingleSerial_OnlyTrueLogicSerialResponse(t *testing.T) {
+func TestSingleSerial_Only_True_Logic_Serial_Response(t *testing.T) {
 	projectDir := dirName + "/test-3.1"
 
 	req, _ := http.NewRequest("GET", URL+"/test-3-1?movie_id=550", nil)
@@ -73,7 +58,7 @@ func TestSingleSerial_OnlyTrueLogicSerialResponse(t *testing.T) {
 
 }
 
-func TestSingleSerial_OnlyTrueLogicWithoutSerialResponse(t *testing.T) {
+func TestSingleSerial_Only_True_Logic_Without_Serial_Response(t *testing.T) {
 	projectDir := dirName + "/test-3.2"
 
 	req, _ := http.NewRequest("GET", URL+"/test-3-2?movie_id=550", nil)
@@ -120,7 +105,7 @@ func TestSingleSerial_OnlyTrueLogicWithoutSerialResponse(t *testing.T) {
 
 }
 
-func TestSingleSerial_FalseLogicWithSerialFailureResponse(t *testing.T) {
+func TestSingleSerial_False_Logic_With_Serial_Failure_Response(t *testing.T) {
 	projectDir := dirName + "/test-3.3"
 
 	req, _ := http.NewRequest("GET", URL+"/test-3-3?movie_id=550", nil)
@@ -143,7 +128,7 @@ func TestSingleSerial_FalseLogicWithSerialFailureResponse(t *testing.T) {
 		assert.Error(t, err, "should not error")
 	}
 
-	expectedByte := util.ReadJsonFile(projectDir + "/test-3.4_expected.json")
+	expectedByte := util.ReadJsonFile(projectDir + "/test-3.3_expected.json")
 	equal, err := util.JSONBytesEqual(expectedByte, responseByte)
 	if err != nil {
 		assert.Error(t, err, "error compare json byte")
@@ -170,7 +155,7 @@ func TestSingleSerial_FalseLogicWithSerialFailureResponse(t *testing.T) {
 
 }
 
-func TestSingleSerial_FalseLogicWithoutSerialFailureResponse(t *testing.T) {
+func TestSingleSerial_False_Logic_Without_Serial_Failure_Response(t *testing.T) {
 	projectDir := dirName + "/test-3.4"
 
 	req, _ := http.NewRequest("GET", URL+"/test-3-4?movie_id=550", nil)
