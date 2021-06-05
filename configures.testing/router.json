@@ -28,5 +28,29 @@
     "project_directory": "test-2.4",
     "type": "serial",
     "method": "GET"
+  },
+  {
+    "path": "/test-3-1",
+    "project_directory": "test-3.1",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-3-2",
+    "project_directory": "test-3.2",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-3-3",
+    "project_directory": "test-3.3",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-3-4",
+    "project_directory": "test-3.4",
+    "type": "serial",
+    "method": "GET"
   }
 ]
