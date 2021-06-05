@@ -56,7 +56,13 @@
   {
     "path": "/test-4-1",
     "project_directory": "test-4.1",
-    "type": "POST",
+    "type": "serial",
+    "method": "GET"
+  },
+  {
+    "path": "/test-4-2",
+    "project_directory": "test-4.2",
+    "type": "serial",
     "method": "GET"
   }
 ]
