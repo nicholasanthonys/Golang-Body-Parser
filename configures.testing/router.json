@@ -108,6 +108,12 @@
     "method": "POST"
   },
   {
+    "path": "/test-6-3",
+    "project_directory": "test-6.3",
+    "type": "parallel",
+    "method": "POST"
+  },
+  {
     "path": "/test-7-1",
     "project_directory": "test-7.1",
     "type": "parallel",
