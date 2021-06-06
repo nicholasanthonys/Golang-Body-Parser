@@ -107,7 +107,7 @@ ConfigureFile:
 		}
 
 		if len(wrapper.Configure.Request.CLogics) > 0 {
-			for _, cLogicItem := range wrapper.Configure.Request.CLogics {
+			for index, cLogicItem := range wrapper.Configure.Request.CLogics {
 				boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
 				if err != nil {
 					log.Errorf("Error while check logic for cLogic %v : %v", cLogicItem, err)
@@ -149,9 +149,18 @@ ConfigureFile:
 								err, nil)
 							return response.ResponseWriter(tmpMapResponse, cLogicItem.FailureResponse.Transform, cc)
 						} else {
-							tmpMapResponse := response.ParseResponse(cc.MapWrapper,
-								mapConfigures[alias].FailureResponse, err, nil)
-							return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
+							if index == len(wrapper.Configure.Request.CLogics)-1 {
+								tmpMapResponse := response.ParseResponse(cc.MapWrapper,
+									mapConfigures[alias].FailureResponse, err, &model.CustomResponse{
+										StatusCode: 0,
+										Header:     nil,
+										Body: map[string]interface{}{
+											"message": "All logic failed in request " + alias,
+										},
+										Error: nil,
+									})
+								return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].FailureResponse.Transform, cc)
+							}
 
 						}
 					}
