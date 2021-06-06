@@ -1,0 +1,60 @@
+{
+  "request": {
+    "destination_url": "https://60bbb59e42e1d00017621029.mockapi.io/random/1",
+    "destination_path": "",
+    "method": "GET",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+        "foo" : "tes"
+      }
+
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "test" : "test key From add response configure-2.json"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "createdAt",
+        "id"
+      ]
+    }
+  }
+}

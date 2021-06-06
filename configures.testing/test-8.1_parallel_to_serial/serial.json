@@ -1,0 +1,57 @@
+{
+  "configures": [
+    {
+      "file_name": "test-8.1_configure-2.json",
+      "alias": "$configure_second_configure",
+      "failure_response" : {
+        "status_code" : 500,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "error_message" : "Failure happen at zero_configure. There is an error",
+            "message"  : "$configure_second_configure--$response--$body"
+          }
+        }
+      },
+      "c_logics": [
+        {
+          "rule": {
+            "==": [
+              "abc",
+              "abc"
+            ]
+          },
+          "data": null,
+          "next_success" :null,
+          "response": {
+            "status_code" : 201,
+            "transform" : "ToJson",
+            "adds" : {
+              "header" : {
+               "status_code_configure_zero" : "$configure_zero_configure--$response--$status_code"
+              },
+              "body" : {
+                "parallel_zero_configure_response" : "$configure_second_configure--$response--$body",
+                "parallel_first_configure_response" : "$configure_zero_configure--$response--$body",
+                "serial_response" : "$configure_first_configure--$response--$body",
+                "test" : "$configure_first_configure--$response--$body[test]"
+              }
+            },
+            "deletes" : {
+              "body" : [
+                "avatar",
+                "content",
+                "createdAt",
+                "id",
+                "name",
+                "numbers",
+                "phone_numbers",
+                "user"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

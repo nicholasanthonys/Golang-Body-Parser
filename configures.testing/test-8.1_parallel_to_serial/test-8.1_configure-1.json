@@ -1,0 +1,94 @@
+{
+  "request": {
+    "destination_url": "https://60bbb59e42e1d00017621029.mockapi.io/random",
+    "destination_path": "",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+        "name": "William",
+        "numbers": "$configure_zero_configure--$request--$body[numbers]",
+        "content": "Hello World from configure-0.json"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    },
+    "c_logics": [
+      {
+        "rule": {
+          "and": [
+            {
+              "==": [
+                {
+                  "var": "tempNumbers.0"
+                },
+                "123-456"
+              ]
+            },
+            {
+              "==": [
+                {
+                  "var": "tempNumbers.1"
+                },
+                "234-567"
+              ]
+            }
+          ]
+        },
+        "data": {
+          "tempNumbers": [
+            "123-456",
+            "234-567",
+            "345-678"
+          ]
+        }
+      }
+    ]
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "test": "test key From add response configure-2.json",
+        "status_code" : "$configure_first_configure--$response--$status_code"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "createdAt",
+        "id"
+      ]
+    }
+  }
+}
