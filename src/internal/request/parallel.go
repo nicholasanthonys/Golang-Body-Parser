@@ -101,6 +101,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 				wrapper := wrp.(*model.Wrapper)
 
 				if len(wrapper.Configure.Request.CLogics) > 0 {
+				CLogics:
 					for _, cLogicItem := range wrapper.Configure.Request.CLogics {
 						boolResult, err := service.CLogicsChecker(cLogicItem,
 							cc.MapWrapper)
@@ -123,9 +124,9 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 								}
 
 							} else {
-								wg.Add(1)
 								// process next configure
 								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextSuccess); ok {
+									wg.Add(1)
 									newWrapper := wrp.(*model.Wrapper)
 									go worker(&wg, cLogicItem.NextSuccess, cc, newWrapper, i)
 								} else {
@@ -141,7 +142,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 									response.SetHeaderResponse(resultWrapper.Header, cc)
 									return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
 								} else {
-									continue
+									continue CLogics
 								}
 
 							} else {
