@@ -1,0 +1,18 @@
+{
+  "error": "Parallel can only refer to parallel/serial.json",
+  "from_configure_0": {
+    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+    "body": "bar",
+    "name": "kakashi"
+  },
+  "from_configure_1": {
+    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+    "body": "bar",
+    "createdAt": "2021-06-05T08:14:55.991Z",
+    "id": "1",
+    "name": "kakashi",
+    "tes": "hello",
+    "title": "foo",
+    "userId": 1
+  }
+}
