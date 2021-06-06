@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
@@ -187,10 +188,15 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			if len(strings.Trim(nextSuccess, " ")) > 0 {
 				if nextSuccess == "serial.json" {
 					return DoSerial(cc, counter+1)
-				} else {
+				} else if nextSuccess == "parallel.json" {
 					// reference to itself
 					return DoParallel(cc, counter+1)
 				}
+
+				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response,
+					errors.New("Parallel can only refer to parallel/serial.json"), nil)
+				response.SetHeaderResponse(resultWrapper.Header, cc)
+				return response.ResponseWriter(resultWrapper, cLogicItem.Response.Transform, cc)
 
 			} else {
 				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, nil, nil)
@@ -214,35 +220,12 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 		}
 
-		//// update next_success
-		//nextSuccess = cLogicItem.NextSuccess
-		//// update alias
-		//if len(strings.Trim(nextSuccess, " ")) > 0 {
-		//	if nextSuccess == "serial.json" {
-		//		return DoSerial(cc, counter+1)
-		//	}
-		//
-		//	// reference to itself
-		//	if nextSuccess == "parallel.json" {
-		//		return DoParallel(cc, counter+1)
-		//	}
-		//}
-		//if len(strings.Trim(nextSuccess, " ")) == 0 {
-		//	finalResponseConfigure = cLogicItem.Response
-		//	break
-		//}
-
 	}
 
 	log.Warn("No Response Specified, returning : ", http.StatusBadRequest)
 	return cc.JSON(400, map[string]interface{}{
 		"message": "No parallel logic to determine response to be returned",
 	})
-	//
-	//resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
-	//
-	//return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, cc)
-
 }
 
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.
