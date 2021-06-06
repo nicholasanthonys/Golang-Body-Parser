@@ -15,7 +15,7 @@ import (
 func TestParallel_No_Logic_Specified(t *testing.T) {
 	projectDir := dirName + "/test-5.1"
 
-	req, _ := http.NewRequest("POST", URL+"/test-5-1?movie_id=550&movie_id2=384018", nil)
+	req, _ := http.NewRequest("POST", URL+"/test-5-1", nil)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{}
