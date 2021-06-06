@@ -100,5 +100,11 @@
     "project_directory": "test-7.1",
     "type": "parallel",
     "method": "POST"
+  },
+  {
+    "path": "/test-7-2",
+    "project_directory": "test-7.2",
+    "type": "parallel",
+    "method": "POST"
   }
 ]
