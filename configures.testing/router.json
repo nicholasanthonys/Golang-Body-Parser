@@ -148,5 +148,11 @@
     "project_directory": "test-8.1_parallel_to_serial",
     "type": "parallel",
     "method": "POST"
+  },
+  {
+    "path": "/test-8-2",
+    "project_directory": "test-8.2_serial_to_parallel",
+    "type": "serial",
+    "method": "POST"
   }
 ]
