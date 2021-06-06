@@ -82,5 +82,11 @@
     "project_directory": "test-5.1",
     "type": "parallel",
     "method": "POST"
+  },
+  {
+    "path": "/test-5-2",
+    "project_directory": "test-5.2",
+    "type": "parallel",
+    "method": "POST"
   }
 ]
