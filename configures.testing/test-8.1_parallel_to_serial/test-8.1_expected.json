@@ -1,4 +1,5 @@
 {
+  "body": "bar",
   "parallel_first_configure_response": {
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "content": "selamat anda menang",
@@ -23,6 +24,14 @@
   },
   "parallel_zero_configure_response": {
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+    "body": "bar",
+    "name": "kakashi",
+    "tes": "hello",
+    "test": "test key From add response configure-2.json",
+    "title": "foo"
+  },
+  "serial_response": {
+    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "content": "selamat anda menang",
     "name": "William",
     "numbers": [
@@ -35,27 +44,10 @@
       "2456789",
       "3456789"
     ],
-    "test": "test key From add response configure-2.json",
-    "user": {
-      "favorite_foods": [
-        "noodle",
-        "chicken",
-        "soup"
-      ]
-    }
-  },
-  "serial_response": {
-    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
-    "content": "selamat anda menang",
-    "name": "William",
-    "numbers": "",
-    "phone_numbers": [
-      "123456789",
-      "2456789",
-      "3456789"
-    ],
     "status_code": 201,
     "test": "test key From add response configure-2.json"
   },
-  "test": "test key From add response configure-2.json"
+  "tes": "hello",
+  "test": "test key From add response configure-2.json",
+  "title": "foo"
 }
