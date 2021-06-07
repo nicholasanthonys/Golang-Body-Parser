@@ -52,6 +52,8 @@
     },
     "deletes": {
       "body": [
+        "createdAt",
+        "id"
       ]
     }
   }
