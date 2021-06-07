@@ -19,7 +19,7 @@ import (
 
 func TestReadWithoutConfigure(t *testing.T) {
 	var project model.Serial
-	jsonFile, err := os.Open("../../configures.example/smsotp/serial.json")
+	jsonFile, err := os.Open("../../configures.testing/smsotp/serial.json")
 	if err != nil {
 		logrus.Error("error when open serial.json")
 		logrus.Error(err)

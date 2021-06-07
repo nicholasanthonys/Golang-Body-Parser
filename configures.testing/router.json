@@ -154,5 +154,23 @@
     "project_directory": "test-8.2_serial_to_parallel",
     "type": "serial",
     "method": "POST"
+  },
+  {
+    "path": "/smsotp/generate/:smsId",
+    "project_directory": "smsotp",
+    "type": "serial",
+    "method": "POST"
+  },
+  {
+    "path": "/emailotp/generate",
+    "project_directory": "emailotp",
+    "type": "serial",
+    "method": "POST"
+  },
+  {
+    "path": "/imdb",
+    "project_directory": "imdb",
+    "type": "serial",
+    "method": "GET"
   }
 ]

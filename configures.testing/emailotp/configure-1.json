@@ -50,6 +50,7 @@
     }
   },
   "response": {
+    "status_code" : 200,
     "transform": "ToJson",
     "log_before_modify": {},
     "log_after_modify": {},

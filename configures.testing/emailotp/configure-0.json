@@ -1,25 +1,31 @@
 {
   "request": {
-    "destination_url": "http://mockbin.org/bin/6e4c1c8d-2be4-47b5-9567-b801aff878d2",
-    "destination_path": "",
+    "destination_url": "http://mockbin.org/bin/85a4721c-a88a-43ee-be8a-169d77e02e31",
+    "destination_path": "/user",
     "method": "POST",
     "transform": "ToJson",
-    "log_before_modify": {},
+    "log_before_modify": {
+    },
     "log_after_modify": {},
     "adds": {
       "header": {
       },
       "body": {
+        "cars": [
+          "honda",
+          "toyota",
+          "avanza"
+        ]
       },
       "query": {
-        "foo" : "tes"
+        "address": "mutiara cibaduyut c20"
       }
-
     },
     "modifies": {
       "header": {
       },
       "body": {
+        "cars.0": "ferrari"
       },
       "query": {
       }
@@ -28,20 +34,31 @@
       "header": [
       ],
       "body": [
+        "user.tes"
       ],
       "query": [
       ]
-    }
+    },
+    "c_logics": [
+      {
+        "rule": {
+          "==": [
+            "abc",
+            "abc"
+          ]
+        }
+      }
+    ]
   },
   "response": {
+    "status_code": 200,
     "transform": "ToJson",
-    "log_before_modify": {},
-    "log_after_modify": {},
+    "log_before_modify": "",
+    "log_after_modify": "",
     "adds": {
       "header": {
       },
       "body": {
-        "test" : "test key From add response configure-2.json"
       },
       "query": {
       }
@@ -52,7 +69,6 @@
     },
     "deletes": {
       "body": [
-
       ]
     }
   }

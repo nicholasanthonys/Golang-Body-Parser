@@ -3,7 +3,7 @@
     {
       "file_name" : "configure-0.json" ,
       "alias"  : "$configure_first_configure",
-      "next_failure" : {
+      "failure_response" : {
         "status_code" : 500,
         "transform" : "ToJson",
         "log_before_modify" : {},
@@ -29,7 +29,7 @@
     {
       "file_name": "configure-1.json",
       "alias" : "$configure_second_configure",
-      "next_failure" : {
+      "failure_response" : {
         "status_code" : 500,
         "transform" : "ToJson",
         "log_before_modify" : {},

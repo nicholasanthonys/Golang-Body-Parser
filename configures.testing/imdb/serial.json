@@ -3,7 +3,7 @@
         {
             "file_name": "id-550.json",
             "alias": "$configure_imdb",
-            "next_failure" : {
+            "failure_response" : {
               "status_code" : 500,
               "transform" : "ToJson",
               "adds" : {
