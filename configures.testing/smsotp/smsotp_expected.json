@@ -1,0 +1,11 @@
+{
+  "message": "Circular response",
+  "user": {
+    "configure0_query": "kopo",
+    "favorite_cars": "honda",
+    "id": 0,
+    "name": "Peter Parker",
+    "tes": "from configure.example directory",
+    "transaction_id": "3"
+  }
+}

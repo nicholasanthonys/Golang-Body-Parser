@@ -1,7 +1,7 @@
 {
   "project_max_circular" :10,
   "circular_response" : {
-    "status_code" : 400,
+    "status_code" : 508,
     "transform": "ToJson",
     "log_before_modify" : {},
     "log_after_modify" : {},
