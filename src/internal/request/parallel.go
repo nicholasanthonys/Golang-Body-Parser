@@ -20,8 +20,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil, nil)
-			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, cc.BaseProject.CircularResponse, nil, nil)
 		}
 		resMap := make(map[string]interface{})
 		resMap["message"] = "Circular Request detected"
@@ -118,10 +117,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 									// process current configure
 									go worker(&wg, alias, cc, wrapper, i)
 								} else {
-									resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, nil, nil)
-									response.SetHeaderResponse(resultWrapper.Header, cc)
-									return response.ResponseWriter(resultWrapper, cLogicItem.Response.Transform, cc)
-
+									return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, nil, nil)
 								}
 
 							} else {
@@ -139,9 +135,8 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 							if len(strings.Trim(cLogicItem.NextFailure, " ")) == 0 {
 								if !(reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{})) {
 									// response
-									resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
-									response.SetHeaderResponse(resultWrapper.Header, cc)
-									return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+									return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
+
 								} else {
 									continue CLogics
 								}
@@ -173,14 +168,13 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	wg.Wait()
 
 	var nextSuccess string
-	//finalResponseConfigure := model.Command{}
 	for index, cLogicItem := range ParallelProject.CLogics {
 
 		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
 		if err != nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, err, nil)
-			return response.ResponseWriter(tmpMapResponse, ParallelProject.FailureResponse.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, ParallelProject.FailureResponse, err, nil)
+
 		}
 
 		if boolResult {
@@ -193,29 +187,22 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 					return DoParallel(cc, counter+1)
 				}
 
-				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response,
+				return response.ConstructResponseFromWrapper(cc, cLogicItem.Response,
 					errors.New("Parallel can only refer to parallel/serial.json"), nil)
-				response.SetHeaderResponse(resultWrapper.Header, cc)
-				return response.ResponseWriter(resultWrapper, cLogicItem.Response.Transform, cc)
 
 			} else {
-				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.Response, nil, nil)
-				response.SetHeaderResponse(resultWrapper.Header, cc)
-				return response.ResponseWriter(resultWrapper, cLogicItem.Response.Transform, cc)
+				return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, nil, nil)
+
 			}
 
 		} else {
 			if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
-				resultWrapper := response.ParseResponse(cc.MapWrapper, cLogicItem.FailureResponse, nil, nil)
-				response.SetHeaderResponse(resultWrapper.Header, cc)
-				return response.ResponseWriter(resultWrapper, cLogicItem.FailureResponse.Transform, cc)
+				return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
+
 			} else {
 				if index == len(ParallelProject.CLogics)-1 {
-					resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.FailureResponse, nil, nil)
-					response.SetHeaderResponse(resultWrapper.Header, cc)
-					return response.ResponseWriter(resultWrapper, ParallelProject.FailureResponse.Transform, cc)
+					return response.ConstructResponseFromWrapper(cc, ParallelProject.FailureResponse, nil, nil)
 				}
-
 			}
 
 		}
