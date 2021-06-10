@@ -18,8 +18,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil, nil)
-			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, cc.BaseProject.CircularResponse, nil, nil)
 		}
 		resMap := make(map[string]interface{})
 		resMap["message"] = "Circular Request detected"
@@ -84,6 +83,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		nextSuccess = SerialProject.Configures[0].CLogics[0].NextSuccess
 	}
 
+	var finalCustomResponse *model.CustomResponse
 	// Processing request
 ConfigureFile:
 	for {
@@ -118,15 +118,13 @@ ConfigureFile:
 					} else {
 						// if response is not empty
 						if !reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
-							// boolean result is true and response is specified
 							return response.ConstructResponseFromWrapper(cc, cLogicItem.Response,
 								err, nil)
 						} else {
-							_, _, err := ProcessingRequest(alias, cc, wrapper, 0)
+							_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
+							finalCustomResponse = customResponse
 							if err != nil {
-								// next failure
-								return response.ConstructResponseFromWrapper(cc,
-									mapConfigures[alias].FailureResponse, err, nil)
+								return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, err, customResponse)
 							}
 						}
 					}
@@ -138,7 +136,6 @@ ConfigureFile:
 						continue ConfigureFile // skip loop and update alias
 					} else {
 						if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
-							// next failure
 							return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse,
 								err, nil)
 						} else {
@@ -160,17 +157,19 @@ ConfigureFile:
 			}
 
 		} else {
-			_, _, err := ProcessingRequest(alias, cc, wrapper, 0)
+			_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
+			finalCustomResponse = customResponse
 			if err != nil {
 				log.Errorf("Error after processing request for alias %v:  %v", alias, err)
-				return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, err, nil)
+				return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse,
+					err, nil)
 			}
 		}
 
 		cc.MapWrapper.Set(alias, wrapper)
 
 		if len(mapConfigures[alias].CLogics) == 0 {
-			return response.ConstructResponseFromWrapper(cc, wrapper.Configure.Response, nil, nil)
+			return response.ConstructResponseFromWrapper(cc, wrapper.Configure.Response, nil, finalCustomResponse)
 		}
 
 		for i := 0; i < len(mapConfigures[alias].CLogics); {
@@ -212,7 +211,8 @@ ConfigureFile:
 						return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
 					} else {
 						if i == len(mapConfigures[alias].CLogics)-1 {
-							return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, nil, nil)
+							return response.ConstructResponseFromWrapper(cc,
+								mapConfigures[alias].FailureResponse, nil, nil)
 						}
 						i++
 					}
