@@ -71,7 +71,7 @@ func TestSingleSerial_Only_True_Logic_Without_Serial_Response(t *testing.T) {
 		t.Errorf("Expected nil, received %s", err.Error())
 	}
 
-	assert.Equalf(t, http.StatusCreated, res.StatusCode, " Expected %s but got %s", http.StatusCreated, res.StatusCode)
+	assert.Equalf(t, http.StatusBadRequest, res.StatusCode, " Expected %s but got %s", http.StatusBadRequest, res.StatusCode)
 
 	responseByte, err := ioutil.ReadAll(res.Body)
 	if err != nil {

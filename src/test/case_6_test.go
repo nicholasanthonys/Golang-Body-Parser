@@ -109,7 +109,17 @@ func TestParallel_Request_True_Logic_With_Response(t *testing.T) {
 func TestParallel_Request_False_Logic_Without_Failure_Response(t *testing.T) {
 	projectDir := dirName + "/test-6.3"
 
-	req, _ := http.NewRequest("POST", URL+"/test-6-3", nil)
+	mapBody := map[string]interface{}{
+		"name": "kakashi",
+		"body": "bar",
+	}
+
+	body, err := service.Transform("ToJson", mapBody)
+	if err != nil {
+		assert.NoError(t, err, "Should not error. Error is %s", err)
+	}
+
+	req, _ := http.NewRequest("POST", URL+"/test-6-3", body)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := http.Client{}
@@ -176,7 +186,7 @@ func TestParallel_Request_True_Logic_Without_Response(t *testing.T) {
 		t.Errorf("Expected nil, received %s", err.Error())
 	}
 
-	assert.Equalf(t, http.StatusCreated, res.StatusCode, " Expected %s but got %s", http.StatusCreated,
+	assert.Equalf(t, http.StatusBadRequest, res.StatusCode, " Expected %s but got %s", http.StatusBadRequest,
 		res.StatusCode)
 
 	responseByte, err := ioutil.ReadAll(res.Body)
