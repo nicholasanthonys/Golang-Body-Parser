@@ -1,15 +1,1 @@
-{
-  "from_configure_0": {
-    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
-    "name": "kakashi",
-    "title": "foo"
-  },
-  "from_configure_1": {
-    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
-    "body": "bar",
-    "id": "1",
-    "name": "kakashi",
-    "tes": "hello",
-    "title": "foo"
-  }
-}
+{}

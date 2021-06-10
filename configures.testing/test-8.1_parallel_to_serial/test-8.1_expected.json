@@ -1,5 +1,4 @@
 {
-  "body": "bar",
   "parallel_first_configure_response": {
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "content": "selamat anda menang",
@@ -23,6 +22,7 @@
     }
   },
   "parallel_zero_configure_response": {
+    "age": 20,
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "body": "bar",
     "name": "kakashi",
@@ -47,7 +47,5 @@
     "status_code": 201,
     "test": "test key From add response configure-2.json"
   },
-  "tes": "hello",
-  "test": "test key From add response configure-2.json",
-  "title": "foo"
+  "test": "test key From add response configure-2.json"
 }
