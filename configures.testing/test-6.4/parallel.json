@@ -34,22 +34,6 @@
           "abc",
           "abc"
         ]
-      },
-      "response": {
-        "status_code": 201,
-        "transform": "ToJson",
-        "adds": {
-          "body": {
-            "from_configure_0": "$configure_first_test_6.4--$response--$body",
-            "from_configure_1": "$configure_second_test_6.4--$response--$body"
-          }
-        },
-        "modifies": {},
-        "deletes": {
-          "header": [],
-          "body": [
-          ]
-        }
       }
     }
   ]
