@@ -27,7 +27,7 @@ func init() {
 	URL = "http://" + os.Getenv("APP_URL") + ":" + os.Getenv("APP_PORT")
 	logrus.Info("init triggered")
 
-	dirName = os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
+	dirName = os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME") + "/projects"
 }
 
 func TestSingleSerial_Without_Logic_Request_And_Without_Logic_Final(t *testing.T) {
