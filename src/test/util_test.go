@@ -2,7 +2,6 @@ package test
 
 import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -16,18 +15,15 @@ func TestFind(t *testing.T) {
 }
 
 func TestGetListFolder(t *testing.T) {
-	expected := []string{"base.json", "configure-0.json", "configure-1.json", "serial.json"}
+	expected := []string{"base.json", "test-1_configure-0.json", "test-1_expected.json", "serial.json"}
 	configureDir := os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
-	fullProjectDir := configureDir + "/" + "emailotp"
+	fullProjectDir := configureDir + "/" + "test-1"
 	files, err := util.GetListFolder(fullProjectDir)
-	results := make([]string, 0)
 	if err != nil {
 		assert.Error(t, err, "Cannot get list folder")
 	}
 	for _, file := range files {
-		logrus.Info("file name is")
-		logrus.Info(file.Name())
-		results = append(results, file.Name())
+		_, exist := util.FindInSliceOfString(expected, file.Name())
+		assert.Truef(t, exist, " file : %s ", file.Name())
 	}
-	assert.Equal(t, expected, results)
 }
