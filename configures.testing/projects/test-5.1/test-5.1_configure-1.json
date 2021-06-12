@@ -1,0 +1,63 @@
+{
+  "request": {
+    "destination_url": "https://jsonplaceholder.typicode.com/posts/2",
+    "destination_path": "",
+    "method": "PUT",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "title": "fooz",
+        "body": "barz",
+        "userId": 2
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "from_configure-0" : "$configure_test-4.4_0--$response--$body"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "popularity",
+        "vote_average",
+        "vote_count"
+      ]
+    }
+  }
+}

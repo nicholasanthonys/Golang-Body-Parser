@@ -1,0 +1,63 @@
+{
+  "request": {
+    "destination_url": "https://api.themoviedb.org/3/movie",
+    "destination_path": "/{{$configure_test-4_1--$request--$query[movie_id2]}}",
+    "method": "GET",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+        "api_key": "d7c23b0b88eb491c20a317ecfee47db3"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    },
+    "c_logics": [
+
+    ]
+  },
+  "response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "popularity",
+        "vote_average",
+        "vote_count"
+      ]
+    }
+  }
+}

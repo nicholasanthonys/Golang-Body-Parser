@@ -31,15 +31,13 @@ func ParseRequestBody(cc *model.CustomContext, contentType string) (map[string]i
 
 	// init variable
 	tempCC := cc
-
 	err = copier.Copy(&tempCC, &cc)
 	if err != nil {
 		log.Error("error copy context in parseRequestBody. error : ", err.Error())
 		return nil, 0, err
 	}
 
-	reqByte, _ := ioutil.ReadAll(cc.Request().Body)
-	// set content back
+	reqByte, _ := ioutil.ReadAll(tempCC.Request().Body)
 	tempCC.Request().Body = ioutil.NopCloser(bytes.NewBuffer(reqByte))
 
 	switch contentType {
@@ -158,7 +156,8 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	response, err := service.Send(wrapper)
 
 	if err != nil {
-		logrus.Error("Error send : ", err.Error())
+		log.Error("Error send : ", err.Error())
+		log.Error("Set status to bad request : ", http.StatusBadRequest)
 		wrapper.Response.Set("statusCode", http.StatusBadRequest)
 		wrapper.Response.Set("body", map[string]interface{}{
 			"error": err.Error(),

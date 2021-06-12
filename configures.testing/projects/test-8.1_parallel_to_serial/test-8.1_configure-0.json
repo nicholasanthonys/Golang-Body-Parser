@@ -1,0 +1,81 @@
+{
+  "request": {
+    "destination_url": "https://60bbb59e42e1d00017621029.mockapi.io/random",
+    "destination_path": "",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": {
+      "phone_number" : "$request--$body[phone_numbers]"
+    },
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+        "name": "William",
+        "numbers" : [
+          "123-456",
+          "234-567",
+          "345-678"
+        ],
+        "content" : "Hello World from configure-0.json",
+        "user.favorite_foods": [
+          "fried rice",
+          "chicken",
+          "soup"
+        ]
+
+      },
+      "query": {
+        "filter" : "on"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+        "user.favorite_foods.0": "noodle"
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    },
+    "c_logics" : {
+      
+    }
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify": {
+
+      "phone_numbers" : "$response--$body[phone_numbers]"
+    },
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "createdAt",
+        "id"
+      ]
+    }
+  }
+}

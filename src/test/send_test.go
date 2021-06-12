@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
@@ -422,5 +423,8 @@ func TestSendPut(t *testing.T) {
 	if !equal {
 		assert.Equal(t, expect, string(bodyByte), "should be equal")
 	}
+
+	log.Infof("bodybyte is ")
+	fmt.Printf("%s", string(bodyByte))
 
 }

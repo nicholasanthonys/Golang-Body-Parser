@@ -1,0 +1,75 @@
+{
+  "request": {
+    "destination_url": "https://60bbb59e42e1d00017621029.mockapi.io/random",
+    "destination_path": "",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+        "name": "William",
+        "hello": "hai",
+        "first_configure_body" : "$configure_zero_configure--$request--$body"
+      },
+      "query": {
+        "foo": "tes"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+        "phone_numbers.0": "10000000"
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+        "phone_numbers"
+      ],
+      "query": [
+      ]
+    },
+    "c_logics": [
+      {
+        "rule": {
+          "==": [
+            "abc",
+            "abc"
+          ]
+        },
+        "data": null
+      }
+    ]
+  },
+  "response": {
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "createdAt",
+        "id"
+      ]
+    }
+  }
+}

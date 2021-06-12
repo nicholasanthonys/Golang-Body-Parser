@@ -1,0 +1,75 @@
+{
+  "request": {
+    "destination_url": "https://60bbb59e42e1d00017621029.mockapi.io/random",
+    "destination_path": "",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": {
+      "body": "$body"
+    },
+    "log_after_modify": {
+      "body" : "$body"
+    },
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+        "name": "William",
+        "number" : "$configure_second_configure--$request--$body[phone_numbers][loop]",
+        "original_phone_number" : "$configure_second_configure--$request--$body[phone_numbers]",
+        "user.favorite_anime": [
+          "naruto",
+          "one piece",
+          "dragon ball"
+        ],
+        "user.favorite_cars" : [ "Mazda", "Aston  Martin", "Ferrari"]
+      },
+      "query": {
+        "foo" : "tes"
+      }
+
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "status_code" : 200,
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "tes" : "tes"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "createdAt",
+        "id"
+      ]
+    }
+  }
+}

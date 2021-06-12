@@ -123,8 +123,6 @@ func GetListTraverseAndDestination(value string) ([]string, string) {
 		destination = "header"
 	} else if strings.HasPrefix(value, "$query") {
 		destination = "query"
-	} else if strings.HasPrefix(value, "$response") {
-		destination = "response"
 	} else if strings.HasPrefix(value, "$path") {
 		destination = "param"
 	} else if strings.HasPrefix(value, "$status_code") {

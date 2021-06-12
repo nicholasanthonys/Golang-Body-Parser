@@ -1,0 +1,60 @@
+{
+  "request": {
+    "destination_url": "https://60bbb59e42e1d00017621029.mockapi.io/random/1",
+    "destination_path": "",
+    "method": "PUT",
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+        "tes" : "hello"
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "status_code": 400,
+    "transform": "ToJson",
+    "log_before_modify": {},
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+        "createdAt",
+        "id"
+      ]
+    }
+  }
+}

@@ -6,11 +6,13 @@ require (
 	github.com/clbanning/mxj v1.8.4
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/diegoholiveira/jsonlogic/v3 v3.0.1
+	github.com/gobeam/stringy v0.0.4
 	github.com/jinzhu/copier v0.3.0
 	github.com/joho/godotenv v1.3.0
-	github.com/labstack/echo v3.3.10+incompatible
-	github.com/labstack/echo-contrib v0.9.0
-	github.com/labstack/gommon v0.3.0 // indirect
+	github.com/labstack/echo v3.3.10+incompatible // indirect
+	github.com/labstack/echo-contrib v0.9.0 // indirect
+	github.com/labstack/echo/v4 v4.1.6
+	github.com/labstack/gommon v0.3.0
 	github.com/orcaman/concurrent-map v0.0.0-20210501183033-44dafcb38ecc
 	github.com/prometheus/client_golang v1.1.0
 	github.com/sirupsen/logrus v1.8.1

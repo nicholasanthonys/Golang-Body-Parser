@@ -1,0 +1,83 @@
+{
+  "configures": [
+    {
+      "file_name": "test-8.2_configure-1.json",
+      "alias": "$configure_first_configure",
+      "tes" : "1"
+    },
+    {
+      "file_name": "test-8.2_configure-2.json",
+      "alias": "$configure_second_configure",
+      "tes" : "1"
+    }
+  ],
+  "next_failure" : "",
+  "failure_response" : {
+    "status_code" : 500,
+    "transform" : "ToJson",
+    "adds" : {
+      "body" : {
+        "error_message" : "all logics is fail",
+        "response_second_configure" : "$configure_second_configure--$response--$status_code",
+        "error" : "$configure_second_configure-$response--$body"
+      }
+    }
+  },
+  "c_logics": [
+    {
+      "rule": {
+        "==": [
+          "$configure_first_configure--$response--$status_code",
+          400
+        ]
+      },
+      "data": null,
+      "next_success" : "",
+      "response": {
+        "status_code" : 400,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {"message" : "configure_first configure status code is 400"
+          }
+        }
+      },
+      "next_failure" : "",
+      "failure_response" : null
+    },
+    {
+      "rule": {
+        "==": [
+          "$configure_second_configure--$response--$status_code",
+          201
+        ]
+      },
+      "data": null,
+      "next_success":"",
+      "response": {
+        "status_code" : 201,
+        "transform": "ToJson",
+        "adds": {
+          "header": {
+            "key" : "123",
+            "userID" : "userid"
+          },
+          "body": {
+            "user.favorite_cars": "$configure_second_configure--$request--$body[user][favorite_cars][0]",
+            "parallel_configure_0_response" : "$configure_first_configure--$response--$body",
+            "parallel_configure_1_response" : "$configure_second_configure--$response--$body"
+          }
+        },
+        "modifies": {
+          "header" :{},
+          "body": {
+          }
+        },
+        "deletes": {
+          "header" : [],
+          "body": [
+          ]
+        }
+      }
+    }
+  ]
+}

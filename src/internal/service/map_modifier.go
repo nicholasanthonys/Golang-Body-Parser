@@ -127,11 +127,9 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 		t := reflect.TypeOf(in)
 		vt := t.Kind()
 		if vt == reflect.Map {
-			if in.(map[string]interface{})[listTraverse[index]] == nil {
-				log.Info(" returning nil with list traverse index ", listTraverse[index])
-				return nil
+			if _, ok := in.(map[string]interface{})[listTraverse[index]]; ok {
+				delete(in.(map[string]interface{}), listTraverse[index])
 			}
-			delete(in.(map[string]interface{}), listTraverse[index])
 		}
 
 		if vt == reflect.Slice {
@@ -153,7 +151,7 @@ func DeleteRecursive(listTraverse []string, in interface{}, index int) interface
 		return in
 	}
 
-	if in.(map[string]interface{})[listTraverse[index]] != nil {
+	if _, ok := in.(map[string]interface{})[listTraverse[index]]; ok {
 		in.(map[string]interface{})[listTraverse[index]] = DeleteRecursive(listTraverse, in.(map[string]interface{})[listTraverse[index]], index+1)
 		return in
 	}

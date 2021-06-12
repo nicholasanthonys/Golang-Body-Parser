@@ -9,7 +9,6 @@ import (
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"os"
 	"testing"
 )
 
@@ -18,13 +17,12 @@ var requestFromUser model.Wrapper
 var routes model.Route
 
 func init() {
-	configureDir := os.Getenv("CONFIGURES_DIRECTORY_TESTING_NAME")
 	// * Read router.json
-	routesByte := util.ReadJsonFile(configureDir + "/router.json")
+	routesByte := util.ReadJsonFile(dirName + "/router.json")
 	err := json.Unmarshal(routesByte, &routes)
 
 	//* let's use email otp project for testing
-	fullProjectDir := configureDir + "/" + "emailotp"
+	fullProjectDir := dirName + "/" + "emailotp"
 
 	mapWrapper = cmap.New()
 

@@ -44,6 +44,13 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 			if wrapper == nil {
 				return in
 			}
+
+			if len(splittedValue) != 3 {
+				log.Error("referenced syntax wrong for : ", in)
+				log.Error(splittedValue)
+				return in
+			}
+
 			if splittedValue[1] == "$request" {
 				val = GetFromHalfReferenceValue(splittedValue[2], wrapper.Request, 0)
 				in = val
@@ -59,50 +66,53 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 
 }
 
-func CLogicsChecker(cLogics []model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (*model.CLogicItem, error) {
-	for _, cLogicItem := range cLogics {
-		cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
-		cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
-		if cLogicItem.Rule == nil {
-			return nil, nil
-		}
-
-		ruleByte, err := json.Marshal(cLogicItem.Rule)
-		if err != nil {
-			return nil, err
-		}
-
-		dataByte, err := json.Marshal(cLogicItem.Data)
-		if err != nil {
-			return nil, err
-		}
-		ruleReader := bytes.NewReader(ruleByte)
-		dataReader := bytes.NewReader(dataByte)
-		var resultBuf bytes.Buffer
-		err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
-
-		if err != nil {
-			log.Error("error is ")
-			log.Error(err.Error())
-			return nil, err
-		}
-
-		var result interface{}
-		decoder := json.NewDecoder(&resultBuf)
-		decoder.Decode(&result)
-
-		// get type of json logic result
-		vt := reflect.TypeOf(result)
-		if vt.Kind() == reflect.Bool {
-			if result.(bool) {
-
-				return &cLogicItem, nil
-			}
-		} else {
-			return &cLogicItem, nil
-		}
-
+func CLogicsChecker(cLogicItem model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (bool,
+	error) {
+	cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
+	cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
+	if cLogicItem.Rule == nil {
+		return false, nil
 	}
-	return nil, nil
+
+	ruleByte, err := json.Marshal(cLogicItem.Rule)
+	if err != nil {
+		return false, err
+	}
+
+	dataByte, err := json.Marshal(cLogicItem.Data)
+	if err != nil {
+		return false, err
+	}
+	ruleReader := bytes.NewReader(ruleByte)
+	dataReader := bytes.NewReader(dataByte)
+	var resultBuf bytes.Buffer
+	err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
+
+	if err != nil {
+		log.Error("error is ")
+		log.Error(err.Error())
+		return false, err
+	}
+
+	var result interface{}
+	decoder := json.NewDecoder(&resultBuf)
+
+	err = decoder.Decode(&result)
+	if err != nil {
+		log.Errorf("Error decode logic result : %v", err)
+		return false, err
+	}
+
+	// get type of json logic result
+	vt := reflect.TypeOf(result)
+	if vt.Kind() == reflect.Bool {
+		if result.(bool) {
+			return true, nil
+		} else {
+			// result is false
+			return false, nil
+		}
+	}
+	return true, nil
 
 }

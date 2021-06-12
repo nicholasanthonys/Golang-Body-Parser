@@ -5,7 +5,6 @@ import (
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
-	"github.com/sirupsen/logrus"
 	"reflect"
 	"strconv"
 	"strings"
@@ -58,8 +57,13 @@ func ParseResponse(mapWrapper *cmap.ConcurrentMap, command model.Command, err er
 
 	statusCode := 400
 	if customResponse != nil {
-		tmpHeader = customResponse.Header
-		tmpBody = customResponse.Body
+		if customResponse.Header != nil {
+			tmpHeader = customResponse.Header
+		}
+		if customResponse.Body != nil {
+			tmpBody = customResponse.Body
+		}
+
 		if customResponse.StatusCode > 0 {
 			statusCode = customResponse.StatusCode
 
@@ -119,6 +123,7 @@ func ResponseWriter(customResponse model.CustomResponse, transform string, cc *m
 	responseHeader := customResponse.Header
 
 	if customResponse.Error != nil {
+		log.Error("response error : ", customResponse.Error.Error())
 		responseBody["error"] = customResponse.Error.Error()
 	}
 
@@ -143,7 +148,13 @@ func ResponseWriter(customResponse model.CustomResponse, transform string, cc *m
 		}
 		return cc.XMLBlob(statusCode, resByte)
 	default:
-		logrus.Info("type not supported. only support ToJson and ToXml. Your transform : " + strings.ToLower(transform))
-		return cc.JSON(404, "Type Not Supported. only support ToJson and ToXml")
+		return cc.JSON(statusCode, responseBody)
 	}
+}
+
+func ConstructResponseFromWrapper(cc *model.CustomContext, command model.Command, err error,
+	customResponse *model.CustomResponse) error {
+	resultWrapper := ParseResponse(cc.MapWrapper, command, err, customResponse)
+	SetHeaderResponse(resultWrapper.Header, cc)
+	return ResponseWriter(resultWrapper, command.Transform, cc)
 }

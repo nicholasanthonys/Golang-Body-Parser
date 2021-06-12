@@ -2,6 +2,7 @@ package request
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/jinzhu/copier"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
@@ -19,8 +20,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil, nil)
-			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, cc.BaseProject.CircularResponse, nil, nil)
 		}
 		resMap := make(map[string]interface{})
 		resMap["message"] = "Circular Request detected"
@@ -70,15 +70,16 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		loop := DetermineLoop(cc.MapWrapper, configureItem)
 
 		for i := 0; i < loop; i++ {
-			alias := configureItem.Alias + "_" + strconv.Itoa(i)
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				err := SetRequestToWrapper(alias, cc, &requestFromUser)
-				if err != nil {
-					log.Error(err.Error())
-				}
-			}()
+			var alias string
+			if loop > 1 {
+				alias = configureItem.Alias + "_" + strconv.Itoa(i)
+			} else {
+				alias = configureItem.Alias
+			}
+			err := SetRequestToWrapper(alias, cc, &requestFromUser)
+			if err != nil {
+				log.Error(err.Error())
+			}
 
 		}
 	}
@@ -88,15 +89,72 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	for _, configureItem := range ParallelProject.Configures {
 		loop := DetermineLoop(cc.MapWrapper, configureItem)
 		for i := 0; i < loop; i++ {
-			alias := configureItem.Alias + "_" + strconv.Itoa(i)
+
+			var alias string
+			if loop > 1 {
+				alias = configureItem.Alias + "_" + strconv.Itoa(i)
+			} else {
+				alias = configureItem.Alias
+			}
+
 			if wrp, ok := cc.MapWrapper.Get(alias); ok {
 				wrapper := wrp.(*model.Wrapper)
+
 				if len(wrapper.Configure.Request.CLogics) > 0 {
-					cLogicItem, _ := service.CLogicsChecker(wrapper.Configure.Request.CLogics, cc.MapWrapper)
-					if cLogicItem != nil {
-						wg.Add(1)
-						go worker(&wg, alias, cc, wrapper, i)
+				CLogics:
+					for _, cLogicItem := range wrapper.Configure.Request.CLogics {
+						boolResult, err := service.CLogicsChecker(cLogicItem,
+							cc.MapWrapper)
+						if err != nil {
+							log.Errorf("Error from when checking logic %v", err)
+						}
+						if boolResult {
+							if len(strings.Trim(cLogicItem.NextSuccess, " ")) == 0 {
+
+								// if Response is empty
+								if reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
+									wg.Add(1)
+									// process current configure
+									go worker(&wg, alias, cc, wrapper, i)
+								} else {
+									return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, nil, nil)
+								}
+
+							} else {
+								// process next configure
+								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextSuccess); ok {
+									wg.Add(1)
+									newWrapper := wrp.(*model.Wrapper)
+									go worker(&wg, cLogicItem.NextSuccess, cc, newWrapper, i)
+								} else {
+									log.Errorf("cannot load ", cLogicItem.NextSuccess)
+								}
+
+							}
+						} else {
+							if len(strings.Trim(cLogicItem.NextFailure, " ")) == 0 {
+								if !(reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{})) {
+									// response
+									return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
+
+								} else {
+									continue CLogics
+								}
+
+							} else {
+								wg.Add(1)
+								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextFailure); ok {
+									newWrapper := wrp.(*model.Wrapper)
+									go worker(&wg, cLogicItem.NextFailure, cc, newWrapper, i)
+								} else {
+									log.Errorf("cannot load ", cLogicItem.NextFailure)
+								}
+								//go worker(&wg, cLogicItem.FailureResponse, cc, wrapper, i)
+							}
+						}
+
 					}
+
 				} else {
 					// no clogics
 					wg.Add(1)
@@ -109,47 +167,52 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	wg.Wait()
 
-	nextSuccess := ParallelProject.CLogics[0].NextSuccess
-	finalResponseConfigure := model.Command{}
-	for {
+	var nextSuccess string
+	for index, cLogicItem := range ParallelProject.CLogics {
 
-		cLogicItemTrue, err := service.CLogicsChecker(ParallelProject.CLogics, cc.MapWrapper)
+		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
 		if err != nil {
 			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, err, nil)
-			return response.ResponseWriter(tmpMapResponse, ParallelProject.NextFailure.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, ParallelProject.FailureResponse, err, nil)
+
 		}
 
-		if cLogicItemTrue == nil {
-			resultWrapper := response.ParseResponse(cc.MapWrapper, ParallelProject.NextFailure, nil, nil)
-			response.SetHeaderResponse(resultWrapper.Header, cc)
-			return response.ResponseWriter(resultWrapper, ParallelProject.NextFailure.Transform, cc)
-		}
+		if boolResult {
+			nextSuccess = cLogicItem.NextSuccess
+			if len(strings.Trim(nextSuccess, " ")) > 0 {
+				if nextSuccess == "serial.json" {
+					return DoSerial(cc, counter+1)
+				} else if nextSuccess == "parallel.json" {
+					// reference to itself
+					return DoParallel(cc, counter+1)
+				}
 
-		// update next_success
-		nextSuccess = cLogicItemTrue.NextSuccess
-		// update alias
-		if len(strings.Trim(nextSuccess, " ")) > 0 {
-			if nextSuccess == "serial.json" {
-				return DoSerial(cc, counter+1)
+				return response.ConstructResponseFromWrapper(cc, cLogicItem.Response,
+					errors.New("Parallel can only refer to parallel/serial.json"), nil)
+
+			} else {
+				return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, nil, nil)
+
 			}
 
-			// reference to itself
-			if nextSuccess == "parallel.json" {
-				return DoParallel(cc, counter+1)
+		} else {
+			if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
+				return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
+
+			} else {
+				if index == len(ParallelProject.CLogics)-1 {
+					return response.ConstructResponseFromWrapper(cc, ParallelProject.FailureResponse, nil, nil)
+				}
 			}
-		}
-		if len(strings.Trim(nextSuccess, " ")) == 0 {
-			finalResponseConfigure = cLogicItemTrue.Response
-			break
+
 		}
 
 	}
 
-	resultWrapper := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, nil, nil)
-
-	return response.ResponseWriter(resultWrapper, finalResponseConfigure.Transform, cc)
-
+	log.Warn("No Response Specified, returning : ", http.StatusBadRequest)
+	return cc.JSON(400, map[string]interface{}{
+		"message": "No parallel logic to determine response to be returned",
+	})
 }
 
 // worker will called ProcessingRequest. This function is called by parallelRouteHandler function.

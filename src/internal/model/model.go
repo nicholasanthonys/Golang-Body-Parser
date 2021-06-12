@@ -22,10 +22,12 @@ type (
 	}
 
 	CLogicItem struct {
-		Rule        interface{} `json:"rule"`
-		Data        interface{} `json:"data"`
-		NextSuccess string      `json:"next_success"`
-		Response    Command     `json:"response"`
+		Rule            interface{} `json:"rule"`
+		Data            interface{} `json:"data"`
+		NextSuccess     string      `json:"next_success"`
+		Response        Command     `json:"response"`
+		NextFailure     string      `json:"next_failure"`
+		FailureResponse Command     `json:"failure_response"`
 	}
 
 	Route struct {
@@ -47,11 +49,11 @@ type (
 	}
 
 	ConfigureItem struct {
-		Loop        string       `json:"loop"`
-		FileName    string       `json:"file_name"`
-		Alias       string       `json:"alias"`
-		CLogics     []CLogicItem `json:"c_logics"`
-		NextFailure Command      `json:"next_failure"`
+		Loop            string       `json:"loop"`
+		FileName        string       `json:"file_name"`
+		Alias           string       `json:"alias"`
+		CLogics         []CLogicItem `json:"c_logics"`
+		FailureResponse Command      `json:"failure_response"`
 	}
 
 	Serial struct {
@@ -59,9 +61,9 @@ type (
 	}
 
 	Parallel struct {
-		Configures  []ConfigureItem `json:"configures"`
-		NextFailure Command         `json:"next_failure"`
-		CLogics     []CLogicItem    `json:"c_logics"`
+		Configures      []ConfigureItem `json:"configures"`
+		FailureResponse Command         `json:"failure_response"`
+		CLogics         []CLogicItem    `json:"c_logics"`
 	}
 
 	Command struct {

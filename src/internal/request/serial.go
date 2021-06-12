@@ -2,12 +2,15 @@ package request
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	cmap "github.com/orcaman/concurrent-map"
 	"net/http"
+	"reflect"
 	"strings"
 )
 
@@ -15,8 +18,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 	if counter == cc.BaseProject.MaxCircular {
 		if &cc.BaseProject.CircularResponse != nil {
-			resMap := response.ParseResponse(cc.MapWrapper, cc.BaseProject.CircularResponse, nil, nil)
-			return response.ResponseWriter(resMap, cc.BaseProject.CircularResponse.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, cc.BaseProject.CircularResponse, nil, nil)
 		}
 		resMap := make(map[string]interface{})
 		resMap["message"] = "Circular Request detected"
@@ -33,7 +35,6 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In unmarshaling File serial.json. "
-		resMap["error"] = err.Error()
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
@@ -82,12 +83,18 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		nextSuccess = SerialProject.Configures[0].CLogics[0].NextSuccess
 	}
 
-	finalResponseConfigure := model.Command{}
 	var finalCustomResponse *model.CustomResponse
 	// Processing request
+ConfigureFile:
 	for {
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(*model.Wrapper)
+		}
+
+		if wrapper == nil {
+			log.Errorf("Wrapper is nil for alias : %v ", alias)
+			err := errors.New(fmt.Sprintf("wrapper is nil for alias %v", alias))
+			return cc.JSON(http.StatusBadRequest, err)
 		}
 
 		err = SetRequestToWrapper(alias, cc, wrapper)
@@ -95,54 +102,124 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 			return err
 		}
 
-		_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
-		finalCustomResponse = customResponse
+		if len(wrapper.Configure.Request.CLogics) > 0 {
+			for index, cLogicItem := range wrapper.Configure.Request.CLogics {
+				boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+				if err != nil {
+					log.Errorf("Error while check logic for cLogic %v : %v", cLogicItem, err)
+					return cc.JSON(http.StatusBadRequest, err)
+				}
 
-		if err != nil {
-			// next failure
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, customResponse)
-			return response.ResponseWriter(tmpMapResponse, mapConfigures[alias].NextFailure.Transform, cc)
+				if boolResult {
+					if len(strings.Trim(cLogicItem.NextSuccess, " ")) > 0 {
+						nextSuccess = cLogicItem.NextSuccess
+						alias = nextSuccess
+						continue ConfigureFile
+					} else {
+						// if response is not empty
+						if !reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
+							return response.ConstructResponseFromWrapper(cc, cLogicItem.Response,
+								err, nil)
+						} else {
+							_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
+							finalCustomResponse = customResponse
+							if err != nil {
+								return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, err, customResponse)
+							}
+						}
+					}
+
+				} else {
+					if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
+						// update alias
+						alias = cLogicItem.NextFailure
+						continue ConfigureFile // skip loop and update alias
+					} else {
+						if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
+							return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse,
+								err, nil)
+						} else {
+							if index == len(wrapper.Configure.Request.CLogics)-1 {
+								return response.ConstructResponseFromWrapper(cc,
+									mapConfigures[alias].FailureResponse, err, &model.CustomResponse{
+										StatusCode: 0,
+										Header:     nil,
+										Body: map[string]interface{}{
+											"message": "All logic failed in request " + alias,
+										},
+										Error: nil,
+									})
+							}
+
+						}
+					}
+				}
+			}
+
+		} else {
+			_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
+			finalCustomResponse = customResponse
+			if err != nil {
+				log.Errorf("Error after processing request for alias %v:  %v", alias, err)
+				return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse,
+					err, nil)
+			}
 		}
 
 		cc.MapWrapper.Set(alias, wrapper)
 
 		if len(mapConfigures[alias].CLogics) == 0 {
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, wrapper.Configure.Response, nil, customResponse)
-			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
+			return response.ConstructResponseFromWrapper(cc, wrapper.Configure.Response, nil, finalCustomResponse)
 		}
 
-		cLogicItemTrue, err := service.CLogicsChecker(mapConfigures[alias].CLogics, cc.MapWrapper)
-
-		if err != nil || cLogicItemTrue == nil {
-			log.Error(err)
-			tmpMapResponse := response.ParseResponse(cc.MapWrapper, mapConfigures[alias].NextFailure, err, nil)
-
-			return response.ResponseWriter(tmpMapResponse, wrapper.Configure.Response.Transform, cc)
-		}
-
-		// update next_success
-		nextSuccess = cLogicItemTrue.NextSuccess
-		// update alias
-		if len(strings.Trim(nextSuccess, " ")) > 0 {
-
-			// reference to parallel request
-			if nextSuccess == "parallel.json" {
-				return DoParallel(cc, counter+1)
+		for i := 0; i < len(mapConfigures[alias].CLogics); {
+			cLogicItem := mapConfigures[alias].CLogics[i]
+			boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+			if err != nil {
+				log.Error(err)
+				return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, err, nil)
 			}
 
-			// reference to itself
-			if nextSuccess == "serial.json" {
-				return DoSerial(cc, counter+1)
+			// if cLogicItem is not nil and error is nil
+			if boolResult {
+				nextSuccess = cLogicItem.NextSuccess
+				if len(strings.Trim(nextSuccess, " ")) > 0 {
+
+					// reference to parallel request
+					if nextSuccess == "parallel.json" {
+						return DoParallel(cc, counter+1)
+					}
+
+					// reference to itself
+					if nextSuccess == "serial.json" {
+						return DoSerial(cc, counter+1)
+					}
+
+					// update alias
+					alias = nextSuccess
+					break
+				} else {
+					return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, err, nil)
+				}
+			} else {
+				if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
+					// update alias
+					alias = cLogicItem.NextFailure
+					break
+				} else {
+					if !reflect.DeepEqual(cLogicItem.FailureResponse, model.Command{}) {
+						return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
+					} else {
+						if i == len(mapConfigures[alias].CLogics)-1 {
+							return response.ConstructResponseFromWrapper(cc,
+								mapConfigures[alias].FailureResponse, nil, nil)
+						}
+						i++
+					}
+				}
 			}
-			alias = nextSuccess
-		}
-		if len(strings.Trim(nextSuccess, " ")) == 0 {
-			finalResponseConfigure = cLogicItemTrue.Response
-			break
 		}
 
 	}
 
-	tmpMapResponse := response.ParseResponse(cc.MapWrapper, finalResponseConfigure, err, finalCustomResponse)
-	return response.ResponseWriter(tmpMapResponse, finalResponseConfigure.Transform, cc)
 }

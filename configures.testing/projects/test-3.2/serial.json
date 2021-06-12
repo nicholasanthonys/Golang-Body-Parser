@@ -1,0 +1,29 @@
+{
+  "configures": [
+    {
+      "file_name": "test-3.2_configure-0.json",
+      "alias": "$configure_test-3_2",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "Request Logic error or there is something error"
+          }
+        }
+      },
+      "c_logics": [
+        {
+          "rule": {
+            "==": [
+              "$configure_test-3_2--$request--$query[movie_id]",
+              550
+            ]
+          },
+          "response":null,
+          "next_failure": null
+        }
+      ]
+    }
+  ]
+}

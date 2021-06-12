@@ -1,0 +1,43 @@
+{
+  "configures": [
+    {
+      "file_name": "test-3.1_configure-0.json",
+      "alias": "$configure_test-3_1",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "Request Logic error or there is something error"
+          }
+        }
+      },
+      "c_logics": [
+        {
+          "rule": {
+            "==": [
+              "$configure_test-3_1--$request--$query[movie_id]",
+              550
+            ]
+          },
+          "response": {
+            "status_code" : 201,
+            "transform" : "ToJson",
+            "adds" : {
+              "body" : {
+               "data" : "$configure_test-3_1--$response--$body"
+              }
+            },
+            "modifies" : {
+
+            },
+            "deletes" : {
+
+            }
+          },
+          "next_failure": null
+        }
+      ]
+    }
+  ]
+}

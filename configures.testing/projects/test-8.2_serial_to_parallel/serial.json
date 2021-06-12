@@ -1,0 +1,30 @@
+{
+  "configures": [
+    {
+      "file_name": "test-8.2_configure-0.json",
+      "alias": "$configure_zero_configure",
+      "next_failure" : {
+        "status_code" : 500,
+        "transform" : "ToJson",
+        "adds" : {
+          "body" : {
+            "error_message" : "Failure happen at zero_configure. There is an error",
+            "message"  : "$configure_zero_configure--$response--$body"
+          }
+        }
+      },
+      "c_logics": [
+        {
+          "rule": {
+            "==": [
+              "abc",
+              "abc"
+            ]
+          },
+          "data": null,
+          "next_success": "parallel.json"
+        }
+      ]
+    }
+  ]
+}

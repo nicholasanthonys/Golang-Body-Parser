@@ -1,0 +1,18 @@
+{
+  "configures": [
+    {
+      "file_name": "test-1_configure-0.json",
+      "alias": "$configure_test-1",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "Request Logic error or there is something error"
+          }
+        }
+      },
+      "c_logics": []
+    }
+  ]
+}

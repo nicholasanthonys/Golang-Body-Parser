@@ -1,0 +1,75 @@
+{
+  "request": {
+    "destination_url": "http://mockbin.org/bin/85a4721c-a88a-43ee-be8a-169d77e02e31",
+    "destination_path": "/user",
+    "method": "POST",
+    "transform": "ToJson",
+    "log_before_modify": {
+    },
+    "log_after_modify": {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "cars": [
+          "honda",
+          "toyota",
+          "avanza"
+        ]
+      },
+      "query": {
+        "address": "mutiara cibaduyut c20"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+        "cars.0": "ferrari"
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+        "user.tes"
+      ],
+      "query": [
+      ]
+    },
+    "c_logics": [
+      {
+        "rule": {
+          "==": [
+            "abc",
+            "abc"
+          ]
+        }
+      }
+    ]
+  },
+  "response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "log_before_modify": "",
+    "log_after_modify": "",
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}

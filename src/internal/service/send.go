@@ -155,9 +155,6 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	// set content type for header
 	SetContentTypeHeader(transformRequest, &req.Header)
 
-	log.Info("url is : ")
-	log.Info(req.URL.String())
-
 	if strings.ToLower(requestFromUser.Configure.Request.Method) == "get" {
 		return DoGetRequest(req.URL.String())
 	}

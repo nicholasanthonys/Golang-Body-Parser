@@ -1,0 +1,15 @@
+{
+  "from_configure_0": {
+    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+    "body": "bar",
+    "name": "kakashi"
+  },
+  "from_configure_1": {
+    "age": 20,
+    "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+    "body": "bar",
+    "name": "kakashi",
+    "tes": "hello",
+    "title": "foo"
+  }
+}
