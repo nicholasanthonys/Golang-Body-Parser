@@ -4,7 +4,7 @@ services:
     networks: 
       proxy_middleware_net:  
     build: .
-    image: go-single-middleware:1.0
+    image: go-single-middleware:1.1
     container_name: container-single-middleware
     volumes:
       - type: bind
