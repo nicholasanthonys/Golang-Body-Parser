@@ -28,7 +28,7 @@ var (
 func SetUpMetrics(registeredRoutes []model.Route) {
 
 	for _, route := range registeredRoutes {
-		setCounterMetricToMap(GetPrefixMetricName(route.MetricPrefixName))
+		setCounterMetricToMap(GetPrefixMetricName(route.ProjectDirectory))
 	}
 }
 

@@ -48,7 +48,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string) (map[string]i
 		if err != nil {
 			logrus.Warn("error parse request body from Json")
 			result["message"] = err.Error()
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_PARSE_REQUEST_JSON"].Inc()
+			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_PARSE_REQUEST_JSON"].Inc()
 
 			return nil, http.StatusInternalServerError, err
 		}
@@ -61,7 +61,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string) (map[string]i
 		//*transform xml request user to map request from user
 		result, err = service.FromXmL(reqByte)
 		if err != nil {
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_PARSE_REQUEST_XML"].Inc()
+			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_PARSE_REQUEST_XML"].Inc()
 
 			logrus.Warn("error service from xml")
 			result["message"] = err.Error()
@@ -70,7 +70,7 @@ func ParseRequestBody(cc *model.CustomContext, contentType string) (map[string]i
 
 	default:
 		logrus.Warn("Content type not supported")
-		CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"UNKNOWN_REQUEST_CONTENT_TYPE"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"UNKNOWN_REQUEST_CONTENT_TYPE"].Inc()
 
 		return nil, http.StatusBadRequest, errors.New("Content Type Not Supported")
 	}
@@ -160,10 +160,10 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	}
 
 	//*send to destination url
-	response, err := service.Send(wrapper, cc.DefinedRoute.MetricPrefixName)
+	response, err := service.Send(wrapper, cc.DefinedRoute.ProjectDirectory)
 
 	if err != nil {
-		CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_SENDING_REQUEST"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_SENDING_REQUEST"].Inc()
 		log.Error("Error send : ", err.Error())
 		log.Error("Set status to bad request : ", http.StatusBadRequest)
 		wrapper.Response.Set("statusCode", http.StatusBadRequest)
@@ -175,11 +175,11 @@ func ProcessingRequest(aliasName string, cc *model.CustomContext, wrapper *model
 	// close http
 	defer response.Body.Close()
 
-	CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"SUCCESS_SENDING_REQUEST"].Inc()
+	CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"SUCCESS_SENDING_REQUEST"].Inc()
 
 	// Modify responseByte in Receiver and get  byte from response that has been modified
 	var tmpResponse map[string]interface{}
-	tmpResponse, err = responseEntity.Receiver(wrapper.Configure, response, cc.DefinedRoute.MetricPrefixName)
+	tmpResponse, err = responseEntity.Receiver(wrapper.Configure, response, cc.DefinedRoute.ProjectDirectory)
 
 	wrapper.Response.Set("statusCode", tmpResponse["statusCode"])
 	wrapper.Response.Set("header", tmpResponse["header"])

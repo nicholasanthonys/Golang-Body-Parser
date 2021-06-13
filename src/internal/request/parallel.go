@@ -38,7 +38,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In unmarshaling File parallel.json. "
 		resMap["error"] = err.Error()
-		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.MetricPrefixName)+"ERR_UNMARSHAL_PARALLEL_JSON"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_UNMARSHAL_PARALLEL_JSON"].Inc()
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
@@ -81,7 +81,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			err := SetRequestToWrapper(alias, cc, &requestFromUser)
 			if err != nil {
 				log.Errorf("error %s", err.Error())
-				CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
+				CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
 
 			}
 
@@ -108,10 +108,10 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 				CLogics:
 					for _, cLogicItem := range wrapper.Configure.Request.CLogics {
 						boolResult, err := service.CLogicsChecker(cLogicItem,
-							cc.MapWrapper, cc.DefinedRoute.MetricPrefixName)
+							cc.MapWrapper, cc.DefinedRoute.ProjectDirectory)
 						if err != nil {
 							log.Errorf("Error from when checking logic %v", err)
-							CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
+							CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
 
 						}
 						if boolResult {
@@ -134,7 +134,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 									go worker(&wg, cLogicItem.NextSuccess, cc, newWrapper, i)
 								} else {
 									log.Errorf("cannot get wrapper : %s", cLogicItem.NextSuccess)
-									CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_GET_WRAPPER"].Inc()
+									CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_GET_WRAPPER"].Inc()
 
 								}
 
@@ -156,7 +156,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 									go worker(&wg, cLogicItem.NextFailure, cc, newWrapper, i)
 								} else {
 									log.Errorf("cannot get wrapper %s", cLogicItem.NextFailure)
-									CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_GET_WRAPPER"].Inc()
+									CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_GET_WRAPPER"].Inc()
 									return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
 								}
 								//go worker(&wg, cLogicItem.FailureResponse, cc, wrapper, i)
@@ -180,10 +180,10 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	var nextSuccess string
 	for index, cLogicItem := range ParallelProject.CLogics {
 
-		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper, cc.DefinedRoute.MetricPrefixName)
+		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper, cc.DefinedRoute.ProjectDirectory)
 		if err != nil {
 			log.Error(err)
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.MetricPrefixName+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
+			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
 			return response.ConstructResponseFromWrapper(cc, ParallelProject.FailureResponse, err, nil)
 
 		}
@@ -198,7 +198,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 					return DoParallel(cc, counter+1)
 				}
 
-				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.MetricPrefixName)+"PARALLEL_ERR_INVALID_REFER"].Inc()
+				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"PARALLEL_ERR_INVALID_REFER"].Inc()
 				return response.ConstructResponseFromWrapper(cc, cLogicItem.Response,
 					errors.New("Parallel can only refer to parallel/serial.json"), nil)
 
@@ -238,21 +238,21 @@ func worker(wg *sync.WaitGroup, mapKeyName string, cc *model.CustomContext, requ
 	err := copier.CopyWithOption(&request, requestFromUser.Request.Items(), copier.Option{DeepCopy: true})
 	if err != nil {
 		log.Errorf("error : %s", err.Error())
-		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.MetricPrefixName)+"PARALLEL_ERR_COPY_REQUEST"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"PARALLEL_ERR_COPY_REQUEST"].Inc()
 		return
 	}
 
 	err = copier.CopyWithOption(&res, requestFromUser.Response.Items(), copier.Option{DeepCopy: true})
 	if err != nil {
 		log.Errorf("error : %s", err.Error())
-		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.MetricPrefixName)+"PARALLEL_ERR_COPY_RESPONSE"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"PARALLEL_ERR_COPY_RESPONSE"].Inc()
 		return
 	}
 
 	err = copier.CopyWithOption(&configure, requestFromUser.Configure, copier.Option{DeepCopy: true})
 	if err != nil {
 		log.Errorf("error : %s", err.Error())
-		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.MetricPrefixName)+"PARALLEL_ERR_COPY_CONFIGURE"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"PARALLEL_ERR_COPY_CONFIGURE"].Inc()
 		return
 	}
 
