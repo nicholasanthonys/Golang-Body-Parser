@@ -33,6 +33,7 @@ type (
 	Route struct {
 		Path             string `json:"path"`
 		ProjectDirectory string `json:"project_directory"`
+		MetricPrefixName string `json:"metric_prefix_name"`
 		Type             string `json:"type"`
 		Method           string `json:"method"`
 	}

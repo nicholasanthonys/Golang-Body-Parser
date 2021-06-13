@@ -2,174 +2,203 @@
   {
     "path": "/test-1",
     "project_directory": "projects/test-1",
+    "metric_prefix_name" : "test_1_1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-1",
     "project_directory": "projects/test-2.1",
+    "metric_prefix_name" : "test_2_1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-2",
     "project_directory": "projects/test-2.2",
+    "metric_prefix_name" : "test_2_2",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-3",
     "project_directory": "projects/test-2.3",
+    "metric_prefix_name" : "test_2_3",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-4",
     "project_directory": "projects/test-2.4",
+    "metric_prefix_name" : "test_2_4",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-1",
     "project_directory": "projects/test-3.1",
+    "metric_prefix_name" : "test_3_1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-2",
     "project_directory": "projects/test-3.2",
+    "metric_prefix_name" : "test_3_2",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-3",
     "project_directory": "projects/test-3.3",
+    "metric_prefix_name" : "test_3_3",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-4",
     "project_directory": "projects/test-3.4",
+    "metric_prefix_name" : "test_3_4",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-1",
     "project_directory": "projects/test-4.1",
+    "metric_prefix_name" : "test_4_1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-2",
     "project_directory": "projects/test-4.2",
+    "metric_prefix_name" : "test_4_2",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-3",
     "project_directory": "projects/test-4.3",
+    "metric_prefix_name" : "test_4_3",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-4",
     "project_directory": "projects/test-4.4",
+    "metric_prefix_name" : "test_4_4",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-5-1",
     "project_directory": "projects/test-5.1",
+    "metric_prefix_name" : "test_5_1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-5-2",
     "project_directory": "projects/test-5.2",
+    "metric_prefix_name" : "test_5_2",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-5-3",
     "project_directory": "projects/test-5.3",
+    "metric_prefix_name" : "test_5_3",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-1",
     "project_directory": "projects/test-6.1",
+    "metric_prefix_name" : "test_6_1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-2",
     "project_directory": "projects/test-6.2",
+    "metric_prefix_name" : "test_6_2",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-4",
     "project_directory": "projects/test-6.4",
+    "metric_prefix_name" : "test_6_4",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-3",
     "project_directory": "projects/test-6.3",
+    "metric_prefix_name" : "test_6_3",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-1",
     "project_directory": "projects/test-7.1",
+    "metric_prefix_name" : "test_7_1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-2",
     "project_directory": "projects/test-7.2",
+    "metric_prefix_name" : "test_7_2",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-3",
     "project_directory": "projects/test-7.3",
+    "metric_prefix_name" : "test_7_3",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-4",
     "project_directory": "projects/test-7.4",
+    "metric_prefix_name" : "test_7_4",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-8-1",
     "project_directory": "projects/test-8.1_parallel_to_serial",
+    "metric_prefix_name" : "test_8_1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-8-2",
     "project_directory": "projects/test-8.2_serial_to_parallel",
+    "metric_prefix_name" : "test_8_2",
     "type": "serial",
     "method": "POST"
   },
   {
     "path": "/smsotp/generate/:smsId",
     "project_directory": "projects/smsotp",
+    "metric_prefix_name" : "smsotp",
     "type": "serial",
     "method": "POST"
   },
   {
     "path": "/emailotp/generate",
     "project_directory": "projects/emailotp",
+    "metric_prefix_name" : "emailotp",
     "type": "serial",
     "method": "POST"
   },
   {
     "path": "/imdb",
     "project_directory": "projects/imdb",
+    "metric_prefix_name" : "imdb",
     "type": "serial",
     "method": "GET"
   }

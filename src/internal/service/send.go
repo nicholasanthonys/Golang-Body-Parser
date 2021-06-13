@@ -109,7 +109,7 @@ func GetNetClientFromEnv() *http.Client {
 	}
 }
 
-func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
+func Send(requestFromUser *model.Wrapper, prefixMetricName string) (*http.Response, error) {
 
 	//*get transform command
 	transformRequest := requestFromUser.Configure.Request.Transform
@@ -123,7 +123,7 @@ func Send(requestFromUser *model.Wrapper) (*http.Response, error) {
 	var err error
 
 	if len(tmpBody) > 0 {
-		body, err = Transform(transformRequest, tmpBody)
+		body, err = Transform(transformRequest, tmpBody, prefixMetricName)
 		log.Info("body request  is ")
 		log.Info(tmpBody)
 

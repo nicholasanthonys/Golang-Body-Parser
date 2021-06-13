@@ -3,7 +3,7 @@ package CustomPrometheus
 import (
 	"github.com/gobeam/stringy"
 	"github.com/labstack/gommon/log"
-	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
+	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
@@ -11,58 +11,73 @@ import (
 )
 
 var (
-	PromMapCollector = map[string]prometheus.Collector{}
-	prefix           = "single_middleware_"
-	cpuTemp          = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name:        "cpu_temperature_celsius",
-		Help:        "Current temperature of the CPU.",
-		ConstLabels: prometheus.Labels{"version": "1234"},
-	})
-	hdFailures = prometheus.NewCounter(prometheus.CounterOpts{
-		Name:        "hd_errors_total",
-		Help:        "Number of hard-disk errors.",
-		ConstLabels: prometheus.Labels{"version": "1234"},
-	})
-
-	histogram = prometheus.NewHistogram(
-		prometheus.HistogramOpts{
-			Namespace: "golang",
-			Name:      "my_histogram",
-			Help:      "This is my histogram",
-		})
-
-	summary = prometheus.NewSummary(
-		prometheus.SummaryOpts{
-			Namespace: "golang",
-			Name:      "my_summary",
-			Help:      "This is my summary",
-		})
-	dirProjects = os.Getenv("CONFIGURES_DIRECTORY_NAME") + "/projects"
+	PromMapCounter = map[string]prometheus.Counter{}
+	Prefix         = "single_middleware_"
+	dirProjects    = os.Getenv("CONFIGURES_DIRECTORY_NAME") + "/projects"
 )
 
-func init() {
-	setUpMetrics()
+//func init() {
+//	//prometheus.Register(prometheus.NewCounter(prometheus.CounterOpts{
+//	//	Name:        "te_ERR_SENDING_REQUEST",
+//	//	Help:        "Error Sending Request for related project",
+//	//	ConstLabels: prometheus.Labels{"version": "1233"},
+//	//}))
+//	SetUpMetrics()
+//}
+
+func SetUpMetrics(registeredRoutes []model.Route) {
+
+	for _, route := range registeredRoutes {
+		setCounterMetricToMap(GetPrefixMetricName(route.MetricPrefixName))
+	}
 }
 
-func setUpMetrics() {
-	directories, err := util.GetListFolder(dirProjects)
-	if err != nil {
-		log.Errorf("Cannot read directory projects  %s,  error : %s", dirProjects, err.Error())
-		return
+func SetPrefixListCounterOptName(prefix string, metrics []prometheus.CounterOpts) []prometheus.CounterOpts {
+	for index, metricCounterOpt := range metrics {
+		metrics[index].Name = prefix + metricCounterOpt.Name
 	}
-	for _, directory := range directories {
-		if directory.IsDir() {
-			for _, counterOpt := range GetPrometheusCounterMetricOpts() {
-				prefixMetricName := stringy.New(prefix+directory.Name()).SnakeCase("?", "").Get()
 
-				// add prefix for metric opt name
-				counterOpt.Name = prefixMetricName + "_" + counterOpt.Name
-				PromMapCollector[prefixMetricName] = prometheus.NewCounter(counterOpt)
-				prometheus.MustRegister(PromMapCollector[prefixMetricName])
-			}
+	log.Infof("returned metrics is")
+	log.Info(metrics)
+	return metrics
+}
 
-		}
+func setListCounterOptToMap(opts []prometheus.CounterOpts) {
+	for _, opt := range opts {
+		PromMapCounter[opt.Name] = prometheus.NewCounter(opt)
+		log.Infof("opt Name is %s", opt.Name)
+		prometheus.MustRegister(PromMapCounter[opt.Name])
 	}
+}
+
+func setCounterMetricToMap(prefixMetricName string) {
+
+	serialMetrics := GetSerialCounterMetricOpt()
+	appendedSerialMetrics := SetPrefixListCounterOptName(prefixMetricName, serialMetrics)
+
+	parallelMetrics := GetParallelCounterMetricOpt()
+	appendedParallelMetrics := SetPrefixListCounterOptName(prefixMetricName, parallelMetrics)
+
+	// general
+	generalMetrics := GetGeneralCounterMetricOpt()
+	appendedGeneralMetrics := SetPrefixListCounterOptName(prefixMetricName, generalMetrics)
+	// request
+	requestMetrics := GetRequestCounterMetricOpt()
+	appendedRequestMetrics := SetPrefixListCounterOptName(prefixMetricName, requestMetrics)
+	// response
+	responseMetrics := GetResponseCounterMetricOpt()
+	appendedResponseMetrics := SetPrefixListCounterOptName(prefixMetricName, responseMetrics)
+
+	setListCounterOptToMap(appendedSerialMetrics)
+	setListCounterOptToMap(appendedParallelMetrics)
+	setListCounterOptToMap(appendedGeneralMetrics)
+	setListCounterOptToMap(appendedRequestMetrics)
+	setListCounterOptToMap(appendedResponseMetrics)
+}
+
+func GetPrefixMetricName(metricPrefixName string) string {
+	return stringy.New(Prefix+metricPrefixName).SnakeCase("/", "").Get() + "_"
+
 }
 
 func CustomPrometheusHandler() http.Handler {
