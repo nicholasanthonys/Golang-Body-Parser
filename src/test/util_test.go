@@ -31,7 +31,8 @@ func Test_Get_List_Folder(t *testing.T) {
 		"emailotp", "test-1", "test-2.2", "test-2.4", "test-3.2", "test-3.4", "test-4.2",
 		"test-4.4", "test-5.2", "test-6.1", "test-6.3", "test-7.1", "test-7.3", "test-8.1_parallel_to_serial",
 		"imdb", "smsotp", "test-2.1", "test-2.3", "test-3.1", "test-3.3", "test-4.1", "test-4.3",
-		"test-5.1", "test-5.3", "test-6.2", "test-6.4", "test-7.2", "test-7.4", "test-8.2_serial_to_parallel",
+		"test-5.1", "test-5.3", "test-6.2", "test-6.4", "test-7.2",
+		"test-7.4", "test-8.2_serial_to_parallel", "router.json",
 	}
 	files, err := util.GetListFolder(dirName)
 	if err != nil {
