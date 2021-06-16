@@ -1,14 +1,15 @@
 {
   "adult": false,
-  "backdrop_path": "/egxh9sOtF9XMZVlqmxIEt5fUCIm.jpg",
+  "backdrop_path": "/qAhedRxRYWZAgZ8O8pHIl6QHdD7.jpg",
   "belongs_to_collection": {
     "backdrop_path": "/6AsfeCJZPPoLUjn8bpYoLyY30Qw.jpg",
     "id": 688042,
     "name": "Hobbs & Shaw Collection",
-    "poster_path": "/uMPJuU6ryiElQymNe1EloWmBNPC.jpg"
+    "poster_path": "/5vkV7506lpOaKnnbVbFsH8WvEWJ.jpg"
   },
   "budget": 200000000,
-  "from_configure-0": {},
+  "from_configure-0": {
+  },
   "genres": [
     {
       "id": 28,
