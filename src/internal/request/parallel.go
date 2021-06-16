@@ -81,7 +81,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			err := SetRequestToWrapper(alias, cc, &requestFromUser)
 			if err != nil {
 				log.Errorf("error %s", err.Error())
-				CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
+				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
 
 			}
 
@@ -111,7 +111,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 							cc.MapWrapper, cc.DefinedRoute.ProjectDirectory)
 						if err != nil {
 							log.Errorf("Error from when checking logic %v", err)
-							CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
+							CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
 
 						}
 						if boolResult {
@@ -134,7 +134,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 									go worker(&wg, cLogicItem.NextSuccess, cc, newWrapper, i)
 								} else {
 									log.Errorf("cannot get wrapper : %s", cLogicItem.NextSuccess)
-									CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_GET_WRAPPER"].Inc()
+									CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_GET_WRAPPER"].Inc()
 
 								}
 
@@ -156,7 +156,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 									go worker(&wg, cLogicItem.NextFailure, cc, newWrapper, i)
 								} else {
 									log.Errorf("cannot get wrapper %s", cLogicItem.NextFailure)
-									CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_GET_WRAPPER"].Inc()
+									CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_GET_WRAPPER"].Inc()
 									return response.ConstructResponseFromWrapper(cc, cLogicItem.FailureResponse, nil, nil)
 								}
 								//go worker(&wg, cLogicItem.FailureResponse, cc, wrapper, i)
@@ -183,7 +183,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 		boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper, cc.DefinedRoute.ProjectDirectory)
 		if err != nil {
 			log.Error(err)
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
+			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
 			return response.ConstructResponseFromWrapper(cc, ParallelProject.FailureResponse, err, nil)
 
 		}

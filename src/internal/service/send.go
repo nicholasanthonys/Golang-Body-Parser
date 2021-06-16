@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	CustomPrometheus "github.com/nicholasanthonys/Golang-Body-Parser/internal/prometheus"
 	cmap "github.com/orcaman/concurrent-map"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -123,13 +124,30 @@ func Send(requestFromUser *model.Wrapper, prefixMetricName string) (*http.Respon
 	var err error
 
 	if len(tmpBody) > 0 {
-		body, err = Transform(transformRequest, tmpBody, prefixMetricName)
+		body, err = Transform(transformRequest, tmpBody)
 		log.Info("body request  is ")
 		log.Info(tmpBody)
 
 		if err != nil {
 			log.Error("error constructing body to send")
 			log.Error(err.Error())
+			transformLowerCase := strings.ToLower(transformRequest)
+			if len(prefixMetricName) > 0 {
+				if transformLowerCase == "toxml" {
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_TRANSFORM_REQUEST_TO_XML"].
+						Inc()
+				} else if transformLowerCase == "toform" {
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_TRANSFORM_REQUEST_TO_FORM"].
+						Inc()
+				} else {
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_TRANSFORM_REQUEST_TO_JSON"].
+						Inc()
+				}
+			}
+
 			return nil, err
 		}
 	}

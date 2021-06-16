@@ -5,44 +5,33 @@ import (
 	"github.com/clbanning/mxj"
 	"github.com/clbanning/mxj/j2x"
 	"github.com/clbanning/mxj/x2j"
-	CustomPrometheus "github.com/nicholasanthonys/Golang-Body-Parser/internal/prometheus"
 	"io"
 	"net/url"
 	"strings"
 )
 
-func Transform(transform string, requestFromUser map[string]interface{}, prefixMetricName string) (io.Reader, error) {
+func Transform(transform string, requestFromUser map[string]interface{}) (io.Reader, error) {
 	var body io.Reader
 	switch strings.ToLower(transform) {
-	case strings.ToLower("ToJson"):
-		resultTransformByte, err := ToJson(requestFromUser)
-		if err != nil {
-			log.Errorf("error : %s", err.Error())
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_TRANSFORM_REQUEST_TO_FORM"].Inc()
-			return nil, err
-		}
-		body = bytes.NewBuffer(resultTransformByte)
-		return body, err
-	case strings.ToLower("ToXML"):
+	case "toxml":
 		resultTransformByte, err := ToXml(requestFromUser)
 		if err != nil {
 			log.Errorf("error : %s", err.Error())
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_TRANSFORM_REQUEST_TO_XML"].Inc()
 			return nil, err
 		}
 
 		body = bytes.NewBuffer(resultTransformByte)
 		return body, err
-	case strings.ToLower("ToForm"):
+	case "toform":
 		myForm := TransformToFormUrl(requestFromUser)
 		body = strings.NewReader(myForm.Encode())
 
 		return body, nil
 	default:
+		// tojson
 		resultTransformByte, err := ToJson(requestFromUser)
 		if err != nil {
 			log.Errorf("error : %s", err.Error())
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_TRANSFORM_REQUEST_TO_FORM"].Inc()
 			return nil, err
 		}
 		body = bytes.NewBuffer(resultTransformByte)

@@ -33,7 +33,9 @@ func Receiver(configure model.Configure, res *http.Response, prefixMetricName st
 	if err != nil {
 		logrus.Error("Error read body")
 		logrus.Error(err.Error())
-		CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_READ_RESPONSE_BODY"].Inc()
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+			prefixMetricName)+"ERR_READ_RESPONSE_BODY"].
+			Inc()
 
 		return nil, err
 	}
@@ -64,7 +66,8 @@ func Receiver(configure model.Configure, res *http.Response, prefixMetricName st
 				if err != nil {
 					log.Error("error convert response byte to json body")
 					log.Error(err.Error())
-					CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_CONVERT_RESPONSE_BYTE_TO_JSON"].Inc()
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_CONVERT_RESPONSE_BYTE_TO_JSON"].Inc()
 
 				}
 
@@ -75,7 +78,8 @@ func Receiver(configure model.Configure, res *http.Response, prefixMetricName st
 				if err != nil {
 					log.Error("error convert response byte to xml body")
 					log.Error(err.Error())
-					CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_CONVERT_RESPONSE_BYTE_TO_XML"].Inc()
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_CONVERT_RESPONSE_BYTE_TO_XML"].Inc()
 
 				}
 
@@ -84,7 +88,8 @@ func Receiver(configure model.Configure, res *http.Response, prefixMetricName st
 				tmpBody["response"] = string(responseByte)
 			} else {
 				// unknown content type
-				CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+prefixMetricName+"ERR_UNKNOWN_RESPONSE_CONTENT_TYPE"].Inc()
+				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+					prefixMetricName)+"ERR_UNKNOWN_RESPONSE_CONTENT_TYPE"].Inc()
 				return nil, errors.New("Content is are not application/json, application/xml, text/plain. content type is : " + contentType)
 			}
 			return map[string]interface{}{

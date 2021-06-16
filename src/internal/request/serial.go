@@ -93,14 +93,14 @@ ConfigureFile:
 		} else {
 			log.Errorf("Wrapper is nil for alias : %v ", alias)
 			err := errors.New(fmt.Sprintf("wrapper is nil for alias %v", alias))
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_GET_WRAPPER"].Inc()
+			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_GET_WRAPPER"].Inc()
 			return cc.JSON(http.StatusBadRequest, err)
 		}
 
 		err = SetRequestToWrapper(alias, cc, wrapper)
 		if err != nil {
 			log.Errorf(" Error : %s", err.Error())
-			CustomPrometheus.PromMapCounter[CustomPrometheus.Prefix+cc.DefinedRoute.ProjectDirectory+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
+			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
 
 			return err
 		}
