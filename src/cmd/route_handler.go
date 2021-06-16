@@ -37,9 +37,6 @@ func SetRouteHandler() *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	// Enable metrics middleware
-	e.GET("/metrics", echo.WrapHandler(CustomPrometheus.CustomPrometheusHandler()))
-
 	// * Read router.json
 	routesByte := util.ReadJsonFile(configureDir + "/router.json")
 	err := json.Unmarshal(routesByte, &routes)
@@ -51,6 +48,11 @@ func SetRouteHandler() *echo.Echo {
 			cc := c.(*model.CustomContext)
 			return cc.String(http.StatusOK, "Golang-Body-Parser Active")
 		})
+
+		// set up metrics
+		CustomPrometheus.SetUpMetrics(routes)
+		// enable Prometheus handler for route /metrics
+		e.GET("/metrics", echo.WrapHandler(CustomPrometheus.CustomPrometheusHandler()))
 
 		//*set path based from configure
 		for _, route := range routes {
@@ -115,7 +117,6 @@ func prepareSerialRoute(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(cc)
 	}
 }
-
 
 // prepareSerialRoute middleware that find defined route in route.json and read SerialProject.json
 func prepareParallelRoute(next echo.HandlerFunc) echo.HandlerFunc {

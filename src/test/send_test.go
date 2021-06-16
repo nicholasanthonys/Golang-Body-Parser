@@ -350,7 +350,7 @@ func TestSendPost(t *testing.T) {
 	}
 	wrapper.Request.Set("body", mapBody)
 
-	res, err := service.Send(&wrapper)
+	res, err := service.Send(&wrapper, "")
 	if err != nil {
 		assert.Error(t, err, " error when calling Send. should not error ")
 	}
@@ -400,7 +400,7 @@ func TestSendPut(t *testing.T) {
 	}
 	wrapper.Request.Set("body", mapBody)
 
-	res, err := service.Send(&wrapper)
+	res, err := service.Send(&wrapper, "")
 	if err != nil {
 		assert.Error(t, err, " error when calling Send. should not error ")
 	}

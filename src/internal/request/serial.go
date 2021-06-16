@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	CustomPrometheus "github.com/nicholasanthonys/Golang-Body-Parser/internal/prometheus"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/response"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
@@ -26,8 +27,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 	}
 
-	var SerialProject model.Serial
-	SerialProject = model.Serial{}
+	SerialProject := model.Serial{}
 	// Read SerialProject .json
 	serialByte := util.ReadJsonFile(cc.FullProjectDirectory + "/" + "serial.json")
 	err := json.Unmarshal(serialByte, &SerialProject)
@@ -35,6 +35,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 	if err != nil {
 		resMap := make(map[string]string)
 		resMap["message"] = "Problem In unmarshaling File serial.json. "
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_UNMARSHAL_SERIAL_JSON"].Inc()
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
@@ -89,24 +90,28 @@ ConfigureFile:
 	for {
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
 			wrapper = tmp.(*model.Wrapper)
-		}
-
-		if wrapper == nil {
+		} else {
 			log.Errorf("Wrapper is nil for alias : %v ", alias)
 			err := errors.New(fmt.Sprintf("wrapper is nil for alias %v", alias))
+			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_GET_WRAPPER"].Inc()
 			return cc.JSON(http.StatusBadRequest, err)
 		}
 
 		err = SetRequestToWrapper(alias, cc, wrapper)
 		if err != nil {
+			log.Errorf(" Error : %s", err.Error())
+			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
+
 			return err
 		}
 
 		if len(wrapper.Configure.Request.CLogics) > 0 {
 			for index, cLogicItem := range wrapper.Configure.Request.CLogics {
-				boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+				boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper, cc.DefinedRoute.ProjectDirectory)
 				if err != nil {
 					log.Errorf("Error while check logic for cLogic %v : %v", cLogicItem, err)
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
+
 					return cc.JSON(http.StatusBadRequest, err)
 				}
 
@@ -124,6 +129,7 @@ ConfigureFile:
 							_, customResponse, err := ProcessingRequest(alias, cc, wrapper, 0)
 							finalCustomResponse = customResponse
 							if err != nil {
+								log.Errorf("Error :  %s", err.Error())
 								return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, err, customResponse)
 							}
 						}
@@ -174,9 +180,11 @@ ConfigureFile:
 
 		for i := 0; i < len(mapConfigures[alias].CLogics); {
 			cLogicItem := mapConfigures[alias].CLogics[i]
-			boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper)
+			boolResult, err := service.CLogicsChecker(cLogicItem, cc.MapWrapper, cc.DefinedRoute.ProjectDirectory)
 			if err != nil {
-				log.Error(err)
+				log.Errorf("error %s", err.Error())
+				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_CHECK_CONFIGURE_LOGIC"].Inc()
+
 				return response.ConstructResponseFromWrapper(cc, mapConfigures[alias].FailureResponse, err, nil)
 			}
 

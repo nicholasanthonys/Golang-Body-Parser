@@ -4,7 +4,7 @@ services:
     networks: 
       proxy_middleware_net:  
     build: .
-    image: go-single-middleware:1.1
+    image: go-single-middleware:1.0
     container_name: container-single-middleware
     volumes:
       - type: bind
@@ -14,9 +14,9 @@ services:
     #   - "5000:${APP_PORT}"
     expose:
       - "80"
-  
+
     
-networks: 
+networks:
   default:
   proxy_middleware_net:
     external: true

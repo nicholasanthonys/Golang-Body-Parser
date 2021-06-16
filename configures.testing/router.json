@@ -1,175 +1,175 @@
 [
   {
     "path": "/test-1",
-    "project_directory": "projects/test-1",
+    "project_directory": "test-1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-1",
-    "project_directory": "projects/test-2.1",
+    "project_directory": "test-2.1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-2",
-    "project_directory": "projects/test-2.2",
+    "project_directory": "test-2.2",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-3",
-    "project_directory": "projects/test-2.3",
+    "project_directory": "test-2.3",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-2-4",
-    "project_directory": "projects/test-2.4",
+    "project_directory": "test-2.4",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-1",
-    "project_directory": "projects/test-3.1",
+    "project_directory": "test-3.1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-2",
-    "project_directory": "projects/test-3.2",
+    "project_directory": "test-3.2",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-3",
-    "project_directory": "projects/test-3.3",
+    "project_directory": "test-3.3",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-3-4",
-    "project_directory": "projects/test-3.4",
+    "project_directory": "test-3.4",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-1",
-    "project_directory": "projects/test-4.1",
+    "project_directory": "test-4.1",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-2",
-    "project_directory": "projects/test-4.2",
+    "project_directory": "test-4.2",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-3",
-    "project_directory": "projects/test-4.3",
+    "project_directory": "test-4.3",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-4-4",
-    "project_directory": "projects/test-4.4",
+    "project_directory": "test-4.4",
     "type": "serial",
     "method": "GET"
   },
   {
     "path": "/test-5-1",
-    "project_directory": "projects/test-5.1",
+    "project_directory": "test-5.1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-5-2",
-    "project_directory": "projects/test-5.2",
+    "project_directory": "test-5.2",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-5-3",
-    "project_directory": "projects/test-5.3",
+    "project_directory": "test-5.3",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-1",
-    "project_directory": "projects/test-6.1",
+    "project_directory": "test-6.1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-2",
-    "project_directory": "projects/test-6.2",
+    "project_directory": "test-6.2",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-4",
-    "project_directory": "projects/test-6.4",
+    "project_directory": "test-6.4",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-6-3",
-    "project_directory": "projects/test-6.3",
+    "project_directory": "test-6.3",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-1",
-    "project_directory": "projects/test-7.1",
+    "project_directory": "test-7.1",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-2",
-    "project_directory": "projects/test-7.2",
+    "project_directory": "test-7.2",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-3",
-    "project_directory": "projects/test-7.3",
+    "project_directory": "test-7.3",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-7-4",
-    "project_directory": "projects/test-7.4",
+    "project_directory": "test-7.4",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-8-1",
-    "project_directory": "projects/test-8.1_parallel_to_serial",
+    "project_directory": "test-8.1_parallel_to_serial",
     "type": "parallel",
     "method": "POST"
   },
   {
     "path": "/test-8-2",
-    "project_directory": "projects/test-8.2_serial_to_parallel",
+    "project_directory": "test-8.2_serial_to_parallel",
     "type": "serial",
     "method": "POST"
   },
   {
     "path": "/smsotp/generate/:smsId",
-    "project_directory": "projects/smsotp",
+    "project_directory": "smsotp",
     "type": "serial",
     "method": "POST"
   },
   {
     "path": "/emailotp/generate",
-    "project_directory": "projects/emailotp",
+    "project_directory": "emailotp",
     "type": "serial",
     "method": "POST"
   },
   {
     "path": "/imdb",
-    "project_directory": "projects/imdb",
+    "project_directory": "imdb",
     "type": "serial",
     "method": "GET"
   }

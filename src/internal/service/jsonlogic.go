@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/diegoholiveira/jsonlogic/v3"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	CustomPrometheus "github.com/nicholasanthonys/Golang-Body-Parser/internal/prometheus"
 	cmap "github.com/orcaman/concurrent-map"
 	"reflect"
 	"strings"
@@ -66,7 +67,7 @@ func InterfaceDirectModifier(in interface{}, mapWrapper *cmap.ConcurrentMap, sep
 
 }
 
-func CLogicsChecker(cLogicItem model.CLogicItem, mapWrapper *cmap.ConcurrentMap) (bool,
+func CLogicsChecker(cLogicItem model.CLogicItem, mapWrapper *cmap.ConcurrentMap, prefixMetricName string) (bool,
 	error) {
 	cLogicItem.Data = InterfaceDirectModifier(cLogicItem.Data, mapWrapper, "--")
 	cLogicItem.Rule = InterfaceDirectModifier(cLogicItem.Rule, mapWrapper, "--")
@@ -76,11 +77,13 @@ func CLogicsChecker(cLogicItem model.CLogicItem, mapWrapper *cmap.ConcurrentMap)
 
 	ruleByte, err := json.Marshal(cLogicItem.Rule)
 	if err != nil {
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(prefixMetricName)+"ERR_MARSHALLING_CONFIGURE_LOGIC_RULE"].Inc()
 		return false, err
 	}
 
 	dataByte, err := json.Marshal(cLogicItem.Data)
 	if err != nil {
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(prefixMetricName)+"ERR_MARSHALLING_CONFIGURE_LOGIC_DATA"].Inc()
 		return false, err
 	}
 	ruleReader := bytes.NewReader(ruleByte)
@@ -89,6 +92,7 @@ func CLogicsChecker(cLogicItem model.CLogicItem, mapWrapper *cmap.ConcurrentMap)
 	err = jsonlogic.Apply(ruleReader, dataReader, &resultBuf)
 
 	if err != nil {
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(prefixMetricName)+"ERR_APPLY_CONFIGURE_LOGIC"].Inc()
 		log.Error("error is ")
 		log.Error(err.Error())
 		return false, err

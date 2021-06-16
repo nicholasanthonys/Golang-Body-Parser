@@ -13,28 +13,25 @@ import (
 func Transform(transform string, requestFromUser map[string]interface{}) (io.Reader, error) {
 	var body io.Reader
 	switch strings.ToLower(transform) {
-	case strings.ToLower("ToJson"):
-		resultTransformByte, err := ToJson(requestFromUser)
-		if err != nil {
-			log.Error("error")
-			return nil, err
-		}
-		body = bytes.NewBuffer(resultTransformByte)
-		return body, err
-	case strings.ToLower("ToXML"):
+	case "toxml":
 		resultTransformByte, err := ToXml(requestFromUser)
 		if err != nil {
+			log.Errorf("error : %s", err.Error())
 			return nil, err
 		}
+
 		body = bytes.NewBuffer(resultTransformByte)
 		return body, err
-	case strings.ToLower("ToForm"):
+	case "toform":
 		myForm := TransformToFormUrl(requestFromUser)
 		body = strings.NewReader(myForm.Encode())
+
 		return body, nil
 	default:
+		// tojson
 		resultTransformByte, err := ToJson(requestFromUser)
 		if err != nil {
+			log.Errorf("error : %s", err.Error())
 			return nil, err
 		}
 		body = bytes.NewBuffer(resultTransformByte)

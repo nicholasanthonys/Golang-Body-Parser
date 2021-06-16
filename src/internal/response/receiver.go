@@ -1,7 +1,9 @@
 package response
 
 import (
+	"errors"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/model"
+	CustomPrometheus "github.com/nicholasanthonys/Golang-Body-Parser/internal/prometheus"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/service"
 	"github.com/nicholasanthonys/Golang-Body-Parser/internal/util"
 	"github.com/sirupsen/logrus"
@@ -21,7 +23,7 @@ func init() {
 	log.Level = util.GetLogLevelFromEnv()
 }
 
-func Receiver(configure model.Configure, res *http.Response) (map[string]interface{}, error) {
+func Receiver(configure model.Configure, res *http.Response, prefixMetricName string) (map[string]interface{}, error) {
 	tmpStatusCode := 0
 	tmpBody := make(map[string]interface{})
 	tmpHeader := make(map[string]interface{})
@@ -31,6 +33,10 @@ func Receiver(configure model.Configure, res *http.Response) (map[string]interfa
 	if err != nil {
 		logrus.Error("Error read body")
 		logrus.Error(err.Error())
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+			prefixMetricName)+"ERR_READ_RESPONSE_BODY"].
+			Inc()
+
 		return nil, err
 	}
 
@@ -60,6 +66,9 @@ func Receiver(configure model.Configure, res *http.Response) (map[string]interfa
 				if err != nil {
 					log.Error("error convert response byte to json body")
 					log.Error(err.Error())
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_CONVERT_RESPONSE_BYTE_TO_JSON"].Inc()
+
 				}
 
 			} else if strings.Contains(contentType, "application/xml") {
@@ -69,13 +78,19 @@ func Receiver(configure model.Configure, res *http.Response) (map[string]interfa
 				if err != nil {
 					log.Error("error convert response byte to xml body")
 					log.Error(err.Error())
+					CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+						prefixMetricName)+"ERR_CONVERT_RESPONSE_BYTE_TO_XML"].Inc()
+
 				}
 
 			} else if strings.Contains(contentType, "text/plain") {
 				//* if content type contain text/plain
 				tmpBody["response"] = string(responseByte)
 			} else {
-				//* panic  if content type unknown
+				// unknown content type
+				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(
+					prefixMetricName)+"ERR_UNKNOWN_RESPONSE_CONTENT_TYPE"].Inc()
+				return nil, errors.New("Content is are not application/json, application/xml, text/plain. content type is : " + contentType)
 			}
 			return map[string]interface{}{
 				"statusCode": tmpStatusCode,
