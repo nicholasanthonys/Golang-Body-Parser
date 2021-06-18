@@ -10,6 +10,8 @@
       "header": {
       },
       "body": {
+        "name" : "$configure_request--$request--$body[title]",
+        "title" : "$configure_request--$request--$body[title]",
         "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
         "tes" : "hello"
       },
@@ -20,6 +22,7 @@
       "header": {
       },
       "body": {
+        "name" : "sakura"
       },
       "query": {
       }

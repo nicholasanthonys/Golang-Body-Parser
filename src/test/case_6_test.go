@@ -110,8 +110,9 @@ func TestParallel_Request_False_Logic_Without_Failure_Response(t *testing.T) {
 	projectDir := dirName + "/test-6.3"
 
 	mapBody := map[string]interface{}{
-		"name": "kakashi",
-		"body": "bar",
+		"name":  "kakashi",
+		"body":  "bar",
+		"title": "foo",
 	}
 
 	body, err := service.Transform("ToJson", mapBody)

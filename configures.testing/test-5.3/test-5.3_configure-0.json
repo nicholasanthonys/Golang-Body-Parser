@@ -10,6 +10,8 @@
       "header": {
       },
       "body": {
+        "name" : "$configure_request--$request--$body[name]",
+        "body" : "$configure_request--$request--$body[body]",
         "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg"
       },
       "query": {
@@ -19,6 +21,7 @@
       "header": {
       },
       "body": {
+        "name" : "naruto"
       },
       "query": {
       }

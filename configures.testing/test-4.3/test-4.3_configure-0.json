@@ -1,7 +1,7 @@
 {
   "request": {
     "destination_url": "https://api.themoviedb.org/3/movie",
-    "destination_path": "/{{$configure_test-4.3_0--$request--$query[movie_id]}}",
+    "destination_path": "/{{$configure_request--$request--$query[movie_id]}}",
     "method": "GET",
     "transform": "ToJson",
     "log_before_modify": {},
@@ -37,13 +37,13 @@
           "and": [
             {
               "==": [
-                "$configure_test-4.3_0--$request--$query[movie_id]",
+                "$configure_request--$request--$query[movie_id]",
                 123123123
               ]
             },
             {
               "==": [
-                "$configure_test-4.3_0--$request--$query[movie_id2]",
+                "$configure_request--$request--$query[movie_id2]",
                 384018
               ]
             }

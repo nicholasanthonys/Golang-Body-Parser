@@ -10,7 +10,9 @@
       "header": {
       },
       "body": {
-        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg"
+        "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
+        "title" : "$configure_request--$request--$body[title]",
+        "name" : "$configure_request-$request--$body[name]"
       },
       "query": {
       }

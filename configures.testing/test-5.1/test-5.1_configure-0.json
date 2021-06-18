@@ -10,7 +10,7 @@
       "header": {
       },
       "body": {
-        "title": "$configure--$request--$body[title]",
+        "title": "$configure_request--$request--$body[title]",
         "body": "bar",
         "userId": 1
       },

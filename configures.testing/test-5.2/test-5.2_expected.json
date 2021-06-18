@@ -2,13 +2,13 @@
   "from_configure_0": {
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "body": "bar",
-    "name": "kakashi"
+    "name": "naruto"
   },
   "from_configure_1": {
     "age": 20,
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "body": "bar",
-    "name": "kakashi",
+    "name": "sakura",
     "tes": "hello",
     "title": "foo"
   }

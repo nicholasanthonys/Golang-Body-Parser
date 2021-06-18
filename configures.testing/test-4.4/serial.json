@@ -24,7 +24,7 @@
               },
               {
                 "==": [
-                  "$configure_test-4.4_0--$request--$query[movie_id2]",
+                  "$configure_request--$request--$query[movie_id2]",
                   384018
                 ]
               }
