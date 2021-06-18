@@ -45,7 +45,11 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	// declare a WaitGroup
 	var wg sync.WaitGroup
 
-	err = SetRequestToWrapper("$configure_request", cc, &model.Wrapper{})
+	err = SetRequestToWrapper("$configure_request", cc, &model.Wrapper{
+		Configure: model.Configure{},
+		Request:   cmap.New(),
+		Response:  cmap.New(),
+	})
 	if err != nil {
 		log.Errorf("error %s", err.Error())
 		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
@@ -85,11 +89,7 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 				alias = configureItem.Alias
 			}
 
-			cc.MapWrapper.Set(alias, &model.Wrapper{
-				Configure: model.Configure{},
-				Request:   cmap.New(),
-				Response:  cmap.New(),
-			})
+			cc.MapWrapper.Set(alias, &requestFromUser)
 
 		}
 	}
