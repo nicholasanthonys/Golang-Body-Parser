@@ -13,7 +13,8 @@
         "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
         "name": "William",
         "hello": "hai",
-        "first_configure_body" : "$configure_zero_configure--$request--$body"
+        "content" : "$configure_request--$request--$body[content]",
+        "parallel_first_configure_body" : ""
       },
       "query": {
         "foo": "tes"
@@ -23,6 +24,7 @@
       "header": {
       },
       "body": {
+        "parallel_first_configure_body" : "$configure_zero_configure--$request--$body",
         "phone_numbers.0": "10000000"
       },
       "query": {

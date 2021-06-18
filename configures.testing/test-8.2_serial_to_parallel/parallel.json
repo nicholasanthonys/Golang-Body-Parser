@@ -37,7 +37,11 @@
         "status_code" : 400,
         "transform" : "ToJson",
         "adds" : {
-          "body" : {"message" : "configure_first configure status code is 400"
+          "body" : {
+            "message" : "configure_first configure status code is 400",
+            "body_0" : "$configure_zero_configure--$response--$body",
+            "body_1" : "$configure_first_configure--$response--$body",
+            "body_2" : "$configure_second_configure--$response--$body"
           }
         }
       },

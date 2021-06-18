@@ -2,7 +2,7 @@
   "parallel_configure_0_response": {
     "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
     "content": "selamat anda menang",
-    "first_configure_body": {
+    "parallel_first_configure_body": {
       "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
       "content": "selamat anda menang",
       "name": "William",
@@ -29,11 +29,6 @@
     "name": "William",
     "number": "123456789",
     "original_phone_number": [
-      "123456789",
-      "2456789",
-      "3456789"
-    ],
-    "phone_numbers": [
       "123456789",
       "2456789",
       "3456789"

@@ -31,9 +31,9 @@
                "status_code_configure_zero" : "$configure_zero_configure--$response--$status_code"
               },
               "body" : {
-                "parallel_zero_configure_response" : "$configure_second_configure--$response--$body",
-                "parallel_first_configure_response" : "$configure_zero_configure--$response--$body",
-                "serial_response" : "$configure_first_configure--$response--$body",
+                "parallel_zero_configure_response" : "$configure_zero_configure--$response--$body",
+                "parallel_first_configure_response" : "$configure_first_configure--$response--$body",
+                "serial_response" : "$configure_second_configure--$response--$body",
                 "test" : "$configure_first_configure--$response--$body[test]"
               }
             },

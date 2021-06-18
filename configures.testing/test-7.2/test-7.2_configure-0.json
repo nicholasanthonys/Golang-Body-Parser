@@ -11,7 +11,8 @@
       },
       "body": {
         "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
-        "name" : "William"
+        "name" : "$configure_request--$request--$body[name]",
+        "body" : "$configure_request--$request--$body[body]"
       },
       "query": {
       }

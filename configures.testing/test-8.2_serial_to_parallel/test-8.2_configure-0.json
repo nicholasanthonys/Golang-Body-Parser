@@ -12,8 +12,8 @@
       "body": {
         "avatar": "https://cdn.fakercloud.com/avatars/bcrad_128.jpg",
         "name": "William",
-        "number" : "$configure_zero_configure--$request--$body[phone_numbers]",
-        "content" : "$configure_zero_configure--$request--$body[content]",
+        "number" : "$configure_request--$request--$body[phone_numbers]",
+        "content" : "$configure_request--$request--$body[content]",
         "user.favorite_cars": [
           "honda",
           "fiat",

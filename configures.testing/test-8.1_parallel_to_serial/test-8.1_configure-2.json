@@ -10,6 +10,7 @@
       "header": {
       },
       "body": {
+        "phone_numbers" : "$configure_request--$request--$body[phone_numbers]"
       },
       "query": {
         "foo" : "tes"
