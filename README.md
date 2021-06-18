@@ -1,25 +1,51 @@
-# Golang Body Parser
+# Single Middleware Frontend
 A middleware that can transform, modify and forward requests based on pre-defined configuration. It allows
 you to modify your client request such as add, modify, or delete key-value, transform your request into JSON or XML 
-and send the response back to the client.
+and send the response back to the client. Execute Request configuration as a 
+serial or parallel request
 
 
 ## Prerequisite
-1. Create a project folder inside configures folder. Take a look inside **configures.example**.
-2. Inside a project folder  create file **configure-n.json and response.json**. **configure-n.json** can be renamed to configure0.json, or configure1.json as long as your file have 'configure', **NOTE : double dash (--)** for in configure files name are prohibited since this symbol will be used. 
+1. Create a project folder inside configures folder. Take a look inside 
+   **configures.testing/test-1**.
+2. Inside a project folder  create file **configure.json,  base.json, 
+   serial/parallel.json**. **configure.json** can be renamed to anything.
 3. Create src/.env file **(see src/.env.example file)**.
 4. Specify the path to the configures directory in .env **(see src/.env.example file)** .
 
 <br> <br>
-See **configures.example directory structure** for examples.
+See **configures.testing directory structure** for examples.
 
 
-## Middleware Route/Endpoint
-### Client to middleware endpoint
-In order to make request to this middleware, take a look inside **configures.example/router.json**.
+## File Base.json
+```
+{
+  "project_max_circular" : 10,
+  "circular_response" : {
+    "status_code" : 508,
+    "adds" : {
+      "body" : {
+        "message" : "Circular request",
+        "error" : "circular request detected"
+      }
+    }
+  }
+}
+```
+
+### project_max_circular
+Specify maximal number of circular request. This can be happen if 
+configure-1 refer to configure-2 but configure-2 refer to configure-1.
+### circular_response
+Specify response to be returned if circular request has reached 
+project_max_circular.s
+
+## File Router.json
+In order to make request to this middleware, take a look inside **configures.testing/router.json**.
  - **path** : Client to middleware endpoint.,
  - **project_directory** : Project directory path relative to **router.json**,
- - **type** : Make a serial or parallel request. The default value is serial if value is empty.
+ - **type** : Make a serial or parallel request. The default value is serial 
+   if value is empty. Middleware will read related files (serial/parallel.json)
  - **method** : Client to middleware request method. <br>Available values are 
    - GET
    - POST
@@ -42,9 +68,94 @@ from middleware to destination as a serial request :
 ]
 ```
 
+## File Serial.json
+Execute request sequentially. This json structure accept list of configures.
+for example:
+``` 
+{
+  "configures": [
+    {
+      "file_name": "test-1_configure-0.json",
+      "alias": "$configure_test-1",
+      "failure_response": {
+        "status_code": 500,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "error_message": "Request Logic error or there is something error"
+          }
+        }
+      },
+      "c_logics": []
+    }
+  ]
+}
+```
+### file_name
+Specify configure file name
+### alias
+Specify alias for configure file name. Must contain prefix $configure
+### failure_response
+Specify response if all logic fail
+### c_logics
+Accept list of json logic structure, based on https://jsonlogic.com/operations.html for example :
+```
+    {
+          "rule": {
+            "==": [
+              "$configure_test-3_2--$request--$query[movie_id]",
+              550
+            ]
+          },
+          data : null,
+          "response":null,
+          "next_success : null,
+          "next_failure": null,
+          "failure_response : null
+        }
+```
+#### rule
+Json logic operator/rule.
 
-### Middleware to destination endpoint
-## Request
+#### data
+Json logic data.
+
+#### response
+Return response if logic is true.
+
+#### failure_response
+return response if logic is false.
+
+#### next_success
+specify configure alias to be processed if logic is true. Response must be null.
+
+#### next_failure
+specify configure alias to be processed if logic is false. Response must be
+false.
+
+#### Note
+<li>If cLogics is empty, return last configure
+executed response. </li>
+<li> next_success or next_failure in file parallel.json value only accept 
+serial.json or parallel.json, cannot refer to other configure</li>
+
+## File Parallel.json
+Execute request simultaneously. See example **configures.testing/test-6.3** .
+### failure_response
+response to be returned when all logic is fail.
+### configures
+List of configuration file.
+#### file_name
+configure file name.
+#### alias
+configure alias. Must contain prefix $configure.
+
+#### c_logics
+check logic after all parallel request processed.
+
+## File Configure.json
+
+### Request to destination endpoint
  **For each configure file in your project directory, it represents a request**.
 #### 1. Specify the target URL for request
 In order to forward your request, the middleware need to know the destination url and destination path.
@@ -66,8 +177,9 @@ You can specify your request format for key **transform** in configure file. The
 - **ToJson** to transform your request to JSON format.
 - **ToXml** to transform your request to XML format
 
-If a request/response don't have any wrapper for the body and you want to convert it to xml, because this middleware use package [clbanning/mxj](https://github.com/clbanning/mxj),
-it automatically wrap your request with **<doc>** such that **<doc>**(body) **</doc>**. <br>
+If a request/response don't have any wrapper for the body and you want to convert it to xml, 
+it automatically wrap your request with **<doc>** such that **<doc>**(body) 
+**</doc>** ,  because this middleware use package [clbanning/mxj](https://github.com/clbanning/mxj), <br>
 
 For example if you send an empty request to the middleware, and your configuration for request like below and you want to transform it to XML : 
 ``` 
@@ -106,7 +218,8 @@ For example if you send an empty request to the middleware, and your configurati
       ],
       "query": [
       ]
-    }
+    },
+    c_logics : [],
   },
 ```
 
@@ -183,47 +296,49 @@ To delete keys from your request, you can specify it in **deletes**. The followi
 
 Note : You can also delete an entire object, for example, replace **user.name** with **user**, you will delete object user from your request.
 
-#### 4.4 Modify response from each request.
+#### 4.4 c_logics in request
+Check logic before sending request. If logic is false, you can specify 
+failure_response to return response or next_failure execute next config.
+In serial request, if failure_response and response not specified, middleware 
+will return 
+serial failure_response for current processed configure that has been 
+specified in serial.json. In Parallel request, middleware will return 
+failure_response that has been specified in parallel.json.
+Middleware will not send any request. If logic is true, you can specify response
+to return response or next_success to execute next config.
+If response and next_success not specified, middleware will send request.
+```
+    "c_logics": [
+      {
+        "rule": {
+          "and": [
+            {
+              "==": [
+                "$configure_test-4_0--$request--$query[movie_id]",
+                550
+              ]
+            },
+            {
+              "==": [
+                "$configure_test-4_0--$request--$query[movie_id2]",
+                384018
+              ]
+            }
+          ]
+        },
+        "data" : null,
+        "response" :  null,
+        "next_success" : "$configure_test-4_1",
+        "next_failure" : null,
+        "failure_response" : null
+      }
+    ]
+```
+
+#### 5 Modify response from each request.
 You can modify response from each request but only for **body** and **header**, the rules are the same like request modification.
 <br>
 Note : **key-value for response header cannot be a nested object**
-
-### 5. Response Modification to client
-To do a response modification that will be sent to the client, you may want to take a look at response.json file in configures directory. This file
-will be used by the middleware to do response modification. You can only do response modification to header and body.
-The rules are the same like request modification, but in response.json we have **configureBased** key.
-
-####5.1 Return response from specific request
-Because configure file represent each request, we can point which configure response we want to return. For example, if
-we want to return response from request configure0.json, and we want to add additional key **id** to response header and **name** to nested object **user** to response body,
-we can write like this
-
-```
-{
-  "configureBased": "$configure0.json",
-  "response": {
-    "transform": "ToJson",
-    "adds": {
-      "header": {
-        "id" : "123"
-      },
-      "body": {
-        "user.name" : "nicholas"
-      }
-    },
-    "modifies": {
-      "header" : [],
-      "body": {}
-    },
-    "deletes": {
-      "header" : [],
-      "body": []
-    }
-  }
-}
-```
-In this example, we take the response from request configure0.json as a base response by specifying the value **configureBased**, and we add additional key-value. If you don't want
-to use a certain request  as a base response, you can leave **configureBased** empty.
 
 
 ### 6. Get a value between each configure
@@ -253,8 +368,6 @@ the middleware execute the request sequentially. For example, you **can** pick a
 2. If you  use parallel route, you can't pick the value between each configure because the middleware
 execute the request simultaneously. For example, you **can't** pick a value for **configure1.json** from **configure0.json** request or response.
 
-3. In file **response.json**, you are safe to pick value from configure-n.json request or response. This is because the response is the last step to be sent to the client, so
-the middleware will wait until every request execution is finished.
 
 ### 7. Logging
 You can log **header, body, query, path parameter** from each configure file by specifying

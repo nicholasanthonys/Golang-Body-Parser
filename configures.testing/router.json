@@ -1,7 +1,13 @@
 [
   {
-    "path": "/test-1",
-    "project_directory": "test-1",
+    "path": "/test-1-1",
+    "project_directory": "test-1.1",
+    "type": "serial",
+    "method": "POST"
+  },
+  {
+    "path": "/test-1-2",
+    "project_directory": "test-1.2",
     "type": "serial",
     "method": "GET"
   },

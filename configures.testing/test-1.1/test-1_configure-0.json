@@ -1,0 +1,65 @@
+
+{
+  "request": {
+    "destination_url": "http://mockbin.org/bin/8cffe52a-c225-4b92-bd07-04d5f8b90813",
+    "destination_path": "",
+    "method" : "POST",
+    "transform": "ToJson",
+    "log_before_modify" : {},
+    "log_after_modify" : {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "tesbody" : "$configure_request--$request--$body",
+        "halo" : "hi"
+      },
+      "query": {
+        "api_key": "$configure_request--$request--$query[api_key]"
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "status_code" : 400,
+    "transform": "ToJson",
+    "log_before_modify" : {},
+    "log_after_modify" : {},
+    "adds": {
+      "header": {
+        "api_key" : "$configure_request--$request--$query[api_key]"
+      },
+      "body": {
+        "tesresponsebody" : "$configure_request--$request--$body",
+        "query": "$configure_request--$request--$query"
+      },
+      "query": {
+        "tes" : "abc"
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}
