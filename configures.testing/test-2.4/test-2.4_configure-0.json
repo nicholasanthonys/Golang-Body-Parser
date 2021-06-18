@@ -1,7 +1,7 @@
 {
   "request": {
     "destination_url": "https://api.themoviedb.org/3/movie",
-    "destination_path": "/{{$configure_test-2_4--$request--$query[movie_id]}}",
+    "destination_path": "/{{$configure_request--$request--$query[movie_id]}}",
     "method": "GET",
     "transform": "ToJson",
     "log_before_modify": {},
@@ -35,7 +35,7 @@
       {
         "rule": {
           "==": [
-            "$configure_test-2_4--$request--$query[movie_id]",
+            "$configure_request--$request--$query[movie_id]",
             123123123
           ]
         },
@@ -46,7 +46,7 @@
           "transform": "ToJson",
           "adds": {
             "body": {
-              "query_movie_id": "$configure_test-2_4--$request--$query[movie_id]",
+              "query_movie_id": "$configure_request--$request--$query[movie_id]",
               "message" : "movie_id is not 123123123"
             }
           }
