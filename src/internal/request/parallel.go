@@ -45,6 +45,12 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	// declare a WaitGroup
 	var wg sync.WaitGroup
 
+	err = SetRequestToWrapper("$configure_request", cc, &model.Wrapper{})
+	if err != nil {
+		log.Errorf("error %s", err.Error())
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
+	}
+
 	for _, configureItem := range ParallelProject.Configures {
 		var configure model.Configure
 		requestFromUser := model.Wrapper{
@@ -78,12 +84,12 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 			} else {
 				alias = configureItem.Alias
 			}
-			err := SetRequestToWrapper(alias, cc, &requestFromUser)
-			if err != nil {
-				log.Errorf("error %s", err.Error())
-				CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
 
-			}
+			cc.MapWrapper.Set(alias, &model.Wrapper{
+				Configure: model.Configure{},
+				Request:   cmap.New(),
+				Response:  cmap.New(),
+			})
 
 		}
 	}

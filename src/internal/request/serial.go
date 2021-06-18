@@ -39,6 +39,18 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
+	// set request to map wrapper
+	err = SetRequestToWrapper("$configure_request", cc, &model.Wrapper{
+		Configure: model.Configure{},
+		Request:   cmap.New(),
+		Response:  cmap.New(),
+	})
+	if err != nil {
+		log.Errorf(" Error : %s", err.Error())
+		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
+		return err
+	}
+
 	//*Read file ConfigureBased
 	var mapConfigures = make(map[string]model.ConfigureItem)
 
@@ -86,6 +98,7 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 
 	var finalCustomResponse *model.CustomResponse
 	// Processing request
+
 ConfigureFile:
 	for {
 		if tmp, ok := cc.MapWrapper.Get(alias); ok {
@@ -95,14 +108,6 @@ ConfigureFile:
 			err := errors.New(fmt.Sprintf("wrapper is nil for alias %v", alias))
 			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_GET_WRAPPER"].Inc()
 			return cc.JSON(http.StatusBadRequest, err)
-		}
-
-		err = SetRequestToWrapper(alias, cc, wrapper)
-		if err != nil {
-			log.Errorf(" Error : %s", err.Error())
-			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
-
-			return err
 		}
 
 		if len(wrapper.Configure.Request.CLogics) > 0 {
