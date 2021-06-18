@@ -16,7 +16,7 @@
         {
           "rule": {
             "==": [
-              "$configure_test-3_1--$request--$query[movie_id]",
+              "$configure_request--$request--$query[movie_id]",
               550
             ]
           },

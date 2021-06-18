@@ -1,7 +1,7 @@
 {
   "request": {
     "destination_url": "https://api.themoviedb.org/3/movie",
-    "destination_path": "/{{$configure_test-3_2--$request--$query[movie_id]}}",
+    "destination_path": "/{{$configure_request--$request--$query[movie_id]}}",
     "method": "GET",
     "transform": "ToJson",
     "log_before_modify": {},
