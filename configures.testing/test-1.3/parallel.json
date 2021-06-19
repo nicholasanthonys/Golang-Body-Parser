@@ -1,0 +1,76 @@
+{
+  "failure_response": {
+    "status_code": 400,
+    "transform": "ToJson",
+    "adds": {
+      "body": {
+        "loop_response_0": "$configure_zero_configure_0--$response--$body",
+        "loop_response_1": "$configure_zero_configure_1--$response--$body",
+        "loop_response_2": "$configure_zero_configure_2--$response--$body"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": []
+    }
+  },
+  "_id": "60c86f02a5b2687d97b0a079",
+  "configures": [
+    {
+      "loop": "3",
+      "alias": "$configure_zero_configure",
+      "date": "2021-06-15T09:13:12.289Z",
+      "file_name": "test-1_configure-0.json"
+    }
+  ],
+  "c_logics": [
+    {
+      "data": null,
+      "next_success": null,
+      "response": {
+        "status_code": 201,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "loop_response_1": "$configure_zero_configure_1--$response--$body",
+            "loop_response_0": "$configure_zero_configure_0--$response--$body",
+            "loop_response_2": "$configure_zero_configure_2--$response--$body"
+          }
+        },
+        "modifies": {},
+        "deletes": {
+          "header": [],
+          "body": []
+        }
+      },
+      "next_failure": null,
+      "failure_response": {
+        "status_code": 201,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "loop_response_1": "$configure_zero_configure_1--$response--$body",
+            "loop_response_0": "$configure_zero_configure_0--$response--$body",
+            "loop_response_2": "$configure_zero_configure_2--$response--$body"
+          }
+        },
+        "modifies": {},
+        "deletes": {
+          "header": [],
+          "body": []
+        }
+      },
+      "rule": {
+        "==": [
+          "abc",
+          "abc"
+        ]
+      },
+      "date": "2021-06-15T09:19:05.504Z",
+      "id": "60c87089a5b2687d97b0a113"
+    }
+  ],
+  "date": "2021-06-15T09:12:34.227Z",
+  "id": "60c86f02a5b2687d97b0a079"
+}

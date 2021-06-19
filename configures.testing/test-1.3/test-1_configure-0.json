@@ -1,0 +1,64 @@
+
+{
+  "request": {
+    "destination_url": "http://mockbin.org/bin/2ae2596e-9c25-40fe-bc6f-0f48708acd83",
+    "destination_path": "/1234",
+    "method" : "POST",
+    "transform": "ToJson",
+    "log_before_modify" : {
+      "header_before_modify" : "$header"
+    },
+    "log_after_modify" : {
+      "header_after_modify" : "$header"
+    },
+    "adds": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "header": {
+      },
+      "body": {
+      },
+      "query": {
+      }
+    },
+    "deletes": {
+      "header": [
+      ],
+      "body": [
+      ],
+      "query": [
+      ]
+    }
+  },
+  "response": {
+    "status_code" : 400,
+    "transform": "ToJson",
+    "log_before_modify" : {},
+    "log_after_modify" : {},
+    "adds": {
+      "header": {
+      },
+      "body": {
+        "x-api-key" : "$configure_request--$request--$header[X-Api-Key]",
+        "name" : "$configure_request--$request--$path[name]"
+
+      },
+      "query": {
+      }
+    },
+    "modifies": {
+      "body": {
+      }
+    },
+    "deletes": {
+      "body": [
+      ]
+    }
+  }
+}
