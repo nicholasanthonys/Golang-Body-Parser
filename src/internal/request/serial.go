@@ -39,12 +39,6 @@ func DoSerial(cc *model.CustomContext, counter int) error {
 		return cc.JSON(http.StatusInternalServerError, resMap)
 	}
 
-	// set request to map wrapper
-	err = SetRequestToWrapper("$configure_request", cc, &model.Wrapper{
-		Configure: model.Configure{},
-		Request:   cmap.New(),
-		Response:  cmap.New(),
-	})
 	if err != nil {
 		log.Errorf(" Error : %s", err.Error())
 		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
@@ -107,7 +101,9 @@ ConfigureFile:
 			log.Errorf("Wrapper is nil for alias : %v ", alias)
 			err := errors.New(fmt.Sprintf("wrapper is nil for alias %v", alias))
 			CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_GET_WRAPPER"].Inc()
-			return cc.JSON(http.StatusBadRequest, err)
+			return cc.JSON(http.StatusBadRequest, map[string]interface{}{
+				"error": err.Error(),
+			})
 		}
 
 		if len(wrapper.Configure.Request.CLogics) > 0 {
@@ -212,7 +208,12 @@ ConfigureFile:
 					alias = nextSuccess
 					break
 				} else {
-					return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, err, nil)
+					if !reflect.DeepEqual(cLogicItem.Response,
+						model.Command{}) {
+						return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, err, nil)
+					}
+					return response.ConstructResponseFromWrapper(cc,
+						model.Command{}, nil, finalCustomResponse)
 				}
 			} else {
 				if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {

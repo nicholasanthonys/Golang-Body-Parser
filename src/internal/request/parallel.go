@@ -29,14 +29,15 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 
 	}
 
-	// Read parallel.json
+	// Read serial.json
 	ParallelProject := model.Parallel{}
-	parallelByte := util.ReadJsonFile(cc.FullProjectDirectory + "/" + "parallel.json")
+	parallelByte := util.ReadJsonFile(cc.
+		FullProjectDirectory + "/" + "parallel.json")
 	err := json.Unmarshal(parallelByte, &ParallelProject)
 
 	if err != nil {
 		resMap := make(map[string]string)
-		resMap["message"] = "Problem In unmarshaling File parallel.json. "
+		resMap["message"] = "Problem In unmarshaling File serial.json. "
 		resMap["error"] = err.Error()
 		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_UNMARSHAL_PARALLEL_JSON"].Inc()
 		return cc.JSON(http.StatusInternalServerError, resMap)
@@ -45,11 +46,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 	// declare a WaitGroup
 	var wg sync.WaitGroup
 
-	err = SetRequestToWrapper("$configure_request", cc, &model.Wrapper{
-		Configure: model.Configure{},
-		Request:   cmap.New(),
-		Response:  cmap.New(),
-	})
 	if err != nil {
 		log.Errorf("error %s", err.Error())
 		CustomPrometheus.PromMapCounter[CustomPrometheus.GetPrefixMetricName(cc.DefinedRoute.ProjectDirectory)+"ERR_SET_REQUEST_TO_WRAPPER"].Inc()
@@ -209,7 +205,9 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 					errors.New("Parallel can only refer to parallel/serial.json"), nil)
 
 			} else {
-				return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, nil, nil)
+				if !reflect.DeepEqual(cLogicItem.Response, model.Command{}) {
+					return response.ConstructResponseFromWrapper(cc, cLogicItem.Response, nil, nil)
+				}
 
 			}
 

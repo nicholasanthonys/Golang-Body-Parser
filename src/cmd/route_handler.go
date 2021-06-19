@@ -147,6 +147,14 @@ func parallelRouteHandler(c echo.Context) error {
 	cc.BaseProject = baseProject
 	mapWrapper := cmap.New()
 	cc.MapWrapper = &mapWrapper
+
+	// set request to map wrapper
+	err = request.SetRequestToWrapper("$configure_request", cc, &model.Wrapper{
+		Configure: model.Configure{},
+		Request:   cmap.New(),
+		Response:  cmap.New(),
+	})
+
 	return request.DoParallel(cc, 0)
 }
 
@@ -163,6 +171,13 @@ func serialRouteHandler(c echo.Context) error {
 	cc.BaseProject = baseProject
 	mapWrapper := cmap.New()
 	cc.MapWrapper = &mapWrapper
+	// set request to map wrapper
+	err = request.SetRequestToWrapper("$configure_request", cc, &model.Wrapper{
+		Configure: model.Configure{},
+		Request:   cmap.New(),
+		Response:  cmap.New(),
+	})
+
 	return request.DoSerial(cc, 0)
 
 }
