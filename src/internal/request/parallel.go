@@ -129,12 +129,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 								}
 
 							} else {
-								if strings.Trim(cLogicItem.NextSuccess, "") == "serial.json" {
-									return DoSerial(cc, counter+1)
-								} else if cLogicItem.NextSuccess == "parallel.json" {
-									// reference to itself
-									return DoParallel(cc, counter+1)
-								}
 								// process next configure
 								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextSuccess); ok {
 									wg.Add(1)
@@ -158,14 +152,6 @@ func DoParallel(cc *model.CustomContext, counter int) error {
 								}
 
 							} else {
-								if strings.Trim(cLogicItem.NextFailure,
-									" ") == "serial.json" {
-									return DoSerial(cc, counter+1)
-								} else if strings.Trim(cLogicItem.
-									NextFailure, " ") == "parallel.json" {
-									// reference to itself
-									return DoParallel(cc, counter+1)
-								}
 								if wrp, ok := cc.MapWrapper.Get(cLogicItem.NextFailure); ok {
 									wg.Add(1)
 									newWrapper := wrp.(*model.Wrapper)
