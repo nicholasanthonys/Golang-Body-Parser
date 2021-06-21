@@ -138,6 +138,15 @@ ConfigureFile:
 
 				} else {
 					if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
+						if cLogicItem.NextFailure == "parallel.json" {
+							return DoParallel(cc, counter+1)
+						}
+
+						// reference to itself
+						if cLogicItem.NextFailure == "serial.json" {
+							return DoSerial(cc, counter+1)
+						}
+
 						// update alias
 						alias = cLogicItem.NextFailure
 						continue ConfigureFile // skip loop and update alias
@@ -217,6 +226,15 @@ ConfigureFile:
 				}
 			} else {
 				if len(strings.Trim(cLogicItem.NextFailure, " ")) > 0 {
+					if cLogicItem.NextFailure == "parallel.json" {
+						return DoParallel(cc, counter+1)
+					}
+
+					// reference to itself
+					if cLogicItem.NextFailure == "serial.json" {
+						return DoSerial(cc, counter+1)
+					}
+
 					// update alias
 					alias = cLogicItem.NextFailure
 					break
