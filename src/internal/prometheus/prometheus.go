@@ -7,13 +7,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
-	"os"
 )
 
 var (
 	PromMapCounter = map[string]prometheus.Counter{}
 	Prefix         = "single_middleware_"
-	dirProjects    = os.Getenv("CONFIGURES_DIRECTORY_NAME") + "/projects"
 )
 
 //func init() {
