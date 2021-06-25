@@ -23,8 +23,5 @@ ENV APP_PORT=80
 # Expose application port
 EXPOSE $APP_PORT/tcp
 
-# Expose SSH PORT
-EXPOSE 22
-
 ## Run build
 ENTRYPOINT ["./build/go-single-middleware"]
