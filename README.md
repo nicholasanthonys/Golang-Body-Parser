@@ -4,7 +4,6 @@ you to modify your client request such as add, modify, or delete key-value, tran
 and send the response back to the client. Execute Request configuration as a 
 serial or parallel request
 
-
 ## Prerequisite
 1. Create a project folder inside configures folder. Take a look inside 
    **configures.testing/test-1**.
@@ -15,6 +14,49 @@ serial or parallel request
 
 <br> <br>
 See **configures.testing directory structure** for examples.
+
+# Running set up
+1. Create configure directory, along with projects and configuration file,
+   and router.json
+2. Specified your configure directory location in **env**
+3. Change working directory to ``src`` and run :
+```
+go build -o ./build/go-single-middleware ./cmd/.
+```
+4.  Run the program :
+```
+./build/go-single-middleware
+```
+
+# Running using docker
+## Set up Docker Container and Network
+1. Create docker network called `proxy_middleware_net` by running :
+   ```
+   docker network create --driver bridge proxy_middleware_net
+   ```
+2.  Check if docker network have been created by running `docker network ls` :
+    ![img.png](images/img.png)
+3. Change working directory to where ```src``` located
+4. Run `docker-compose build`
+5. Run `docker-compose up`
+6. Check if container have been assigned to network `proxy_middleware_net`
+   by running `docker network inspect proxy_middleware_net`
+   ![img.png](images/network-ls.png)
+
+### Set Up Proxy Container and Postman
+1. run ``docker run -d --name='proxy-middleware' -p 8000:8888 dannydirect/tinyproxy:latest ANY``
+2. Make sure that proxy-middleware is running :
+   ![img.png](images/docker-ps.png)
+3. Configure postman proxy, by setting`proxy server` to
+   `0.0.0.0` and `proxy port` to `8000` :
+   ![img.png](images/postman-proxy-settings.png)
+
+### Make a request through proxy
+1. Check your container name and router
+2. To make a request, just enter url `http://<container name>/<path>` and
+   hit `send`. Make sure container `proxy-middleware` is running and postman
+   proxy settings have been set up.
+   ![img.png](images/example-post-request.png)
 
 
 ## File Base.json
