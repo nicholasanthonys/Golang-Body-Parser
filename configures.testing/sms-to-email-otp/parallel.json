@@ -1,0 +1,17 @@
+{
+  "failure_response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "adds": {},
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": []
+    }
+  },
+  "_id": "60cda6cd0628d6471bdabbe5",
+  "configures": [],
+  "c_logics": [],
+  "date": "2021-06-19T08:11:57.405Z",
+  "id": "60cda6cd0628d6471bdabbe5"
+}

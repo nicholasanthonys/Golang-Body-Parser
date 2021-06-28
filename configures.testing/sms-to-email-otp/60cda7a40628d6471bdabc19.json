@@ -1,0 +1,51 @@
+{
+  "description": "target : unauthorized (401)",
+  "request": {
+    "destination_path": "",
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+        "x-api-key": "$configure_request--$request--$header[X-Api-Key-Sms]"
+      },
+      "body": {
+        "maxAttempt": "$configure_request--$request--$body[maxAttempt]",
+        "phoneNum": "089661528571",
+        "expireIn": "$configure_request--$request--$body[expire]",
+        "content": "$configure_request--$request--$body[message]",
+        "digit": "$configure_request--$request--$body[digit]"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": [],
+      "query": []
+    },
+    "log_before_modify": {
+      "body_before_modify": "$body",
+      "header_before_modify": "$header"
+    },
+    "log_after_modify": {
+      "body_after_modify": "$body",
+      "header_after_modify": "$header"
+    },
+    "c_logics": [],
+    "destination_url": "http://mockbin.org/bin/6affa895-041a-4004-95b3-7727719290d7",
+    "method": "PUT"
+  },
+  "response": {
+    "status_code": 200,
+    "transform": "ToJson",
+    "adds": {
+      "body": {
+        "tes_sms": "ini key tambahan"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": []
+    }
+  },
+  "id": "60cda7a40628d6471bdabc19"
+}

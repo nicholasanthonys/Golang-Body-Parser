@@ -1,0 +1,73 @@
+{
+  "_id": "60cda6cd0628d6471bdabbe4",
+  "configures": [
+    {
+      "loop": null,
+      "__t": "ConfigureFileSerial",
+      "configure_id": "60cda7a40628d6471bdabc19",
+      "alias": "$configure_sms",
+      "failure_response": {
+        "status_code": 200,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "message": "all logic fail",
+            "response_sms": "$configure_sms--$response--$body",
+            "response_sms_status_code": "$configure_sms--$response--$status_code"
+          }
+        },
+        "modifies": {},
+        "deletes": {
+          "header": [],
+          "body": []
+        }
+      },
+      "c_logics": [
+        {
+          "data": null,
+          "next_success": null,
+          "response": null,
+          "next_failure": "$configure_email",
+          "failure_response": null,
+          "date": "2021-06-19T12:21:39.552Z",
+          "rule": {
+            "==": [
+              200,
+              200
+            ]
+          },
+          "id": "60cde153731eeeb37879ea6b"
+        }
+      ],
+      "date": "2021-06-19T09:40:33.653Z",
+      "file_name": "60cda7a40628d6471bdabc19.json",
+      "id": "60cdbb910628d6471bdac265"
+    },
+    {
+      "loop": null,
+      "__t": "ConfigureFileSerial",
+      "configure_id": "60cdad5a0628d6471bdabe01",
+      "alias": "$configure_email",
+      "failure_response": {
+        "status_code": 400,
+        "transform": "ToJson",
+        "adds": {
+          "body": {
+            "message": "configure_email_failure"
+          }
+        },
+        "modifies": {},
+        "deletes": {
+          "header": [],
+          "body": []
+        }
+      },
+      "c_logics": [],
+      "date": "2021-06-19T12:03:39.290Z",
+      "file_name": "60cdad5a0628d6471bdabe01.json",
+      "id": "60cddd1b0628d6471bdac510"
+    }
+  ],
+  "date": "2021-06-19T08:11:57.403Z",
+  "id": "60cda6cd0628d6471bdabbe4"
+}

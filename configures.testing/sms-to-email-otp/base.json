@@ -1,0 +1,19 @@
+{
+  "project_max_circular": 10,
+  "circular_response": {
+    "status_code": 508,
+    "transform": "ToJson",
+    "adds": {
+      "body": {
+        "message": "request loop detected"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": []
+    }
+  },
+  "date": "2021-06-19T08:11:57.407Z",
+  "id": "60cda6cd0628d6471bdabbe7"
+}

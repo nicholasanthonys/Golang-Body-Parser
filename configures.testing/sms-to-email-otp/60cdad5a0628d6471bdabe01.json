@@ -1,0 +1,50 @@
+{
+  "description": "",
+  "request": {
+    "destination_path": "/1234",
+    "transform": "ToJson",
+    "adds": {
+      "header": {
+        "x-api-key": "$configure_request--$request--$header[X-Api-Key-Email]"
+      },
+      "body": {
+        "subject": "$configure_request--$request--$body[subject]",
+        "message": "$configure_request--$request--$body[message]",
+        "recipient": "$configure_request--$request--$body[recipient]",
+        "digit": "$configure_request--$request--$body[digit]",
+        "expire": "$configure_request--$request--$body[expire]",
+        "maxAttempt": "$configure_request--$request--$body[maxAttempt]"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": [],
+      "query": []
+    },
+    "log_before_modify": {
+      "body_before_modify": "$body"
+    },
+    "log_after_modify": {
+      "body_after_modify": "$body"
+    },
+    "c_logics": [],
+    "destination_url": "https://api.thebigbox.id/email-otp/1.0.0/send",
+    "method": "PUT"
+  },
+  "response": {
+    "status_code": 0,
+    "transform": "ToJson",
+    "adds": {
+      "body": {
+        "key_tambahan": "ini key tambahan"
+      }
+    },
+    "modifies": {},
+    "deletes": {
+      "header": [],
+      "body": []
+    }
+  },
+  "id": "60cdad5a0628d6471bdabe01"
+}
